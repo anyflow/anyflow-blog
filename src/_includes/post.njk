@@ -1,0 +1,27 @@
+---
+layout: base.njk
+---
+<article class="post">
+  {% if hero_image %}
+  <div class="post-cover" style="background-image: url('{{ hero_image }}')"></div>
+  {% endif %}
+
+  <div class="post-header">
+    <h1 class="post-title">{{ title }}</h1>
+    <div class="post-meta">
+      <span class="post-category">{{ category }}</span>
+      <time class="post-date" datetime="{{ created }}">{{ created }}</time>
+    </div>
+    {% if tags %}
+    <div class="post-tags">
+      {% for tag in tags %}
+      <span class="tag">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="post-body">
+    {{ content | safe }}
+  </div>
+</article>

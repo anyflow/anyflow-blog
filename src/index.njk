@@ -1,0 +1,56 @@
+---
+layout: base.njk
+title: Home
+---
+<section class="profile">
+  <div class="profile-inner">
+    <h2 class="profile-heading">Who and Why am I here?</h2>
+    <div class="profile-columns">
+      <div class="profile-links">
+        <ul>
+          <li><a href="https://www.linkedin.com/in/anyflow/">LinkedIn</a></li>
+          <li><a href="https://github.com/anyflow">Github</a></li>
+          <li><a href="https://www.youtube.com/channel/UC0upJ_e63Eq3_AfJ4Vw0FGw">YouTube</a></li>
+        </ul>
+      </div>
+      <div class="profile-bookmarks">
+        <p>어쨌건간에 흘러가는 者</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="recent">
+  <h2 class="section-heading">Recent</h2>
+  <div class="card-grid">
+    {%- for post in collections.post | reverse -%}
+    <a href="{{ post.data.permalink }}" class="card">
+      {% if post.data.hero_image %}
+      <div class="card-image" style="background-image: url('{{ post.data.hero_image }}')"></div>
+      {% endif %}
+      <div class="card-body">
+        <h3 class="card-title">{{ post.data.title }}</h3>
+        <time class="card-date">{{ post.data.created }}</time>
+        <div class="card-tags">
+          {%- for tag in post.data.tags -%}
+          <span class="tag">{{ tag }}</span>
+          {%- endfor -%}
+        </div>
+      </div>
+    </a>
+    {%- endfor -%}
+  </div>
+</section>
+
+<section class="categories">
+  <h2 class="section-heading">By Category</h2>
+  <div class="category-list">
+    {%- for cat in site.categories -%}
+    <a href="/category/{{ cat.name | slugify }}/" class="category-item">
+      <span class="category-emoji">{{ cat.emoji }}</span>
+      <span class="category-name">{{ cat.name }}</span>
+      <span class="category-count">{{ cat.count }}</span>
+    </a>
+    {%- endfor -%}
+  </div>
+</section>

@@ -1,0 +1,13 @@
+{
+  "title": "어쨌건간에 흘러가는 者",
+  "url": "https://anyflow.net",
+  "description": "anyflow blog",
+  "author": "Hyunjeong Park",
+  "categories": [
+    { "name": "as S/W 엔지니어", "emoji": "👨‍💻", "count": 137 },
+    { "name": "예술/인문 소감", "emoji": "🎨", "count": 73 },
+    { "name": "自省(Introspection) / 세상살이", "emoji": "🌊", "count": 74 },
+    { "name": "프로젝트s", "emoji": "🔧", "count": 97 },
+    { "name": "as 음악인", "emoji": "🎵", "count": 13 }
+  ]
+}
