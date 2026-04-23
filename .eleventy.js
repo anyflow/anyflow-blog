@@ -2,6 +2,9 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/css");
   eleventyConfig.addPassthroughCopy("src/js");
   eleventyConfig.addPassthroughCopy("src/images");
+  eleventyConfig.addPassthroughCopy({"src/posts": "/"});
+
+  eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });
 
   return {
     dir: {
@@ -10,7 +13,7 @@ module.exports = function(eleventyConfig) {
       data: "_data",
       output: "_site"
     },
-    markdownTemplateEngine: "njk",
+    markdownTemplateEngine: false,
     htmlTemplateEngine: "njk",
     templateFormats: ["md", "njk", "html"]
   };

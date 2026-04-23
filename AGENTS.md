@@ -10,13 +10,14 @@
   - namespace `service`에 `anyflow-blog` `Deployment/Service`가 떠 있다.
   - `HTTPrRoute`는 `blog.anyflow.net` host로 연결되어 있다.
   - `cluster` namespace의 `blog-anyflow-net` certificate는 `Ready=True`다.
-- 현재 nested repo working tree는 clean하지 않다. 특히 content migration/정리 작업 흔적이 남아 있을 수 있으므로, 새 스레드는 먼저 `git status`를 보고 무엇이 추적 중인지 확인해야 한다.
+- 콘텐츠 소스는 현재 `obsidian-vault`의 `blog/` 디렉토리에서 동기화하는 방향으로 정리 중이다. 새 스레드는 먼저 `git status`와 `Makefile`의 `sync` 흐름을 보고 현재 콘텐츠 반영 방식이 무엇인지 확인해야 한다.
 
 ## 현재 작업트리 관찰 포인트
 
-- 루트 파일 기준 최근 관찰된 변경 축:
-  - `.eleventy.js`, `CONTENT_CONTRACT.md` 수정
-  - `.eleventyignore`, `Makefile` 미추적 파일 존재 가능
+- 핵심 관찰 포인트:
+  - `.eleventy.js`는 `src/posts`를 그대로 passthrough copy하고 Markdown 렌더 경로를 단순화했다.
+  - repo-local `Makefile`은 `obsidian-vault` -> `src/posts/` 동기화 흐름을 제공한다.
+  - `.eleventyignore`는 `src/posts/**/*.html`을 무시해 원문 HTML 찌꺼기가 빌드 입력으로 섞이지 않게 한다.
   - `src/posts/` 아래 개별 글 경로는 로컬 작업공간 성격으로 운용 중이다.
 - `src/posts/`는 `.gitignore`에 등록되어 있으므로, 이 경로에서 새로 만든 로컬 콘텐츠는 기본적으로 Git 추적 대상이 아니다.
 - 현재 트래킹 기준의 핵심 배포 자산은 `deployment/` 아래 파일들과 루트 빌드 설정들이다.
@@ -35,6 +36,8 @@
 
 - 핵심 설정/빌드 파일:
   - `.eleventy.js`
+  - `.eleventyignore`
+  - `Makefile`
   - `Dockerfile`
   - `package.json`
   - `deployment/`
@@ -53,11 +56,13 @@
 
 ## 빌드/배포 흐름
 
+- repo-local `Makefile`의 `sync`는 `obsidian-vault`의 `blog/` 디렉토리를 `src/posts/`로 복사하고 불필요한 보조 디렉토리를 제거한다.
 - 배포 경로는 다음 순서를 따른다.
-  1. 정적 사이트 빌드
-  2. Docker 이미지 빌드
-  3. kind 클러스터로 이미지 load
-  4. `deployment.yaml`, `service.yaml`, `httproute.yaml` 적용
+  1. `sync`로 콘텐츠 동기화
+  2. 정적 사이트 빌드
+  3. Docker 이미지 빌드
+  4. kind 클러스터로 이미지 load
+  5. `deployment.yaml`, `service.yaml`, `httproute.yaml` 적용
 - 루트 repo에서 전체 진입은 다음 타깃을 사용한다.
   - `make anyflow-blog-c`
   - `make anyflow-blog-d`
@@ -68,12 +73,13 @@
 - 최종 목표는 `anyflow.net`과 구분이 어려운 표면 재현이다.
 - nested repo 작업은 이 repo의 Git 이력 안에서만 정리한다.
 - `AGENTS.md`는 handoff용으로 유지하되 `.gitignore`에도 등록한다. 이미 tracked 상태라 계속 업데이트 가능하다.
-- `src/posts/` 아래 로컬 콘텐츠를 바로 진실로 취급하지 말고, 추적 대상인지 먼저 확인한다.
+- `src/posts/`는 `.gitignore` 대상이므로, 콘텐츠 자체보다 동기화 규칙과 빌드/배포 자산을 우선 검토한다.
 - UI/콘텐츠 정리는 배포 자산(`deployment/*`)과 실제 노출 상태(`blog.anyflow.net`)를 같이 보고 판단한다.
 
 ## 검증 기준
 
 - `git status`로 현재 작업트리 변경 축 확인
+- `npm run build` 또는 동등한 11ty 빌드 통과
 - 배포 변경 시 루트 `make anyflow-blog-c` 또는 동등 흐름으로 재배포
 - `kubectl get deploy,svc -n service anyflow-blog`
 - `kubectl get httproute -n service anyflow-blog`
