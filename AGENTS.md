@@ -1,77 +1,86 @@
 # AGENTS.md
 
-이 문서는 apps/anyflow-blog 하위 작업에만 적용된다.
-상위 AGENTS 지침을 따르되, 이 범위에서는 아래 원칙을 추가로 적용한다.
+이 문서는 `apps/anyflow-blog` nested repo 작업에 적용된다.
+상위 repo 지침을 따르되, 이 범위에서는 아래 현재 상태와 작업 원칙을 추가로 적용한다.
 
-## 프로젝트 현황
+## 현재 운영 상태
 
-- 11ty(Eleventy) 기반 정적 블로그. blog.anyflow.net으로 서빙 중.
-- 현재 1차 범위: representative page subset으로 표면 재현 검증 단계.
-- 대표 글 2개(AI Agents Platform, Zero Trust Architecture via Istio)가 수집/변환 완료.
-- 홈, 상세 페이지가 동작하며 CSS/JS/다크모드 포함.
+- 11ty(Eleventy) 기반 정적 블로그이며 현재 `blog.anyflow.net`으로 외부 노출 중이다.
+- 현재 클러스터 기준 런타임 상태:
+  - namespace `service`에 `anyflow-blog` `Deployment/Service`가 떠 있다.
+  - `HTTPrRoute`는 `blog.anyflow.net` host로 연결되어 있다.
+  - `cluster` namespace의 `blog-anyflow-net` certificate는 `Ready=True`다.
+- 현재 nested repo working tree는 clean하지 않다. 특히 content migration/정리 작업 흔적이 남아 있을 수 있으므로, 새 스레드는 먼저 `git status`를 보고 무엇이 추적 중인지 확인해야 한다.
+
+## 현재 작업트리 관찰 포인트
+
+- 루트 파일 기준 최근 관찰된 변경 축:
+  - `.eleventy.js`, `CONTENT_CONTRACT.md` 수정
+  - `.eleventyignore`, `Makefile` 미추적 파일 존재 가능
+  - `src/posts/` 아래 개별 글 경로는 로컬 작업공간 성격으로 운용 중이다.
+- `src/posts/`는 `.gitignore`에 등록되어 있으므로, 이 경로에서 새로 만든 로컬 콘텐츠는 기본적으로 Git 추적 대상이 아니다.
+- 현재 트래킹 기준의 핵심 배포 자산은 `deployment/` 아래 파일들과 루트 빌드 설정들이다.
 
 ## 기술 스택
 
 - 생성기: 11ty v3 (Node.js)
-- 런타임: nginx:alpine (단일 컨테이너 이미지)
-- 이미지: ghcr.io/anyflow/anyflow-blog:latest
-- 빌드: multi-stage Dockerfile (node:22-alpine -> nginx:alpine)
-- 배포: kind 클러스터, make anyflow-blog-c / make anyflow-blog-d
-- 인증서: cert-manager, Let Encrypt HTTP-01
-- ingress: Gateway API HTTPRoute, blog.anyflow.net
+- 런타임: `nginx:alpine` 단일 컨테이너
+- 이미지: `ghcr.io/anyflow/anyflow-blog:latest`
+- 빌드: multi-stage Dockerfile (`node:22-alpine` -> `nginx:alpine`)
+- 배포: 루트 `Makefile`의 `anyflow-blog-c`, `anyflow-blog-d`, `anyflow-blog-r`
+- ingress: Gateway API `HTTPRoute`, host `blog.anyflow.net`
+- 인증서: cert-manager / `certificate/blog-anyflow-net.yaml`
 
 ## 프로젝트 구조
 
-    apps/anyflow-blog/
-    +-- .eleventy.js          # 11ty 설정
-    +-- Dockerfile            # multi-stage build
-    +-- .dockerignore
-    +-- package.json
-    +-- src/
-    |   +-- _includes/        # 템플릿 (base.njk, post.njk)
-    |   +-- _data/            # site.json (사이트 메타, 카테고리)
-    |   +-- css/style.css     # 자체 CSS
-    |   +-- js/main.js        # 다크모드 등
-    |   +-- posts/            # Markdown 글 + posts.json (layout/tags)
-    |   +-- index.njk         # 홈페이지
-    +-- deployment/
-    |   +-- deployment.yaml   # k8s Deployment (단일 컨테이너)
-    |   +-- service.yaml      # k8s Service
-    |   +-- httproute.yaml    # Gateway API HTTPRoute (blog.anyflow.net)
-    |   +-- nginx.conf        # nginx 설정
-    +-- _site/                # 빌드 출력 (gitignore 대상)
-    +-- 문서들 (GOAL, PLAN, ARCHITECTURE, OPERATIONS, CONTENT_CONTRACT, README)
-
-## 관련 파일 (apps/anyflow-blog 외부)
-
-- Makefile: anyflow-blog-c, anyflow-blog-d, anyflow-blog-r 타겟
-- cluster/public-gateway.yaml: blog.anyflow.net listener (http + https)
-- certificate/blog-anyflow-net.yaml: Let Encrypt 인증서
+- 핵심 설정/빌드 파일:
+  - `.eleventy.js`
+  - `Dockerfile`
+  - `package.json`
+  - `deployment/`
+- 콘텐츠/템플릿 축:
+  - `src/_includes/`
+  - `src/_data/`
+  - `src/css/`
+  - `src/js/`
+  - `src/posts/` (현재 로컬 작업공간 성격, ignore 대상)
+- 참고 문서:
+  - `GOAL.md`
+  - `PLAN.md`
+  - `ARCHITECTURE.md`
+  - `OPERATIONS.md`
+  - `CONTENT_CONTRACT.md`
 
 ## 빌드/배포 흐름
 
-    docker build -> kind load -> kubectl apply deployment/service/httproute -> rollout
-
-전체 원샷: make anyflow-blog-c (cert-manager 의존)
-삭제: make anyflow-blog-d
+- 배포 경로는 다음 순서를 따른다.
+  1. 정적 사이트 빌드
+  2. Docker 이미지 빌드
+  3. kind 클러스터로 이미지 load
+  4. `deployment.yaml`, `service.yaml`, `httproute.yaml` 적용
+- 루트 repo에서 전체 진입은 다음 타깃을 사용한다.
+  - `make anyflow-blog-c`
+  - `make anyflow-blog-d`
+  - `make anyflow-blog-r`
 
 ## 작업 원칙
 
-- 최종 목표는 anyflow.net과 구분 불가한 표면 재현. 중간 산출물보다 결과 우선.
-- 의견/결정사항은 하나씩 보여주며 사용자 확인을 받을 것.
-- subagent를 적극 활용하되, 서로 충돌하는 파일을 동시에 수정하지 않을 것.
-- legacy UUID는 이관 대상이 아님. redirect도 만들지 않음.
-- 카테고리 목록은 정적 페이지로 별도 생성 (홈 JS 필터링 아님).
+- 최종 목표는 `anyflow.net`과 구분이 어려운 표면 재현이다.
+- nested repo 작업은 이 repo의 Git 이력 안에서만 정리한다.
+- `AGENTS.md`는 handoff용으로 유지하되 `.gitignore`에도 등록한다. 이미 tracked 상태라 계속 업데이트 가능하다.
+- `src/posts/` 아래 로컬 콘텐츠를 바로 진실로 취급하지 말고, 추적 대상인지 먼저 확인한다.
+- UI/콘텐츠 정리는 배포 자산(`deployment/*`)과 실제 노출 상태(`blog.anyflow.net`)를 같이 보고 판단한다.
 
-## 1차에서 아직 안 한 것
+## 검증 기준
 
-- 카테고리 목록 페이지 생성
-- 기준 사이트와 나란히 표면 비교 (브라우저 확인)
-- RSS, sitemap, search index
-- 모바일 반응형 세부 조정
-- 다크모드 색상 세부 조정
+- `git status`로 현재 작업트리 변경 축 확인
+- 배포 변경 시 루트 `make anyflow-blog-c` 또는 동등 흐름으로 재배포
+- `kubectl get deploy,svc -n service anyflow-blog`
+- `kubectl get httproute -n service anyflow-blog`
+- `kubectl get certificate -n cluster blog-anyflow-net`
+- 필요 시 실제 `blog.anyflow.net` 응답 확인
 
-## 완료 판단
+## 주의
 
-- GOAL.md 기준으로 gap review 수행.
-- 기능, 정보 구조, 탐색 흐름, 레이아웃, 타이포그래피, 색상, 인터랙션 관점에서 목표 충족 여부 점검.
+- 이 repo는 nested git repository다. 상위 `my-cluster` repo와 별도 이력을 가진다.
+- 현재 content migration 흔적이 남아 있으므로, 의도하지 않은 파일까지 같이 commit하지 않도록 stage 범위를 제한할 것.
