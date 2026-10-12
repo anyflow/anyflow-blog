@@ -1,56 +1,25 @@
 ---
 layout: base.njk
-title: Home
 ---
-<section class="profile">
-  <div class="profile-inner">
-    <h2 class="profile-heading">Who and Why am I here?</h2>
-    <div class="profile-columns">
-      <div class="profile-links">
-        <ul>
-          <li><a href="https://www.linkedin.com/in/anyflow/">LinkedIn</a></li>
-          <li><a href="https://github.com/anyflow">Github</a></li>
-          <li><a href="https://www.youtube.com/channel/UC0upJ_e63Eq3_AfJ4Vw0FGw">YouTube</a></li>
-        </ul>
-      </div>
-      <div class="profile-bookmarks">
-        <p>어쨌건간에 흘러가는 者</p>
-      </div>
-    </div>
-  </div>
+{% from "tags.njk" import tag %}
+{% from "icon.njk" import icon %}
+<section class="profile" aria-labelledby="who-and-why">
+  <h2 id="who-and-why">Who and Why am I here?</h2>
+  <p>제 소개와 연락처입니다. 각 페이지 맨 아래에 <span class="inline-emoji">❤️</span> 또는 댓글 한마디 남겨주심 그저 좋아라~ 합니다.</p>
+  <div class="profile-columns"><ul class="profile-links">
+    <li><a href="https://www.linkedin.com/in/anyflow/">Linkedin</a> / <a href="https://github.com/anyflow">Github</a></li>
+    <li><a href="https://www.youtube.com/channel/UC0upJ_e63Eq3_AfJ4Vw0FGw">Youtube</a> / <a href="https://www.strava.com/athletes/57404417">Strava</a></li>
+    <li><code>anyflow@gmail·com</code></li>
+  </ul><a class="bookmark" href="/introspective-life/anyway/" target="_blank" rel="noopener noreferrer"><div><span>어쨌건간에</span><small>{{ icon(home) }} https://www.anyflow.net/introspective-life/anyway</small></div>{% if home.cover %}<img src="{{ home.cover | escape }}" alt="">{% endif %}</a></div>
 </section>
-
-<section class="recent">
-  <h2 class="section-heading">Recent</h2>
-  <div class="card-grid">
-    {%- for post in collections.post | reverse -%}
-    <a href="{{ post.data.permalink }}" class="card">
-      {% if post.data.hero_image %}
-      <div class="card-image" style="background-image: url('{{ post.data.hero_image }}')"></div>
-      {% endif %}
-      <div class="card-body">
-        <h3 class="card-title">{{ post.data.title }}</h3>
-        <time class="card-date">{{ post.data.created }}</time>
-        <div class="card-tags">
-          {%- for tag in post.data.tags -%}
-          <span class="tag">{{ tag }}</span>
-          {%- endfor -%}
-        </div>
-      </div>
-    </a>
-    {%- endfor -%}
-  </div>
+<section class="recent" aria-labelledby="recent"><h2 id="recent">Recent</h2>
+  <div class="gallery-tools"><button class="search-button" type="button" aria-label="Recent 검색"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg>Search</button></div>
+  <div class="card-grid" id="recent-cards">{% for item in posts %}<a href="{{ item.url }}" class="card" {% if loop.index>10 %}hidden{% endif %}>
+    {% if item.thumbnail %}<div class="card-preview"><img src="{{ item.thumbnail }}" alt="" loading="lazy"></div>{% else %}<div class="card-preview text-preview" aria-hidden="true">{{ item.preview | safe }}</div>{% endif %}
+    <div class="card-body"><h3 class="card-title">{{ icon(item) }} {{ item.title | escape }}</h3><div class="card-category">{{ tag(item.category,item.tagStyles) }}</div><div class="card-tags">{% for name in item.tags %}{{ tag(name,item.tagStyles) }}{% endfor %}</div><time datetime="{{ item.date }}">{{ item.displayDate }}</time></div>
+  </a>{% endfor %}</div>
+  {% if posts.length>10 %}<button class="load-more" data-load-more="recent-cards" type="button">↓ &nbsp;Load more</button>{% endif %}
 </section>
-
-<section class="categories">
-  <h2 class="section-heading">By Category</h2>
-  <div class="category-list">
-    {%- for cat in site.categories -%}
-    <a href="/category/{{ cat.name | slugify }}/" class="category-item">
-      <span class="category-emoji">{{ cat.emoji }}</span>
-      <span class="category-name">{{ cat.name }}</span>
-      <span class="category-count">{{ cat.count }}</span>
-    </a>
-    {%- endfor -%}
-  </div>
+<section class="category-section" aria-labelledby="by-category"><h2 id="by-category">By Category</h2><div class="gallery-tools"><button class="search-button" type="button" aria-label="카테고리 검색"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg>Search</button></div>
+{% for group in categories %}<details class="category-group" open><summary>{{ group.name | escape }} <span class="category-count">{{ group.posts.length }}</span></summary><div id="category-{{ loop.index }}">{% for item in group.posts %}<a class="category-row" href="{{ item.url }}" {% if loop.index>10 %}hidden{% endif %}>{{ icon(item) }}<span class="row-title">{{ item.title | escape }}</span><time datetime="{{ item.date }}">{{ item.displayDate }}</time></a>{% endfor %}</div>{% if group.posts.length>10 %}<button class="load-more" data-load-more="category-{{ loop.index }}" type="button">↓ &nbsp;Load more</button>{% endif %}</details>{% endfor %}
 </section>

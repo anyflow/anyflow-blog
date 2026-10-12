@@ -1,0 +1,1 @@
+{% macro tag(label, colors) %}<span class="tag" style="{{ (colors[label] or (label | tagColor)) | tagStyle }}">{{ label | escape }}</span>{% endmacro %}

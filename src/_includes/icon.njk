@@ -1,0 +1,3 @@
+{% macro icon(item, large=false) -%}
+{% if item.iconImage and (not large or item.iconIsImage) %}<img class="visual-icon{% if large %} visual-icon-large{% endif %}" src="{{ item.iconImage | escape }}" alt="{{ (item.icon if not item.iconIsImage else '페이지 아이콘') | escape }}"{% if not large %} loading="lazy"{% endif %}>{% elif item.icon %}<span class="visual-icon-text">{{ item.icon | escape }}</span>{% endif %}
+{%- endmacro %}

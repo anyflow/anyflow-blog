@@ -4,10 +4,22 @@
   "description": "anyflow blog",
   "author": "Hyunjeong Park",
   "categories": [
-    { "name": "as S/W 엔지니어", "emoji": "👨‍💻", "count": 137 },
-    { "name": "예술/인문 소감", "emoji": "🎨", "count": 73 },
-    { "name": "自省(Introspection) / 세상살이", "emoji": "🌊", "count": 74 },
-    { "name": "프로젝트s", "emoji": "🔧", "count": 97 },
-    { "name": "as 음악인", "emoji": "🎵", "count": 13 }
-  ]
+    {
+      "name": "as 음악인"
+    },
+    {
+      "name": "as S/W 엔지니어"
+    },
+    {
+      "name": "예술/인문 소감"
+    },
+    {
+      "name": "自省(Introspection) / 세상살이"
+    },
+    {
+      "name": "프로젝트s"
+    }
+  ],
+  "cover": "/images/reference/home-cover.webp",
+  "icon": "🌼"
 }

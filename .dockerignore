@@ -1,5 +1,12 @@
-_site
-node_modules
+node_modules/
+_site/
+_preview/
 .git
-*.md
-!README.md
+.cache/*
+!.cache/blog/
+!.cache/blog/**
+.cache/blog/.git/
+.cache/blog/.obsidian/
+.cache/blog/.gitignore
+.cache/blog/.mcp.json
+src/posts/

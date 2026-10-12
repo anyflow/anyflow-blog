@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+name="anyflow blog preview"
+description="Loopback-only static blog review server"
+supervisor="supervise-daemon"
+command="/usr/bin/python3"
+command_args="-u -m http.server 18765 --bind 127.0.0.1 --directory /home/anyflow/workspace/my-cluster/apps/anyflow-blog/_preview"
+command_user="anyflow:anyflow"
+directory="/home/anyflow/workspace/my-cluster/apps/anyflow-blog"
+pidfile="/run/${RC_SVCNAME}.pid"
+respawn_delay=5
+respawn_max=0
+output_log="/home/anyflow/workspace/my-cluster/apps/anyflow-blog/.cache/preview.stdout.log"
+error_log="/home/anyflow/workspace/my-cluster/apps/anyflow-blog/.cache/preview.log"
+depend() { need net; }

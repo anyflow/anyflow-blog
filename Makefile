@@ -1,25 +1,26 @@
-VAULT_REPO   := git@github.com:anyflow/obsidian-vault.git
-VAULT_DIR    := /tmp/obsidian-vault
-POSTS_DIR    := src/posts
-IMAGE        := ghcr.io/anyflow/anyflow-blog:latest
+VAULT_REPO   := git@github.com:anyflow/blog.git
+VAULT_DIR    := $(CURDIR)/.cache/blog
+IMAGE        := $(shell sed -n 's/^[[:space:]]*image:[[:space:]]*//p' deployment/deployment.yaml)
 CLUSTER_NAME := my-cluster
 NAMESPACE    := service
 
-.PHONY: sync build load deploy create delete recreate
+.PHONY: sync site build load deploy create delete recreate
 
 sync:
 	@if [ -d "$(VAULT_DIR)/.git" ]; then \
-		git -C $(VAULT_DIR) pull --ff-only; \
+		test "$$(git -C "$(VAULT_DIR)" remote get-url origin)" = "$(VAULT_REPO)" || { echo "Unexpected content remote"; exit 1; }; \
+		git -C "$(VAULT_DIR)" pull --ff-only; \
 	else \
-		git clone --depth 1 $(VAULT_REPO) $(VAULT_DIR); \
+		mkdir -p "$$(dirname "$(VAULT_DIR)")"; \
+		git clone --depth 1 $(VAULT_REPO) "$(VAULT_DIR)"; \
 	fi
-	rm -rf $(POSTS_DIR)/*/
-	cp -r $(VAULT_DIR)/blog/* $(POSTS_DIR)/
-	rm -rf $(POSTS_DIR)/_legacy_notion_import $(POSTS_DIR)/_audit
-	@echo "Synced $$(find $(POSTS_DIR) -name '*.md' | wc -l) posts"
+	@echo "Content revision: $$(git -C "$(VAULT_DIR)" rev-parse --short HEAD)"
+
+site: sync
+	BLOG_CONTENT_DIR="$(VAULT_DIR)" npm run build
 
 build: sync
-	docker build -t $(IMAGE) .
+	docker build --label org.opencontainers.image.revision=$$(git rev-parse HEAD) --label net.anyflow.blog.content-revision=$$(git -C "$(VAULT_DIR)" rev-parse HEAD) -t $(IMAGE) .
 
 load: build
 	kind load docker-image $(IMAGE) --name $(CLUSTER_NAME)
@@ -27,7 +28,6 @@ load: build
 deploy:
 	kubectl apply -f deployment/service.yaml
 	kubectl apply -f deployment/deployment.yaml
-	kubectl rollout restart deployment/anyflow-blog -n $(NAMESPACE)
 	kubectl apply -f deployment/httproute.yaml
 	kubectl rollout status deployment/anyflow-blog -n $(NAMESPACE) --timeout=300s
 

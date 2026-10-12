@@ -2,73 +2,38 @@
 
 ## 목표
 
-anyflow.net public site를 자체 정적 블로그 시스템으로 대체한다.
-1차 범위는 representative page subset으로 표면 재현 품질을 검증하고, 이 방향으로 갈 수 있는지 판단하는 것이다.
+anyflow.net의 UI를 최대한 재현하고 Obsidian과 홈 서버로 이전한다. 현재 범위는 대표 UI 검증, 코드 게시와 blog.anyflow.net 배포다. 기존 anyflow.net은 유지한다.
 
-## 결정 사항
+## 단계
 
-### 도구
-- 11ty(Eleventy) 기반 정적 사이트 생성.
-- CSS/JS는 자체 작성, 외부 CDN 의존 없음.
-- 단일 컨테이너 이미지 (multi-stage Dockerfile: 11ty 빌드 + nginx 서빙).
+### 1. Vault와 Git 준비 — 완료
 
-### 1차 범위
-- 대표 페이지 subset으로 표면 재현 검증.
-- 전체 corpus 이관, GitHub Actions, Remark42 연동은 1차에 포함하지 않는다.
+- iCloud의 독립 blog vault로 글·첨부를 이전한다.
+- 비공개 `anyflow/blog` 저장소에 초기 콘텐츠를 commit·push한다.
 
-### 대표 페이지 선정 기준
-- 표면 유형 기준 4종을 커버한다.
-  - 홈페이지: 글 목록 피드, 카테고리 네비게이션, 프로필 영역
-  - 글 상세 페이지 (텍스트 위주): 제목, 메타, 본문
-  - 글 상세 페이지 (이미지 많은): 이미지/캡션 처리 확인
-  - 카테고리 목록 페이지: 카테고리별 글 목록
-- 대표 글 3~4개면 충분하다.
+### 2. 대표 화면 구현·비교와 blog.anyflow.net 배포
 
-### 콘텐츠 수집
-- 1차에서는 수동 수집한다.
-- 자동 추출기는 전체 이관 단계에서 필요할 때 만든다.
+- 홈, `/sw-engineer/install-istio-in-production/`, `/trip-northen-europe/freiberg-potsdam/`을 사용한다.
+- 원본 커버·아이콘·본문 폭·제목·속성 표·목차·카드·카테고리 목록을 재현한다.
+- 원본 398개 페이지의 시각 자산을 저장하고 글 394개와 홈에 연결했다. slug가 없는 글 8개도 원본 UUID로 수집하고, 최신 글 3개는 자산만 확보했다.
+- 공개 대상만 변환하고 원문·설정 파일을 출력에서 제외한다.
+- PC 1280×720, 모바일 390×844에서 밝은 화면과 다크모드를 비교한다.
+- 전체 글을 빌드하되 대표 화면에 대한 검증과 전체 콘텐츠 검수를 구분한다.
+- 콘텐츠 5a9e126을 사용하고 코드는 비공개 anyflow/anyflow-blog에 게시한다. 고유 이미지 태그로 blog.anyflow.net을 갱신하고 실제 응답을 검증한다.
 
-### 프로젝트 구조
-- manifest/, migration/ 등 중간 산출물 디렉토리를 두지 않는다.
-- src/ (소스), _site/ (빌드 출력), deployment/ (k8s 매니페스트).
+### 3. 전체 콘텐츠와 기능
 
-### URL 정책
-- 정식 URL은 clean URL 기준.
-- legacy UUID 경로는 이관 대상이 아니다. redirect도 만들지 않는다.
+- 누락 글과 미해결 링크를 정리한다.
+- 작성 템플릿, 검색, RSS, sitemap, OG 메타데이터를 구현한다.
+- 기존 permalink와 UUID 주소 연결, Disqus 댓글·좋아요 보존을 검증한다.
 
-### 호스팅
-- blog.anyflow.net으로 서빙. my-cluster에서 직접 서빙.
-- Gateway API HTTPRoute + Let Encrypt TLS.
+### 4. 작성·게시 자동화
 
-### 카테고리
-- 정적 카테고리 페이지를 별도 생성한다 (홈 JS 필터링 아님).
+- iCloud와 Git의 실행 주체를 정하고 수동 commit 이후 자동 push를 구성한다.
+- GitHub Actions와 홈 서버의 self-hosted runner를 연결한다.
+- 공유 볼륨으로 공개 결과를 교체하고 동시 게시와 실패를 처리한다.
 
-## 구현 순서
+### 5. 운영 전환
 
-### 1. 기준 사이트 표면 분석 [완료]
-- anyflow.net의 레이아웃, CSS, 인터랙션 분석 완료.
-- 단일 컬럼, max-width 708px, 시스템 폰트, 다크모드 토글, 카드 그리드 등 파악.
-
-### 2. 11ty 프로젝트 세팅 + 대표 페이지 수집/변환 [완료]
-- 11ty 프로젝트 초기화, 템플릿 구조, CSS/JS 작성 완료.
-- 대표 글 2개 (AI Agents Platform, Zero Trust Architecture via Istio) Markdown 변환 완료.
-- 컨테이너 이미지 빌드 및 blog.anyflow.net 배포 완료.
-
-### 3. 표면 재현 [진행 중]
-- 기본 레이아웃, 타이포그래피, 카드 그리드, 다크모드 구현 완료.
-- 남은 작업:
-  - 카테고리 목록 페이지
-  - 기준 사이트와 나란히 비교하여 세부 스타일 조정
-  - RSS, sitemap, search index
-
-### 4. 검증 [미착수]
-- 대표 페이지 4종을 기준 사이트와 나란히 비교.
-- 내부 링크, 이미지 로드, 반응형, 다크모드, 검색, OG metadata.
-
-## 후속 단계
-
-1차 검증 통과 후:
-- 전체 corpus 이관 (자동화 필요)
-- GHCR push 자동화 (GitHub Actions + self-hosted runner)
-- Remark42 연결
-- production cutover
+- 새 글·수정·첨부 변경과 빌드 실패를 실제 URL에서 검증한다.
+- 전체 콘텐츠를 확인하고 별도 승인을 받은 뒤 anyflow.net으로 전환한다. 이번 배포에서는 기존 anyflow.net을 유지한다.

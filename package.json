@@ -1,16 +1,19 @@
 {
   "name": "anyflow-blog",
   "version": "1.0.0",
-  "description": "`anyflow-blog`\ub294 \ud604\uc7ac `anyflow.net` public site\ub97c \ub300\uccb4\ud558\uae30 \uc704\ud55c \uc815\uc801 \ube14\ub85c\uadf8 \uc2dc\uc2a4\ud15c \uc791\uc5c5 \uacf5\uac04\uc774\ub2e4. \uc774 \ub514\ub809\ud130\ub9ac\uc758 \uae30\uc900 \ubb38\uc11c\ub294 \uc544\ub798 5\uac1c\ub2e4.",
+  "description": "`anyflow-blog`는 현재 `anyflow.net` public site를 대체하기 위한 정적 블로그 시스템 작업 공간이다. 이 디렉터리의 기준 문서는 아래 5개다.",
   "main": "index.js",
   "scripts": {
-    "build": "eleventy",
-    "dev": "eleventy --serve"
+    "build": "node scripts/build.js",
+    "dev": "BLOG_OUTPUT_DIR=_preview npm run build && python3 -m http.server 18765 --bind 127.0.0.1 --directory _preview",
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@11ty/eleventy": "^3.1.5"
+    "@11ty/eleventy": "^3.1.5",
+    "gray-matter": "4.0.3",
+    "markdown-it": "14.1.1"
   }
 }

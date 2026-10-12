@@ -3,3 +3,6 @@ _site/
 
 src/posts/
 AGENTS.md
+
+.cache/
+_preview/
