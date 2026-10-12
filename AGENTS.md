@@ -14,10 +14,10 @@
 
 - 대표 화면은 홈, Istio 설치 글, 프라이베르크·포츠담 여행기다.
 - 대표 UI 12쌍 비교, 코드 commit·push와 blog.anyflow.net 배포를 완료했다.
-- 이번 배포 대상은 blog.anyflow.net만이다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 콘텐츠는 anyflow/blog의 6ff55de를 깨끗한 작업 사본에 동기화한다.
+- 이번 배포 대상은 blog.anyflow.net만이다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 콘텐츠는 anyflow/blog의 30fe184를 깨끗한 작업 사본에 동기화한다.
 - 전체 글의 빌드 통과와 전체 콘텐츠의 시각 검수, 사용자 UI 승인을 구분한다.
 - 현재 입력에서 공개 글 394개와 참조 첨부 1,133개를 생성한다. 원본 블록 전체 대조, 이미지 639개 디코딩과 기존 미해결 참조 정리를 완료했다. 원본에서 목적 블록을 찾지 못한 8종 링크는 해당 글로 연결한다.
-- 본문 정상화 배포 태그는 normalize-20261013-6ff55de이며 실제 코드·콘텐츠 revision과 런타임 증거는 OPERATIONS.md에 기록한다. 본문 정상화 회귀 테스트는 13/13이다. 최신 배포 revision과 실제 검증은 OPERATIONS.md에 기록한다.
+- 본문 정상화 배포 태그는 normalize-20261013-30fe184이며 실제 코드·콘텐츠 revision과 런타임 증거는 OPERATIONS.md에 기록한다. 본문 정상화 회귀 테스트는 13/13이다. 최신 배포 revision과 실제 검증은 OPERATIONS.md에 기록한다.
 - 서버 재부팅 후 기존 루트 make port_forward가 필요할 수 있다. 호스트 DNS·기본 라우트는 변경하지 않았다.
 
 ## 핵심 구현

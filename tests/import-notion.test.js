@@ -12,7 +12,7 @@ test("source block import preserves metadata, image identity, captions, nested b
  const heading=b("h","header","Heading",["code"]),code={id:"code",type:"code",properties:{title:rich("echo 'hello'"),language:rich("bash")}};
  const quote=b("quote","quote","Quoted text"),callout=b("callout","callout","Info",["quote"]);
  const link={id:"link",type:"text",properties:{title:[["Next",[["a","https://www.anyflow.net/"+"a".repeat(32)+"?v="+"b".repeat(32)+"#h"],["b"],["b"]]]]}};
- const records={"/post":{pageID:"root",vaultPath:"post/post.md",blocks:[b("root","page","",["h","one","two","callout","link","format"]),heading,code,image1,image2,callout,quote,link,{id:"format",type:"text",properties:{title:[["Orchestra(오케스트라)",[["b"]]],["는."]]}}]}};
+ const records={"/post":{pageID:"a".repeat(32),vaultPath:"post/post.md",blocks:[b("a".repeat(32),"page","",["h","one","two","callout","link","format","mention"]),heading,code,image1,image2,callout,quote,link,{id:"mention",type:"text",properties:{title:[["‣",[["p","h"]]]]}},{id:"format",type:"text",properties:{title:[["Orchestra(오케스트라)",[["b"]]],["는."]]}}]}};
  assert.throws(()=>importNotion(root,records),/Verified image mapping required/);
  const result=importNotion(root,records,{},{"one":{path:"post/one.png",sha256:require("crypto").createHash("sha256").update("one").digest("hex")},"two":{path:"post/two.png",sha256:require("crypto").createHash("sha256").update("two").digest("hex")}});
  assert.equal(result.types.image,2);assert.equal(result.types.code,1);
@@ -20,6 +20,7 @@ test("source block import preserves metadata, image identity, captions, nested b
  assert.match(raw,/post\.md#\^h/);
  const current=loadContent(root,path.join(root,"none"));validateContent(current);
  assert.match(current.posts[0].html,/src="\/assets\/post\/one.png"/);assert.match(current.posts[0].html,/src="\/assets\/post\/two.png"/);assert.match(current.posts[0].html,/<figcaption>/);
+ assert.match(current.posts[0].html,/<a href="\/post\/#h">Heading<\/a>/);
  assert.match(current.posts[0].html,/<strong>Orchestra\(오케스트라\)<\/strong>는\./);
  assert.match(current.posts[0].html,/<h2[\s\S]*class="code-block"/);
 });

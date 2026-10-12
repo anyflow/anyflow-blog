@@ -6,6 +6,7 @@ validateContent(content);
 const counts={pages:content.posts.length,images:0,captions:0,callouts:0,toggles:0,quotes:0,tables:0,rows:0,headings:0,codes:0,equations:0,assets:content.assets.size,unresolved:content.unresolved.length},errors=[];
 for(const p of content.posts) {
  const ref=refs[p.url.replace(/\/$/,"")];assert.ok(ref,"Missing source reference: "+p.url);
+ if(/>‣<\/a>/.test(p.html))errors.push(p.url+": unresolved Notion mention");
  const blocks=ref.blocks,expected=type=>blocks.filter(b=>b.type===type).length;
  const figures=[...p.html.matchAll(/<figure\b[^>]*>([\s\S]*?)<\/figure>/g)].map(m=>m[1]),sourceImages=blocks.filter(b=>b.type==="image");
  if(figures.length!==sourceImages.length)errors.push(p.url+": image count "+figures.length+" != "+sourceImages.length);

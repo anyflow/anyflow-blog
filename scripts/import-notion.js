@@ -8,7 +8,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
  root=fs.realpathSync(root);
  for(const p of Object.values(reference)){const file=path.resolve(root,p.vaultPath);if(!file.startsWith(root+path.sep)||!fs.realpathSync(file).startsWith(root+path.sep))throw new Error("Import path outside vault");}
  const catalog=JSON.parse(fs.readFileSync(path.join(root,"_assets/visuals/manifest.json")));
- const pages=new Map(),owners=new Map(),anchors=new Set(),media=[],report={pages:[],types:{},emptyPageLinks:[],unresolvedSourceFragments:[],omittedMetadata:0};
+ const pages=new Map(),owners=new Map(),anchors=new Set(),media=[],report={pages:[],types:{},emptyPageLinks:[],unresolvedSourceFragments:[],unresolvedBlockMentions:[],omittedMetadata:0};
  for(const p of Object.values(catalog.pages)) if(p.vaultPath) pages.set(uuid(p.pageId),p);
  const blocks=new Map(Object.entries(aliases));
  for(const [url,p] of Object.entries(reference))for(const b of p.blocks){blocks.set(b.id,b);owners.set(uuid(b.id),{url,p,b});}
@@ -26,7 +26,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
    let s=escape(value),url=null;
    for(const mark of marks) {
     const [type,arg]=mark;
-    if(type==="p"){const p=pages.get(uuid(arg));s=escape(p?.title||text(blocks.get(arg)?.properties?.title)||value);url=p?internal(arg,source):"https://www.anyflow.net/"+arg;}
+    if(type==="p"){const p=pages.get(uuid(arg)),owner=owners.get(uuid(arg));s=escape(p?.title||text(blocks.get(arg)?.properties?.title)||"원문 참조");url=p?internal(arg,source):owner?internal(owner.p.pageID+"#"+arg,source):"https://www.anyflow.net/"+arg;if(!p&&!owner&&!report.unresolvedBlockMentions.includes(arg))report.unresolvedBlockMentions.push(arg);}
     else if(type==="d")s=escape([arg.start_date,arg.start_time].filter(Boolean).join(" "));
     else if(type==="lm"){s=escape(arg.title||value);url=internal(arg.href,source);}
     else if(type==="eoi"){const b=blocks.get(arg);s=escape(b?.format?.uri||value);url=b?.format?.original_url||b?.format?.uri;}
