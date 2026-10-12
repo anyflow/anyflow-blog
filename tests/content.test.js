@@ -124,3 +124,27 @@ test('malformed export syntax and frontmatter are rejected, literal examples are
  const raw=fs.readFileSync(file,'utf8');fs.writeFileSync(file,raw.replace('\n---\n\n','\n---'));
  assert.throws(()=>loadContent(root,path.join(root,'none')),/Invalid frontmatter delimiter/);
 });
+
+test('Obsidian columns retain ratios, captions and nested content',t=>{
+ const root=fixture(t),file=post(root,'columns',{},'> [!columns]\n>\n> > [!column|0.25]\n> >\n> > ![First](a.png) ^photo\n> >\n> > First\n>\n> > [!column|0.25]\n> >\n> > ## Middle\n> >\n> > Middle text.\n>\n> > [!column|0.5]\n> >\n> > > A quote.');
+ fs.writeFileSync(path.join(path.dirname(file),'a.png'),'image');
+ const result=loadContent(root,path.join(root,'none')),html=result.posts[0].html;
+ assert.equal((html.match(/class="notion-columns"/g)||[]).length,1);
+ assert.deepEqual([...html.matchAll(/class="notion-column" style="--column-ratio:([^"]+)"/g)].map(m=>Number(m[1])),[.25,.25,.5]);
+ assert.match(html,/<figcaption>[\s\S]*First/);assert.match(html,/<h2 id="middle">Middle/);assert.match(html,/<blockquote>[\s\S]*A quote/);
+ assert.match(html,/id="photo"/);assert.doesNotMatch(html,/\^photo/);
+ assert.doesNotMatch(html,/\[!column|callout-icon/);
+ post(root,'columns',{},'> [!column|bad]\n> Text.');assert.throws(()=>loadContent(root,path.join(root,'none')),/Invalid column ratio/);
+});
+test('the home favicon is a referenced asset declared on home and post pages',t=>{
+ const root=fixture(t),file=post(root,'first'),home=post(root,'home',{kind:'page',permalink:'/',favicon:'./favicon.png'});
+ fs.writeFileSync(path.join(path.dirname(home),'favicon.png'),'favicon');
+ const result=loadContent(root,path.join(root,'none'));assert.equal(result.home.favicon,'/assets/home/favicon.png');assert.equal(result.assets.size,1);
+ const nunjucks=require('nunjucks'),env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname,'../src/_includes')));
+ env.addFilter('versionedAsset',s=>s);env.addFilter('tagColor',()=>"#fff");env.addFilter('tagStyle',()=>"");
+ for(const post of [null,result.posts[0]]){
+  const html=env.render('base.njk',{home:result.home,site:{title:'Blog'},post,content:''});
+  assert.match(html,/<link rel="icon" href="\/assets\/home\/favicon.png">/);assert.match(html,/<link rel="apple-touch-icon"/);
+ }
+ fs.unlinkSync(path.join(path.dirname(home),'favicon.png'));assert.throws(()=>loadContent(root,path.join(root,'none')),/Missing favicon attachment/);
+});

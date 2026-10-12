@@ -9,6 +9,7 @@
   <meta property="og:title" content="{{ (post.title or site.title) | escape }}">
   <meta property="og:description" content="{{ (post.summary or site.description) | escape }}">
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
+  {% if home.favicon %}<link rel="icon" href="{{ home.favicon | escape }}"><link rel="apple-touch-icon" href="{{ home.favicon | escape }}">{% endif %}
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'light'}catch{}</script>
   <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="{{ '/css/style.css' | versionedAsset }}">

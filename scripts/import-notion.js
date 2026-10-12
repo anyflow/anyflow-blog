@@ -12,12 +12,18 @@ function importNotion(root,reference,aliases={},imageMap={}) {
  for(const p of Object.values(catalog.pages)) if(p.vaultPath) pages.set(uuid(p.pageId),p);
  const blocks=new Map(Object.entries(aliases));
  for(const [url,p] of Object.entries(reference))for(const b of p.blocks){blocks.set(b.id,b);owners.set(uuid(b.id),{url,p,b});}
+ const columnOwners=new Map();
+ for(const p of Object.values(reference)){
+  const local=new Map(p.blocks.map(b=>[b.id,b]));
+  function mark(id,row){if(columnOwners.has(uuid(id)))return;columnOwners.set(uuid(id),row);for(const child of local.get(id)?.content||[])mark(child,row);}
+  for(const b of p.blocks)if(b.type==="column_list")mark(b.id,b.id);
+ }
  function internal(raw,source) {
   const [base,fragment]=raw.split("#"),ids=base.split("?")[0].match(/[a-f\d]{32}|[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}/ig);
   const id=ids?.at(-1),target=(id&&pages.get(uuid(id)))||Object.entries(catalog.pages).find(([url,p])=>p.vaultPath&&base.replace(/^https?:\/\/(?:www\.)?anyflow\.net/,"").replace(/\/$/,"")===url)?.[1];
   if(!target) return raw;
   let result=path.relative(path.dirname(source),target.vaultPath).split(path.sep).join("/")||path.basename(source);
-  if(fragment&&target.vaultPath!=="blog.md"){const owner=owners.get(uuid(fragment));if(owner){anchors.add(uuid(owner.b.id));result+="#^"+uuid(owner.b.id);}else if(!report.unresolvedSourceFragments.some(x=>x.page===target.vaultPath&&x.fragment===fragment))report.unresolvedSourceFragments.push({page:target.vaultPath,fragment,fallback:"post"});}
+  if(fragment&&target.vaultPath!=="blog.md"){const owner=owners.get(uuid(fragment));if(owner){const id=uuid(columnOwners.get(uuid(owner.b.id))||owner.b.id);anchors.add(id);result+="#^"+id;}else if(!report.unresolvedSourceFragments.some(x=>x.page===target.vaultPath&&x.fragment===fragment))report.unresolvedSourceFragments.push({page:target.vaultPath,fragment,fallback:"post"});}
   return result;
  }
  const wrap=(tag,body)=>body.split(/(\n\s*\n)/).map(s=>s.trim()?"<"+tag+">"+s+"</"+tag+">":s).join("");
@@ -77,7 +83,12 @@ function importNotion(root,reference,aliases={},imageMap={}) {
     case "quote":result=quote([value,children()].filter(Boolean).join("\n\n"));break;
     case "callout":result=quote("[!notion]\n\n"+[value,children()].filter(Boolean).join("\n\n"));break;
     case "toggle":result=quote("[!abstract]- "+value+"\n\n"+children());break;
-    case "column_list":case "column":result=children();break;
+    case "column_list":result=quote("[!columns]\n\n"+children());break;
+    case "column": {
+     const ratio=Number(b.format?.column_ratio);
+     if(!Number.isFinite(ratio)||ratio<=0||ratio>1)throw new Error("Invalid column ratio: "+b.id);
+     result=quote("[!column|"+Number(ratio.toFixed(6))+"]\n\n"+children());break;
+    }
     case "code": {
      const code=text(b.properties?.title),language=text(b.properties?.language).toLowerCase().replace(/\s+/g,"-");
      // Oopy reads these configuration blocks as page metadata and hides them.
@@ -88,7 +99,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
     case "image": {
      const caption=rich(b.properties?.caption,p.vaultPath),alt=md.utils.unescapeAll(md.renderInline(caption).replace(/<[^>]+>/g,"")).replace(/\s+/g," ").replace(/([\\[\]])/g,"\\$1");
      const width=b.format?.block_page_width||b.format?.block_full_width?null:b.format?.block_width;
-     result="!["+alt+(width?"|"+Math.round(width):"")+"](<"+attachment(b,p)+">)"+(caption?"\n\n"+caption:"");break;
+     result="!["+alt+(width?"|"+Math.round(width):"")+"](<"+attachment(b,p)+">)"+(anchors.has(uuid(b.id))?" ^"+uuid(b.id):"")+(caption?"\n\n"+caption:"");break;
     }
     case "file":result="["+escape(text(b.properties?.title)||"첨부 파일")+"](<"+attachment(b,p)+">)";break;
     case "audio":result="![](<"+attachment(b,p)+">)";break;
@@ -112,7 +123,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
     }
     default:throw new Error("Unsupported block type: "+b.type);
    }
-   if(anchors.has(uuid(b.id))&&result)result+="\n\n^"+uuid(b.id);
+   if(anchors.has(uuid(b.id))&&result&&b.type!=="image")result+="\n\n^"+uuid(b.id);
    return result;
   }
   return render(byId.get(p.pageID)).trim()+"\n";

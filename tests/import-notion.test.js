@@ -12,11 +12,14 @@ test("source block import preserves metadata, image identity, captions, nested b
  const heading=b("h","header","Heading",["code"]),code={id:"code",type:"code",properties:{title:rich("echo 'hello'"),language:rich("bash")}};
  const quote=b("quote","quote","Quoted text"),callout=b("callout","callout","Info",["quote"]);
  const link={id:"link",type:"text",properties:{title:[["Next",[["a","https://www.anyflow.net/"+"a".repeat(32)+"?v="+"b".repeat(32)+"#h"],["b"],["b"]]]]}};
- const records={"/post":{pageID:"a".repeat(32),vaultPath:"post/post.md",blocks:[b("a".repeat(32),"page","",["h","one","two","callout","link","format","mention"]),heading,code,image1,image2,callout,quote,link,{id:"mention",type:"text",properties:{title:[["‣",[["p","h"]]]]}},{id:"format",type:"text",properties:{title:[["Orchestra(오케스트라)",[["b"]]],["는."]]}}]}};
+ const records={"/post":{pageID:"a".repeat(32),vaultPath:"post/post.md",blocks:[b("a".repeat(32),"page","",["h","layout","callout","link","format","mention","imageMention"]),heading,code,image1,image2,{id:"layout",type:"column_list",content:["left","right"]},{id:"left",type:"column",format:{column_ratio:0.25},content:["one"]},{id:"right",type:"column",format:{column_ratio:0.75},content:["two"]},callout,quote,link,{id:"imageMention",type:"text",properties:{title:[["‣",[["p","one"]]]]}},{id:"mention",type:"text",properties:{title:[["‣",[["p","h"]]]]}},{id:"format",type:"text",properties:{title:[["Orchestra(오케스트라)",[["b"]]],["는."]]}}]}};
  assert.throws(()=>importNotion(root,records),/Verified image mapping required/);
  const result=importNotion(root,records,{},{"one":{path:"post/one.png",sha256:require("crypto").createHash("sha256").update("one").digest("hex")},"two":{path:"post/two.png",sha256:require("crypto").createHash("sha256").update("two").digest("hex")}});
+ assert.equal(result.types.column_list,1);assert.equal(result.types.column,2);
  assert.equal(result.types.image,2);assert.equal(result.types.code,1);
  const raw=fs.readFileSync(path.join(root,"post/post.md"),"utf8");assert.match(raw,/icon: ⭐\n---\n/);assert.match(raw,/\[!notion\]/);assert.doesNotMatch(raw,/\*\*\*\*/);
+ assert.match(raw,/post\.md#\^layout/);assert.match(raw,/\^layout/);
+ assert.match(raw,/\[!column\|0.25\]/);assert.match(raw,/\[!columns\]/);
  assert.match(raw,/post\.md#\^h/);
  const current=loadContent(root,path.join(root,"none"));validateContent(current);
  assert.match(current.posts[0].html,/src="\/assets\/post\/one.png"/);assert.match(current.posts[0].html,/src="\/assets\/post\/two.png"/);assert.match(current.posts[0].html,/<figcaption>/);
@@ -30,4 +33,3 @@ test("generated link validation rejects missing notes and block anchors",()=>{
  c.posts.push({url:"/other/",html:""});assert.throws(()=>validateContent(c),/missing anchor/);
  c.posts[1].html='<span id="missing"></span>';validateContent(c);
 });
-
