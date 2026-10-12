@@ -7,6 +7,7 @@ const {loadContent}=require("../lib/content");
   const output=path.resolve(target);
   const staging=path.resolve(".cache/build-"+Date.now());
   const content=loadContent();
+  require("../lib/validate-content").validateContent(content);
   if(!content.posts.length) throw new Error("Build requires at least one published post");
   process.env.BLOG_OUTPUT_DIR=staging;
   const engine=new Eleventy("src",staging);

@@ -16,6 +16,7 @@ module.exports = function(config) {
     return `--tag-bg:${bg};--tag-fg:${fg};--tag-dark-bg:${darkBg};--tag-dark-fg:${darkFg}`;
   });
   config.addFilter("dateLabel",date=>new Date(date).toISOString().slice(0,10).replaceAll("-","/"));
+  config.addPassthroughCopy({"node_modules/katex/dist/katex.min.css":"vendor/katex/katex.min.css","node_modules/katex/dist/fonts":"vendor/katex/fonts","node_modules/katex/LICENSE":"vendor/katex/LICENSE"});
   config.addPassthroughCopy("src/css");config.addPassthroughCopy("src/js");config.addPassthroughCopy("src/images");
   return {dir:{input:"src",includes:"_includes",data:"_data",output:process.env.BLOG_OUTPUT_DIR||"_site"},templateFormats:["njk"],htmlTemplateEngine:"njk"};
 };

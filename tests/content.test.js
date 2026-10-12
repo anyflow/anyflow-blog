@@ -22,7 +22,7 @@ test('only published notes and referenced assets, correct legacy paths and dates
  assert.match(first.html,/class="caption"/);
  assert.match(first.html,/do-not-touch\.png/);
  assert.match(first.html,/class="mermaid"/);
- assert.match(first.html,/<blockquote class="callout"><span class="callout-icon">💡<\/span><div class="callout-content"><p>Callout text./);
+ assert.match(first.html,/<blockquote class="callout"><span class="callout-icon"[^>]*>💡<\/span><div class="callout-content"><p>Callout text./);
  assert.deepEqual(first.toc.map(t=>t.id),['introduction','introduction-2']);
  assert.equal(result.assets.size,1);
  assert.equal(first.thumbnail,'/assets/first/image(1).png');
@@ -92,4 +92,35 @@ test('Pixel Banner image links and numeric crop coordinates match the published 
  for(const value of [-1,101,'invalid']){
   const bad=fixture(t);post(bad,'bad',{cover_y:value});assert.throws(()=>loadContent(bad),/Cover position must be between/);
  }
+});
+
+test('native Obsidian callouts preserve nested quotes, folding, figures and math',t=>{
+ const root=fixture(t),file=post(root,'native',{},'> [!notion]\n>\n> **Title**\n>\n> Body.\n>\n> > Nested quotation.\n\n> [!info] Custom title\n> More information.\n\n> [!warning]- Collapsed\n> Hidden details.\n\n![First paragraph. Second paragraph.|528](<image one.png>)\n\nFirst paragraph.\n\nSecond paragraph.\n\nAfter caption.\n\n$$\n\\frac{a}{b}=c\n$$\n\nInline $x^2$.\n\n^equation\n\n[Jump](#^equation)\n\n![[native/image one.png|240]]');
+ fs.writeFileSync(path.join(path.dirname(file),'image one.png'),'image');
+ const result=loadContent(root,path.join(root,'no.json')),html=result.posts[0].html;
+ assert.match(html,/<blockquote class="callout">[\s\S]*<strong>Title<\/strong>[\s\S]*<blockquote>[\s\S]*Nested quotation/);
+ assert.match(html,/<div class="callout-title">Custom title<\/div>/);
+ assert.match(html,/<details class="callout" data-callout="warning">/);
+ assert.doesNotMatch(html,/\[!|\^\w+<\/p>/);
+ assert.match(html,/<figure style="width:528px;max-width:100%">[\s\S]*<figcaption>[\s\S]*<p class="caption">First paragraph\.<\/p>[\s\S]*Second paragraph\.<\/p><\/figcaption><\/figure>\s*<p>After caption/);
+ assert.match(html,/class="katex-display"/);
+ assert.match(html,/id="equation"/);assert.match(html,/href="#equation"/);
+ assert.equal(result.unresolved.length,0);
+});
+test('an unsupported image format stops publication, audio remains a media element',t=>{
+ const root=fixture(t),file=post(root,'media',{},'![](voice.mp3)');
+ fs.writeFileSync(path.join(path.dirname(file),'voice.mp3'),'audio');
+ assert.match(loadContent(root,path.join(root,'none')).posts[0].html,/<audio controls preload="metadata" src="\/assets\/media\/voice.mp3"/);
+ fs.writeFileSync(path.join(path.dirname(file),'photo.heic'),'heic');
+ post(root,'media',{},'![](photo.heic)');assert.throws(()=>loadContent(root,path.join(root,'none')),/Unsupported web image format/);
+});
+
+
+test('malformed export syntax and frontmatter are rejected, literal examples are allowed',t=>{
+ const root=fixture(t),file=post(root,'bad',{},'![caption first.\n\ncaption second.](image.png)');
+ fs.writeFileSync(path.join(path.dirname(file),'image.png'),'image');
+ assert.throws(()=>loadContent(root,path.join(root,'none')),/Malformed Markdown/);
+ post(root,'bad',{},'\\!\\[example\\] and \x60![code example]\x60');loadContent(root,path.join(root,'none'));
+ const raw=fs.readFileSync(file,'utf8');fs.writeFileSync(file,raw.replace('\n---\n\n','\n---'));
+ assert.throws(()=>loadContent(root,path.join(root,'none')),/Invalid frontmatter delimiter/);
 });

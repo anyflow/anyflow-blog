@@ -10,6 +10,7 @@
   <meta property="og:description" content="{{ (post.summary or site.description) | escape }}">
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'light'}catch{}</script>
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="{{ '/css/style.css' | versionedAsset }}">
   <script defer src="/js/vendor/highlight.min.js"></script><script defer src="{{ '/js/main.js' | versionedAsset }}"></script>
 </head>

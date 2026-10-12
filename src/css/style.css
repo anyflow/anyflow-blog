@@ -232,3 +232,20 @@ svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5;
 .page-mention-icon img { display:inline; width:1.2em; height:1.2em; margin:0; object-fit:contain; border-radius:0}
 .page-mention-title { border-bottom:.05em solid rgba(55,53,47,.25); font-weight:500}
 [data-theme=dark] .page-mention-title { border-bottom-color:rgba(255,255,255,.25)}
+
+/* Native Obsidian figures, nested callouts and equations. */
+.post-body figure { margin:16px auto; padding:0; max-width:100% }
+.post-body figure img { width:100%; margin:0 auto }
+.post-body figcaption { font-size:14px; color:var(--muted); padding:4px 2px 0 }
+.post-body figcaption .caption { margin:0; padding:0; line-height:1.5 }
+.post-body figcaption .caption + .caption { margin-top:1em }
+.post-body .callout-content > * + * { margin-top:12px }
+.post-body .callout-content > blockquote { padding:4px 14px }
+.post-body .callout-title { font-weight:600; margin-bottom:8px }
+.post-body details.callout { margin:8px 0; padding:12px 16px; border-radius:4px; background:var(--soft) }
+.post-body details.callout > summary { cursor:pointer; display:flex; align-items:center; gap:8px }
+.post-body details.callout > summary .callout-title { margin:0 }
+.post-body details.callout > .callout-content { margin-top:12px; padding-left:32px }
+.post-body .katex-display { overflow-x:auto; overflow-y:hidden; padding:8px 0; max-width:100% }
+.block-anchor { display:block; scroll-margin-top:70px; height:0 }
+.post-body iframe { max-width:100%; display:block }
