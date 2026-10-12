@@ -115,3 +115,28 @@ blog.anyflow.net 배포와 실제 응답 검증을 완료했다. 기존 anyflow.
 전체 Docker 빌드는 코드 91eac08에서 성공했다. 캐시 헤더만 바꾼 577b7c7의 재빌드는 Docker Hub 연결 시간 초과로 실패했다. 이 마지막 변경은 검증된 런타임 이미지 ui-20261012-5a9e126을 기반으로 nginx.conf만 교체하고 nginx -t를 통과한 뒤 새 r2 태그로 적재했다. HTML·CSS·JS·콘텐츠는 같은 바이트를 유지했다. 이미지 label의 코드 577b7c7과 콘텐츠 5a9e126을 런타임에서 대조했다.
 
 이번 패치의 생성 문맥과 로그는 .cache/revalidate-image, .cache/release-r2-cached-build.log에 보관한다. 서버 재부팅 후 make port_forward가 필요할 수 있으며 이미지·콘텐츠·문서 commit과 GitHub Actions 자동 게시 완료를 구분한다. 자동 게시, 전체 콘텐츠 검수, 최신 글 3개의 게시 속성·본문 보완, 검색·RSS·sitemap·UUID·댓글은 후속 단계다.
+
+## 2026-10-13 본문 정상화 배포
+
+현재 공개 결과는 콘텐츠 main 30fe184와 코드 master 5a0f53b로 생성했다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다.
+
+| 항목 | 확인 |
+| --- | --- |
+| 콘텐츠 commit | 30fe184a7e4172cea169e5eb617faf2e6c21aa53 |
+| 이미지 코드 commit | 5a0f53b2f3f5386e36fd1171250dbcb53b925034 |
+| 이미지 | ghcr.io/anyflow/anyflow-blog:normalize-20261013-30fe184 |
+| 이미지 ID | sha256:7cf494925380826bf747d98d9cbfb12f65f7bfc1d5c0f192df52003f55434316 |
+| 런타임 | anyflow-blog-8696ddf644-r6mjx, Ready 1/1, 재시작 0, 이미지 ID와 label 일치 |
+| 회귀 검사 | 13/13, 누락 첨부·빈 입력 실패 시 이전 결과 유지 |
+| 원본 대조 | 공개 글 394개, 이미지 639개, 캡션 223개, 알림 상자 102개, 접기 74개, 인용문 112개, 표 29개·243행, 제목 1,207개, 코드 260개, 블록 수식 2개 일치 |
+| 이미지 검사 | 공개 참조 이미지 1,123개 실제 디코딩·SVG 파싱 성공, Notion 블록 ID와 이미지 해시 대조 |
+| Obsidian | 공개 글 394개, 이미지·오디오 임베드 640개와 블록 링크 90개에서 누락 대상 0 |
+| 공개 URL | 글 394개·첨부 1,133개 총 1,527개 HEAD 200, 비공개 정상화 manifest 404 |
+| 첨부 | HTML 파일은 application/octet-stream·attachment·nosniff 응답 |
+| 브라우저 | 라이프치히 이미지·여러 문단 캡션·알림 상자와 중첩 인용문·다음 글, 본문 블록 이동, 수식, 모바일 가로 넘침 0 확인 |
+
+서버의 npm registry DNS 조회가 실패하고 대용량 GitHub fetch가 지연되어, GitHub에 push한 콘텐츠를 Git bundle로 전달하고 commit ID를 대조했다. npm ci --offline과 실제 Git 콘텐츠의 Eleventy 빌드를 통과했다. 검증한 정적 출력만 기존 r2 nginx 런타임에 새로 복사하고 nginx -t를 통과한 고유 이미지를 kind에 적재했다. 표준 Dockerfile 전체 재빌드와 GHCR 업로드를 수행한 것으로 간주하지 않는다. 서버의 DNS·기본 라우트는 변경하지 않았다.
+
+원본 스냅샷에서 목적 블록이 없는 링크 8종은 해당 글 처음으로, 대상 정보가 없는 인라인 참조 2개는 원문 주소로 연결한다. 컬럼은 Obsidian의 읽기 순서로 이어진다. 이 범위와 출처는 CONTENT_CONTRACT.md 및 콘텐츠의 _assets/notion-import.json에 기록한다. 전체 글의 픽셀 동일성·사용자 UI 승인, 최신 글 3개 보완과 GitHub Actions 자동 게시 등 남은 단계는 PLAN.md를 따른다.
+
+상시 미리보기 http://127.0.0.1:8765/도 같은 콘텐츠로 갱신했다. 상세 증거는 Mac의 /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 전체 정상화/에 보관한다.
