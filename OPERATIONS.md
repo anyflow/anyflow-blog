@@ -155,3 +155,17 @@ blog.anyflow.net 배포와 실제 응답 검증을 완료했다. 기존 anyflow.
 - Obsidian의 읽기 화면에서도 세 사진 152·152·304px과 1:1:2 비율을 확인했다. 다열 묶음은 하나의 인용 블록이므로 내부 참조를 행으로 연결한다. 임베드 640개·블록 링크 90개의 대상 누락은 0이다.
 
 상시 미리보기도 갱신했다. 검증된 정적 출력을 캐시 nginx 런타임에 패키징하는 방식과 DNS·라우팅 유지 조건은 앞선 배포 기록을 따른다. 기존 anyflow.net은 변경하지 않았다. 증거는 /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 아이콘과 다열 배치/에 보관한다.
+
+## 2026-10-13 본문 폰트 가장자리 처리 교정
+
+공통 body의 -webkit-font-smoothing: antialiased 강제를 제거해 브라우저 기본값 auto를 사용한다. 본문 크기 16px·굵기 400·줄 높이 24px을 유지한다. 검색 기능은 구현하지 않았다.
+
+- 코드 commit: 54b1f187f8694c987cc59c7b1e5bf610e85e3c69, 콘텐츠: c3cd15e70a74609e0285eb6ad6ebfde202347dca
+- 이미지: ghcr.io/anyflow/anyflow-blog:font-20261013-c3cd15e
+- 이미지 ID: sha256:98b277e01ed8fec796aeafc6ed9cda34b4771bc276936261c48ead611bd248cc
+- Pod anyflow-blog-697cd5b467-fjdgc: Ready 1/1, 재시작 0, imageID와 코드·콘텐츠 label 일치
+- 회귀 검사 15/15와 전체 글 394개·첨부 1,134개의 정적 빌드를 통과했다. 상시 미리보기도 갱신했다.
+- 공개 CSS 해시는 8c71e829b581이며 실행 Pod의 CSS SHA-256이 생성 결과와 일치한다.
+- 원본과 공개 어쨌건간에 글을 Mac 브라우저 1280×720에서 대조했다. 본문의 font-family·크기·굵기·색상·줄 높이·가장자리 처리 auto가 일치한다. 다른 OS와 전체 글의 픽셀 동일성은 검증하지 않았다.
+
+검증된 정적 출력을 캐시 nginx 런타임에 패키징해 kind에 적재했다. 표준 Dockerfile 전체 재빌드와 GHCR 업로드는 수행하지 않았다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지했다. 화면과 설정 비교 자료는 /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 본문 폰트/에 보관한다.
