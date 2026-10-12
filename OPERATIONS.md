@@ -86,6 +86,8 @@ Obsidian의 갤러리 선택은 글 속성과 편집기 표시를 갱신한다. 
 
 ## 이미지 버전과 복구
 
-현재 태그는 ghcr.io/anyflow/anyflow-blog:ui-20261012-5a9e126이다. manifest의 태그를 Makefile에서 읽으며 이미지 label에 코드·콘텐츠 commit을 기록한다. GHCR 업로드 없이 kind에 적재한 이미지를 사용한다. 다음 릴리스에는 새 태그를 사용한다.
+현재 태그는 ghcr.io/anyflow/anyflow-blog:ui-20261012-5a9e126-r2이다. manifest의 태그를 Makefile에서 읽으며 이미지 label에 코드·콘텐츠 commit을 기록한다. GHCR 업로드 없이 kind에 적재한 이미지를 사용한다. 다음 릴리스에는 새 태그를 사용한다.
 
 이전 latest 이미지와 Deployment 이력은 유지한다. 장애 시 kubectl -n service rollout undo deployment/anyflow-blog로 이전 이력을 복구하고 manifest도 대응 버전으로 되돌린다. 서버 재부팅 후 80·443 포워딩이 없어지면 루트 make port_forward로 기존 NodePort 경로를 복구한다. CSS·JS URL에는 파일 해시를 붙여 변경된 파일을 다시 읽도록 한다.
+
+HTML과 첨부에 Cache-Control: no-cache를 반환해 브라우저가 변경 여부를 재검증하도록 한다. 기존 방문자의 이전 HTML 캐시는 한 번 새로고침하면 갱신된다.
