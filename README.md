@@ -33,7 +33,7 @@ python3 -m http.server 18765 --bind 127.0.0.1 --directory _preview
 
 커버 98개와 이모지 이미지 172개를 콘텐츠 저장소의 `_assets/visuals/`에 보관한다. 글 394개와 홈의 `cover`, `cover_x`, `cover_y`, `icon`으로 표시하며 원본 컬렉션의 전체 페이지 ID 398개를 대조했다. 최신 글 3개는 자산만 확보했다. 현재 콘텐츠는 5a9e126이며 깨끗한 clone으로 재현한다.
 
-GitHub Actions·Obsidian 자동 push·운영 도메인 전환은 후속 단계다. 이번 배포 대상은 blog.anyflow.net이며 기존 anyflow.net은 유지한다. 코드는 비공개 anyflow/anyflow-blog에 게시한다. 배포 검증 상태는 OPERATIONS.md에 기록한다.
+GitHub Actions·Obsidian 자동 push·운영 도메인 전환은 후속 단계다. blog.anyflow.net 배포와 실제 HTTPS 검증을 완료했다. 기존 anyflow.net은 유지한다. 코드는 비공개 anyflow/anyflow-blog에 게시한다. 배포 검증 상태는 OPERATIONS.md에 기록한다.
 
 ## 문서
 

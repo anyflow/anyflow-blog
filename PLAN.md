@@ -11,7 +11,7 @@ anyflow.net의 UI를 최대한 재현하고 Obsidian과 홈 서버로 이전한�
 - iCloud의 독립 blog vault로 글·첨부를 이전한다.
 - 비공개 `anyflow/blog` 저장소에 초기 콘텐츠를 commit·push한다.
 
-### 2. 대표 화면 구현·비교와 blog.anyflow.net 배포
+### 2. 대표 화면 구현·비교와 blog.anyflow.net 배포 — 완료
 
 - 홈, `/sw-engineer/install-istio-in-production/`, `/trip-northen-europe/freiberg-potsdam/`을 사용한다.
 - 원본 커버·아이콘·본문 폭·제목·속성 표·목차·카드·카테고리 목록을 재현한다.
@@ -21,7 +21,7 @@ anyflow.net의 UI를 최대한 재현하고 Obsidian과 홈 서버로 이전한�
 - 전체 글을 빌드하되 대표 화면에 대한 검증과 전체 콘텐츠 검수를 구분한다.
 - 콘텐츠 5a9e126을 사용하고 코드는 비공개 anyflow/anyflow-blog에 게시한다. 고유 이미지 태그로 blog.anyflow.net을 갱신하고 실제 응답을 검증한다.
 
-### 3. 전체 콘텐츠와 기능
+### 3. 전체 콘텐츠와 기능 — 다음 단계
 
 - 누락 글과 미해결 링크를 정리한다.
 - 작성 템플릿, 검색, RSS, sitemap, OG 메타데이터를 구현한다.
