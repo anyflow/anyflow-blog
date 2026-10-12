@@ -140,3 +140,18 @@ blog.anyflow.net 배포와 실제 응답 검증을 완료했다. 기존 anyflow.
 원본 스냅샷에서 목적 블록이 없는 링크 8종은 해당 글 처음으로, 대상 정보가 없는 인라인 참조 2개는 원문 주소로 연결한다. 컬럼은 Obsidian의 읽기 순서로 이어진다. 이 범위와 출처는 CONTENT_CONTRACT.md 및 콘텐츠의 _assets/notion-import.json에 기록한다. 전체 글의 픽셀 동일성·사용자 UI 승인, 최신 글 3개 보완과 GitHub Actions 자동 게시 등 남은 단계는 PLAN.md를 따른다.
 
 상시 미리보기 http://127.0.0.1:8765/도 같은 콘텐츠로 갱신했다. 상세 증거는 Mac의 /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 전체 정상화/에 보관한다.
+
+## 2026-10-13 파비콘과 다열 배치 교정
+
+콘텐츠 c3cd15e70a74609e0285eb6ad6ebfde202347dca와 코드 79790f85a476b4da42097a92e5b5db7d188435d9를 commit·push하고 blog.anyflow.net에 배포했다.
+
+- 이미지: ghcr.io/anyflow/anyflow-blog:columns-20261013-c3cd15e
+- 이미지 ID: sha256:ba5e0af45d4e6729291ee0580090bda3e6d902560f9e05d0699a90478f3b7507
+- Pod anyflow-blog-5c7db6b855-hbh5g: Ready 1/1, 재시작 0, 실제 imageID와 두 revision label 일치
+- 원본 꽃 파비콘을 _assets/visuals/site-icon.png에 보관하고 홈의 favicon 속성으로 연결했다. 공개 PNG의 SHA-256 832c60831d6c4adcce0262a586a4315e7c2f4efb19aad4da9ca422df4f6bf333이 원본과 일치한다.
+- 원본 다열 묶음 62개·열 145개를 순서·비율대로 복원했다. 원본 대조와 회귀 검사 15/15를 통과했다. 이미지 639개·캡션 223개 등 다른 표현의 원본 대조도 유지한다.
+- 빈 글의 묘비 사진은 PC에서 154·154·308px, 높이 205.328·205.328·231px로 같은 행에 표시된다. 행 높이 294.59375px와 46px 간격이 원본과 일치한다.
+- 모바일 390×844에서는 원본처럼 세로로 전환하고 문서 가로 넘침이 없다. 이미지 너비 192·192·342px와 각 열 높이를 대조했다.
+- Obsidian의 읽기 화면에서도 세 사진 152·152·304px과 1:1:2 비율을 확인했다. 다열 묶음은 하나의 인용 블록이므로 내부 참조를 행으로 연결한다. 임베드 640개·블록 링크 90개의 대상 누락은 0이다.
+
+상시 미리보기도 갱신했다. 검증된 정적 출력을 캐시 nginx 런타임에 패키징하는 방식과 DNS·라우팅 유지 조건은 앞선 배포 기록을 따른다. 기존 anyflow.net은 변경하지 않았다. 증거는 /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 아이콘과 다열 배치/에 보관한다.
