@@ -4,11 +4,13 @@ const text=a=>(a||[]).map(x=>x[0]).join("");
 const escape=s=>String(s).replace(/([\\\x60*_[\]<>#|!~])/g,"\\$1");
 const html=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const uuid=s=>String(s).replaceAll("-","").toLowerCase();
+// Markdown drops edge breaks and splits repeated breaks into separate paragraphs.
+const paragraph=s=>s.replace(/(?<!\\)(`+)[\s\S]*?\1|^[ \t]*(?:\n[ \t]*)+|\n(?:[ \t]*\n)+|\n[ \t]*$/g,(match,code)=>code?match:match.replaceAll("\n","<br>"));
 function importNotion(root,reference,aliases={},imageMap={}) {
  root=fs.realpathSync(root);
  for(const p of Object.values(reference)){const file=path.resolve(root,p.vaultPath);if(!file.startsWith(root+path.sep)||!fs.realpathSync(file).startsWith(root+path.sep))throw new Error("Import path outside vault");}
  const catalog=JSON.parse(fs.readFileSync(path.join(root,"_assets/visuals/manifest.json")));
- const pages=new Map(),owners=new Map(),anchors=new Set(),media=[],report={pages:[],types:{},emptyPageLinks:[],unresolvedSourceFragments:[],unresolvedBlockMentions:[],omittedMetadata:0};
+ const pages=new Map(),owners=new Map(),anchors=new Set(),media=[],report={pages:[],types:{},emptyParagraphs:[],paragraphLineBreaks:[],emptyPageLinks:[],unresolvedSourceFragments:[],unresolvedBlockMentions:[],omittedMetadata:0};
  for(const p of Object.values(catalog.pages)) if(p.vaultPath) pages.set(uuid(p.pageId),p);
  const blocks=new Map(Object.entries(aliases));
  for(const [url,p] of Object.entries(reference))for(const b of p.blocks){blocks.set(b.id,b);owners.set(uuid(b.id),{url,p,b});}
@@ -73,11 +75,15 @@ function importNotion(root,reference,aliases={},imageMap={}) {
   function render(b) {
    if(!b)throw new Error("Missing block");
    report.types[b.type]=(report.types[b.type]||0)+1;
-   const value=rich(b.properties?.title,p.vaultPath),children=()=>sequence(b.content||[]);
+   const title=rich(b.properties?.title,p.vaultPath),value=["text","header","sub_header","sub_sub_header","bulleted_list","numbered_list","quote","callout","toggle"].includes(b.type)?paragraph(title):title,children=()=>sequence(b.content||[]);
+   if(value!==title)report.paragraphLineBreaks.push({path:p.vaultPath,id:b.id});
    let result="";
    switch(b.type) {
     case "page":result=children();break;
-    case "text":result=value;if(b.content?.length)result+="\n\n"+children();break;
+    case "text":
+     result=value;
+     if(!value){result='<p class="notion-empty-paragraph" data-notion-block-id="'+html(b.id)+'" aria-hidden="true"><br></p>';report.emptyParagraphs.push({path:p.vaultPath,id:b.id});}
+     if(b.content?.length)result+="\n\n"+children();break;
     case "header":case "sub_header":case "sub_sub_header":result=({"header":"## ","sub_header":"### ","sub_sub_header":"#### "}[b.type])+value;if(b.content?.length)result+="\n\n"+children();break;
     case "bulleted_list":case "numbered_list":result=(b.type==="bulleted_list"?"- ":"1. ")+value.replaceAll("\n","\n   ");if(b.content?.length)result+="\n\n"+children().split("\n").map(l=>"   "+l).join("\n");break;
     case "quote":result=quote([value,children()].filter(Boolean).join("\n\n"));break;

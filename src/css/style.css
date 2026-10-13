@@ -97,7 +97,9 @@ svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5;
 .row-title { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .category-row time { font-size:12px; white-space:nowrap}
 .post-body>h2:first-child { margin-top:40px}
-.post-body>p:first-child { margin-top:24px}
+.post-body p { margin:2px 0 }
+.post-body>p:first-child,.post-body>.block-anchor:first-child+p { margin-top:10px }
+.post-body p.notion-empty-paragraph { min-height:30px }
 .post-body ul,.post-body ol { padding-left:30px; margin:4px 0}
 .post-body li { padding:3px 2px}
 .post-body li>p { padding:0}

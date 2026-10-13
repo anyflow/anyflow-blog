@@ -33,3 +33,44 @@ test("generated link validation rejects missing notes and block anchors",()=>{
  c.posts.push({url:"/other/",html:""});assert.throws(()=>validateContent(c),/missing anchor/);
  c.posts[1].html='<span id="missing"></span>';validateContent(c);
 });
+test("empty paragraphs and paragraph line breaks survive import without changing code or previews",t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),"notion-spacing-"));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ fs.mkdirSync(path.join(root,"_assets/visuals"),{recursive:true});
+ const header='---\ntitle: Spacing\npermalink: /spacing\ncreated: 2025-01-01\ncategory: test\nkind: post\ndraft: false\nicon: ⭐\n---';
+ fs.writeFileSync(path.join(root,"spacing.md"),header+'\n\nOld body.');
+ fs.writeFileSync(path.join(root,"_assets/visuals/manifest.json"),JSON.stringify({emojis:{},pages:{"/spacing":{pageId:"page",vaultPath:"spacing.md",title:"Spacing"}}}));
+ const block=(id,type,title="",content=[])=>({id,type,properties:{title:[[title]]},content});
+ const first=block("first","text","\nFirst\nsecond\n\n<strong>literal</strong>\n");
+ const formatted=block("formatted","text");formatted.properties.title=[["Bold\n\nnext",[["b"]]],[" and "],["code\ncode",[["c"]]],[" then `literal`\n\nend"]];
+ const image={id:"image",type:"image",properties:{caption:[["Caption."]]}};
+ const map={image:{path:"photo.png",sha256:require("crypto").createHash("sha256").update("image").digest("hex")}};
+ fs.writeFileSync(path.join(root,"photo.png"),"image");
+ const blocks=[block("page","page","",["empty1","empty2","first","formatted","quote","callout","list","columns","parent","code"]),block("empty1","text"),block("empty2","text"),first,formatted,
+  block("quote","quote","\nQuoted\n\ntext\n",["quoteEmpty"]),block("quoteEmpty","text"),
+  block("callout","callout","Info\n\nnext",["calloutEmpty"]),block("calloutEmpty","text"),
+  block("list","bulleted_list","List\n",["listEmpty"]),block("listEmpty","text"),
+  block("columns","column_list","",["column"]),{...block("column","column","",["columnEmpty"]),format:{column_ratio:1}},block("columnEmpty","text"),
+  block("parent","text","",["image"]),image,{...block("code","code","a\n\nb\n"),properties:{title:[["a\n\nb\n"]],language:[["text"]]}}];
+ const reference={"/spacing":{pageID:"page",vaultPath:"spacing.md",blocks}},report=importNotion(root,reference,{},map);
+ const raw=fs.readFileSync(path.join(root,"spacing.md"),"utf8");assert.equal(raw.slice(0,header.length),header);
+ assert.deepEqual(report.emptyParagraphs.map(p=>p.id),["empty1","empty2","quoteEmpty","calloutEmpty","listEmpty","columnEmpty","parent"]);
+ assert.equal(report.paragraphLineBreaks.length,5);
+ assert.match(raw,/<br>First\nsecond<br><br>\\<strong\\>literal\\<\/strong\\><br>/);
+ assert.match(raw,/<strong>Bold<\/strong><br><br><strong>next<\/strong>/);
+ assert.match(raw,/`code\ncode`/);assert.match(raw,/\\`literal\\`<br><br>end/);
+ assert.match(raw,/```text\na\n\nb\n\n```/);
+ const current=loadContent(root,path.join(root,"none"));validateContent(current);
+ const post=current.posts[0];
+ assert.equal((post.html.match(/class="notion-empty-paragraph"/g)||[]).length,7);
+ assert.match(post.html,/<p><br>First<br>\nsecond<br><br>&lt;strong&gt;literal&lt;\/strong&gt;<br><\/p>/);
+ assert.match(post.html,/<code>code code<\/code>/);
+ assert.match(post.html,/<blockquote>\s*<p><br>Quoted<br><br>text<br><\/p>/);
+ assert.match(post.html,/data-notion-block-id="parent"[^>]*><br><\/p>\s*<figure/);
+ assert.doesNotMatch(post.preview,/notion-empty-paragraph/);
+ assert.match(post.preview,/First[\s\S]*Bold[\s\S]*Quoted[\s\S]*Info/);
+ fs.writeFileSync(path.join(root,"reference.json"),JSON.stringify(reference));fs.writeFileSync(path.join(root,"images.json"),JSON.stringify(map));
+ const audit=()=>require("node:child_process").spawnSync(process.execPath,[path.resolve(__dirname,"../scripts/audit-import.js"),root,path.join(root,"reference.json"),path.join(root,"images.json"),path.join(root,"audit.json")],{encoding:"utf8"});
+ assert.equal(audit().status,0);
+ fs.writeFileSync(path.join(root,"spacing.md"),raw.replace('data-notion-block-id="empty1"','data-notion-block-id="wrong"'));
+ const failed=audit();assert.equal(failed.status,1);assert.match(failed.stdout,/empty paragraph order or identity mismatch/);
+});

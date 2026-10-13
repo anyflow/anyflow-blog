@@ -2,7 +2,7 @@
 
 ## 현재 단계
 
-대표 UI와 콘텐츠 5a9e126을 blog.anyflow.net에 게시한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
+마지막으로 확인한 운영 배포는 font-20261013-c3cd15e다. 문단 복원은 Mac에서 구현·검증하고 작성 vault에 반영했다. GitHub commit·push는 승인되었으며 운영 배포를 대기한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
 
 ## 미리보기
 
@@ -169,3 +169,19 @@ blog.anyflow.net 배포와 실제 응답 검증을 완료했다. 기존 anyflow.
 - 원본과 공개 어쨌건간에 글을 Mac 브라우저 1280×720에서 대조했다. 본문의 font-family·크기·굵기·색상·줄 높이·가장자리 처리 auto가 일치한다. 다른 OS와 전체 글의 픽셀 동일성은 검증하지 않았다.
 
 검증된 정적 출력을 캐시 nginx 런타임에 패키징해 kind에 적재했다. 표준 Dockerfile 전체 재빌드와 GHCR 업로드는 수행하지 않았다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지했다. 화면과 설정 비교 자료는 /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 본문 폰트/에 보관한다.
+
+
+## 2026-10-13 문단 복원 — 로컬 완료, 운영 배포 대기
+
+사용자 요청으로 Mac의 `/Users/anyflow/workspace/anyflow-blog`에서 GitHub 소스 `6f81582`를 받아 수정·검증한다. 원본 스냅샷과 이미지 대응 자료는 `.cache/notion-reference.json`, `.cache/notion-aliases.json`, `.cache/image mapping.json`에 보관한다. 전체 394개 글을 재변환하고 iCloud 작성 vault의 305개 글과 비공개 검증 manifest에 반영했다. 게시 속성·커버·아이콘과 공백 외 본문은 보존한다.
+
+빈 문단 1,048개의 ID·순서, 앞뒤·연속 줄바꿈이 있는 68개 블록 및 이미지·캡션·표·다열 등 전체 구조를 대조했다. 테스트 16/16과 394개 글·참조 첨부 1,134개의 빌드를 통과했다. 대표 글의 PC 1280×720·모바일 390×844·라이트·다크에서 빈 문단 높이 30px, 첫 두 문단 사이 34px과 각 문단 높이를 확인했다. Obsidian 읽기 보기에서도 빈 문단 6개와 문단 앞 줄바꿈을 확인했다. 전체 글의 픽셀 일치를 뜻하지 않는다.
+
+Mac의 `net.anyflow.blog-local-preview` LaunchAgent가 `127.0.0.1:8766`에서 `_preview`를 제공한다. 설정 파일은 `~/Library/LaunchAgents/net.anyflow.blog-local-preview.plist`다. SSH 터널의 8765 포트와 별도로 동작하며 Mac 로그인 시 시작하고 프로세스 종료 후 재시작한다. 실행 프로세스 종료 후 새 PID로 0.49초 만에 복구하고 HTTP 200이 되는 것을 검증했다. 작성 vault의 미공개 변경을 검토할 때는 아래 명령을 사용한다.
+
+```sh
+rsync -a --exclude=.git --exclude=.obsidian "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/blog/" .cache/blog/
+BLOG_OUTPUT_DIR=_preview npm run build
+```
+
+검수 자료와 작성본 백업은 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 문단 간격/` 및 `work/blog paragraph spacing/before-local-20261013/`에 보관한다. 문단 복원은 GitHub commit·push까지 승인되었다. 사용자 커버 편집과 Obsidian 화면 설정은 게시 범위에서 제외한다. 운영 배포는 수행하지 않으며 서버 접속 복구 후 원격 작업트리의 변경과 대조해 반영한다.
