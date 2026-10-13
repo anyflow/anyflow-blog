@@ -217,3 +217,9 @@ LAN 192.168.0.4:22 접속을 확인하고 깨끗한 서버 작업트리를 GitHu
 | 경로 유지 | Gateway·HTTPRoute·Service spec 배포 전후 일치, 기존 www.anyflow.net DNS 동일 |
 
 검증한 서버 정적 출력을 캐시 nginx 런타임에 패키징해 kind 두 노드에 적재하고 기존 Deployment를 삭제 없이 rollout했다. 표준 다단계 Dockerfile 전체 재빌드와 GHCR 업로드는 수행하지 않았다. 이전 font 이미지와 Deployment 이력을 유지한다. 상시 미리보기도 397편으로 갱신했다. 증거는 Mac의 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 운영 배포/` 및 서버 `.cache/release-20261013-5371f9a/`에 보관한다. 자동 게시·RSS·sitemap·추가 OG 보완은 후속 작업이다.
+
+## 2026-10-13 Share 동작 보정
+
+원본의 공개 공유 코드를 확인해 Web Share 지원 시 OS 공유창을 사용하고, 미지원·권한 오류 시 링크 복사·Facebook·X·LinkedIn·Pinterest 메뉴를 표시한다. 취소는 추가 동작 없이 끝낸다. 공유 아이콘은 로컬 자산이며 URL을 매개변수로 인코딩하고 메뉴는 Esc·바깥 클릭으로 닫힌다. 테스트 24/24와 전체 397편 미리보기 빌드, Web Share 미지원 상태를 재현한 격리 브라우저의 PC·모바일·다크·키보드 조작을 검증했다. SNS 실제 게시·전송은 수행하지 않았다.
+
+배포 태그는 `share-20261013-5371f9a`이며 콘텐츠 `5371f9a`를 유지한다. 이전 publish 런타임에 검증한 정적 결과를 패키징하는 방식을 사용한다. 검수와 배포 증거는 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog Share/` 및 서버 `.cache/share-review/`에 보관한다.

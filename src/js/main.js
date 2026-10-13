@@ -10,7 +10,6 @@ document.querySelectorAll('.content h2[id],.content h3[id],.content h4[id]').for
 document.querySelector('.back-to-top').addEventListener('click',()=>scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'}));
 document.querySelectorAll('[data-load-more]').forEach(button=>button.addEventListener('click',()=>{const group=document.getElementById(button.dataset.loadMore);Array.from(group.children).filter(e=>e.hidden).slice(0,10).forEach(e=>e.hidden=false);if(!Array.from(group.children).some(e=>e.hidden))button.hidden=true;onScroll();}));
 function notify(text){const toast=document.querySelector('.toast');toast.textContent=text;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800);}
-document.querySelector('.share-button').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href);notify('링크를 복사했습니다.')}catch{notify(location.href);}});
 document.querySelectorAll('.copy-code').forEach(button=>button.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(button.parentElement.querySelector('code').textContent);button.textContent='복사됨';setTimeout(()=>button.textContent='복사',1500);}catch{notify('코드를 선택해 복사해주세요.');}}));
 if(window.hljs)hljs.highlightAll();
 const graphSources=Array.from(document.querySelectorAll('.mermaid')).map(node=>({node,source:node.textContent}));

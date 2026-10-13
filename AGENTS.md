@@ -35,6 +35,7 @@
 - `src/_data/visuals.json`: 대표 태그 표현과 속성이 없는 콘텐츠의 참고값. 작성자 속성을 우선한다.
 - `src/_includes/icon.njk`: 작은 이모지는 캐시 이미지, 큰 이모지는 문자, 사용자 이미지 아이콘은 크기와 관계없이 파일을 사용한다.
 - `src/css/`, `src/js/`: 표면 재현과 다크모드·목차·목록 펼치기·코드 복사
+- `src/js/share.js`: 원본과 같은 Web Share OS 공유창·대체 메뉴와 링크 복사. 원본 SNS 아이콘 4개를 로컬에 보관하며 취소·권한 오류·URL 인코딩·복사 실패를 포함해 서버 테스트 24/24와 PC·모바일·다크·키보드 검수를 완료했다. 이번 공유 UI 보정 이미지로 운영에 반영한다.
 - `src/js/vendor/`: Mermaid와 highlight.js 고정 버전 및 라이선스. 실행 시 외부 CDN을 사용하지 않는다.
 - `tests/content.test.js`, `tests/import-notion.test.js`, `tests/build.test.js`: 원본 변환·Obsidian 형식·공개 경계·잘못된 입력 차단과 실패 시 결과 보존
 - `lib/obsidian-markdown.js`, `lib/validate-content.js`: 알림 상자·캡션·수식·블록 링크와 생성 참조 검증

@@ -17,13 +17,21 @@
   <link rel="stylesheet" href="{{ '/css/style.css' | versionedAsset }}">
   <script defer src="/js/vendor/highlight.min.js"></script><script defer src="{{ '/js/main.js' | versionedAsset }}"></script>
   <script defer src="{{ '/js/search.js' | versionedAsset }}"></script>
+  <script defer src="{{ '/js/share.js' | versionedAsset }}"></script>
 </head>
 <body>
 <header class="site-header">
   <nav class="breadcrumbs" aria-label="위치"><a class="site-logo" href="/">{{ icon(home) }} <span>{{ site.title | escape }}</span></a>{% if post %}<span class="crumb-divider">/</span><a class="post-crumb" href="{{ post.url }}">{{ icon(post) }} <span>{{ post.title | escape }}</span></a>{% endif %}</nav>
   <div class="header-actions">
     <button class="search-button" type="button" aria-label="Search" aria-haspopup="dialog" aria-controls="search-dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg><span>Search</span></button>
-    <button class="share-button" type="button" aria-label="Share"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 10-6M5 10l10 6"/><circle cx="4" cy="10" r="2"/><circle cx="16" cy="3" r="2"/><circle cx="16" cy="17" r="2"/></svg><span>Share</span></button>
+    <button class="share-button" type="button" aria-label="Share" popovertarget="share-menu" aria-haspopup="dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 10-6M5 10l10 6"/><circle cx="4" cy="10" r="2"/><circle cx="16" cy="3" r="2"/><circle cx="16" cy="17" r="2"/></svg><span>Share</span></button>
+    <div id="share-menu" class="share-menu" popover="auto" role="dialog" aria-label="공유">
+      <button class="share-option share-copy" type="button" aria-label="링크 복사" title="Copy link" autofocus><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 13 4-4M8 16l-1 1a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0m0 12a4 4 0 0 0 6 0l5-5a4 4 0 0 0-6-6l-1 1"/></svg></button>
+      <a class="share-option" href="https://www.facebook.com/sharer/sharer.php?display=popup&amp;u=" data-share-base="https://www.facebook.com/sharer/sharer.php?display=popup&amp;u=" aria-label="Facebook에 공유" title="Facebook" target="_blank" rel="noopener noreferrer"><img src="/images/reference/share/facebook.png" alt="" width="30" height="30"></a>
+      <a class="share-option" href="https://twitter.com/intent/tweet?text=&amp;url=" data-share-base="https://twitter.com/intent/tweet?text=&amp;url=" aria-label="X에 공유" title="X (Twitter)" target="_blank" rel="noopener noreferrer"><img src="/images/reference/share/twitter.png" alt="" width="30" height="30"></a>
+      <a class="share-option" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=" data-share-base="https://www.linkedin.com/shareArticle?mini=true&amp;url=" aria-label="LinkedIn에 공유" title="LinkedIn" target="_blank" rel="noopener noreferrer"><img src="/images/reference/share/linkedin.png" alt="" width="30" height="30"></a>
+      <a class="share-option" href="https://www.pinterest.co.kr/pin/create/link/?url=" data-share-base="https://www.pinterest.co.kr/pin/create/link/?url=" aria-label="Pinterest에 공유" title="Pinterest" target="_blank" rel="noopener noreferrer"><img src="/images/reference/share/pinterest.png" alt="" width="30" height="30"></a>
+    </div>
     <button class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Turn on the dark mode"><span class="theme-knob"></span><img class="theme-symbol" src="/images/reference/sun.png" alt=""></button>
   </div><div class="reading-progress"></div>
 </header>
