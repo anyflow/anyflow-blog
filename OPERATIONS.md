@@ -334,3 +334,11 @@ X 게시물의 첨부 사진·동영상 포스터를 카드 자동 선택·Obsid
 이 배포의 API Ready probe는 TCP 확인이다. Pod Ready가 댓글 등록·Like 저장 성공을 뜻하지 않는다. Git 연결 안정화와 실제 저장·PR·메일 확인은 TODO에 미완료로 남긴다. 전체 회귀·콘텐츠·URL·이미지 전수 검증은 실행하지 않았다. 전체 구현 TODO 완료 후 최종 한 번만 수행한다.
 
 관리자 운영 토큰은 Mac의 ~/Library/Application Support/anyflow-blog/comments-production-admin.txt에 0600으로 보관한다. 미리보기 관리자 토큰과 별개다. 운영 설정·키 원본은 .cache/comments-runtime/에 비추적 보관하며 값은 문서·이미지·Git에 넣지 않는다. 이전 profile 이미지와 Deployment 이력은 보존해 정적 사이트의 rollout undo가 가능하다.
+
+## 2026-10-14 댓글 UI·방명록 복원 운영 반영
+
+- 코드 5738a62·콘텐츠 d5b6645·댓글 데이터 2b205e8을 GitHub에 게시했다. 댓글 게시 [Actions](https://github.com/anyflow/blog-comments/actions/runs/38467601122)가 성공했다.
+- 정적 이미지 ghcr.io/anyflow/anyflow-blog:release-20261014-5738a62, imageID sha256:68ca6844b3effafe99135843d14fe283c4a6a5ae52dd8911264a2c84c166c8d9을 kind 두 노드에 적재했다. Deployment 선언을 apply했고 새 Pod anyflow-blog-7d58fb49b8-rcql5는 Ready 1/1·재시작 0, rollout 완료다. 검증한 _preview 산출물로 패키징하고 이전 html을 이미지 안에서 교체했다. 정규 Dockerfile 재빌드·GHCR 업로드는 수행하지 않았다. API 이미지는 release-20261014-6dab388을 유지한다.
+- HTTPS 홈·Cassandra 200, 본문 백업 제거, Comments 표제 30px·같은 행 오른쪽 Like/댓글 수 14px, 댓글→이름→선택 링크 입력 순서·placeholder·투명 폼을 운영 브라우저에서 확인했다. 홈 댓글 수의 오른쪽 여백은 0px이며 답글 1개 버튼은 기본 aria-expanded=false다. 이전 댓글 배지를 제거했다.
+- 운영 API는 홈 공개 28개·Cassandra 1개·preview=false를 반환하고 pending을 제외한다. 전체 이관 223개 중 잠금 원글·답글 2개는 비공개로 보존한다. Cassandra 작성일은 미상으로 표시한다. UI·이관 관련 테스트 21개를 통과했다.
+- 기존 anyflow.net·DNS·Gateway·HTTPRoute는 유지했다. 신규 댓글 PR·승인 OFF/ON·메일 수신, 모바일 화면·전체 콘텐츠 전수 검증은 이번 배포에서 실행하지 않았다. 전수 검증은 전체 TODO 완료 후 최종 1회다.
