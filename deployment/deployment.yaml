@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: anyflow-blog
-          image: ghcr.io/anyflow/anyflow-blog:share-20261013-5371f9a
+          image: ghcr.io/anyflow/anyflow-blog:profile-20261013-5371f9a
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
