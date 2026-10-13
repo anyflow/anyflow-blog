@@ -10,7 +10,7 @@ layout: base.njk
     <li><a href="https://www.linkedin.com/in/anyflow/">Linkedin</a> / <a href="https://github.com/anyflow">Github</a></li>
     <li><a href="https://www.youtube.com/channel/UC0upJ_e63Eq3_AfJ4Vw0FGw">Youtube</a> / <a href="https://www.strava.com/athletes/57404417">Strava</a></li>
     <li><code>anyflow@gmail·com</code></li>
-  </ul><a class="bookmark" href="/introspective-life/anyway/" target="_blank" rel="noopener noreferrer"><div><span>어쨌건간에</span><small>{{ icon(home) }} https://www.anyflow.net/introspective-life/anyway</small></div>{% if home.cover %}<img src="{{ home.cover | escape }}" alt="">{% endif %}</a></div>
+  </ul><a class="bookmark" href="/introspective-life/anyway" target="_blank" rel="noopener noreferrer"><div><span>어쨌건간에</span><small>{{ icon(home) }} https://www.anyflow.net/introspective-life/anyway</small></div>{% if home.cover %}<img src="{{ home.cover | escape }}" alt="">{% endif %}</a></div>
 </section>
 <section class="recent" aria-labelledby="recent"><h2 id="recent">Recent</h2>
   <div class="card-grid" id="recent-cards">{% for item in posts %}<article class="card" {% if loop.index>10 %}hidden{% endif %}>

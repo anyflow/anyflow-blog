@@ -16,7 +16,7 @@ test('only published notes and referenced assets, correct legacy paths and dates
  assert.deepEqual(result.posts.map(p=>p.title),['other','first']);
  const first=result.posts[1];
  assert.match(first.html,/src="\/assets\/first\/image\(1\)\.png"/);
- assert.match(first.html,/href="\/other\/"/);
+ assert.match(first.html,/href="\/other"/);
  assert.match(first.html,/class="page-mention"/);
  assert.match(first.html,/class="page-mention-title">other<\/span><\/a>/);
  assert.match(first.html,/class="caption"/);
@@ -31,7 +31,7 @@ test('only published notes and referenced assets, correct legacy paths and dates
  assert.ok(!JSON.stringify(result.posts).includes('DO_NOT_PUBLISH'));
 });
 test('invalid or duplicate public URLs stop the build',t=>{
- const root=fixture(t);post(root,'first');post(root,'second',{permalink:'/first'});
+ const root=fixture(t);post(root,'first');post(root,'second',{permalink:'/first',post_id:'second-post-123'});
  assert.throws(()=>loadContent(root),/Duplicate permalink/);
  for(const permalink of ['/../outside','/%2e%2e/outside','/%252e%252e/outside','/first//second','/']){
   const other=fixture(t);post(other,'bad',{permalink});
@@ -229,4 +229,18 @@ test('comment post IDs remain fixed across permalink changes and reject collisio
  assert.equal(loadContent(root,path.join(root,'none')).posts[0].id,'stable-post-123');
  post(root,'first',{post_id:'stable-post-123',permalink:'/new'});assert.equal(loadContent(root,path.join(root,'none')).posts[0].id,'stable-post-123');
  post(root,'second',{post_id:'stable-post-123'});assert.throws(()=>loadContent(root,path.join(root,'none')),/Duplicate post_id/);
+});
+
+test('post URLs omit trailing slashes across authored paths and internal link forms without changing IDs',t=>{
+ const root=fixture(t);
+ post(root,'first',{permalink:'/first/',post_id:'stable-first-123'},'[Old](https://www.anyflow.net/other/#introduction)\n\n[Local](/other/)\n\n[MD](../other/other.md)\n\n<a href="https://blog.anyflow.net/other/?a=1&amp;b=2#introduction">HTML</a>');
+ post(root,'other',{permalink:'/other/',post_id:'stable-other-123'});
+ const content=loadContent(root,path.join(root,'none')),first=content.posts.find(p=>p.id==='stable-first-123');
+ assert.equal(first.url,'/first');assert.ok(first.aliases.includes('/first/'));
+ assert.match(first.html,/href="\/other#introduction"/);
+ assert.match(first.html,/href="\/other"/);
+ assert.match(first.html,/href="\/other\?a=1&amp;b=2#introduction"/);
+ require('../lib/validate-content').validateContent(content);
+ post(root,'first',{permalink:'/first',post_id:'stable-first-123'});
+ assert.equal(loadContent(root,path.join(root,'none')).posts.find(p=>p.id==='stable-first-123').url,'/first');
 });

@@ -34,6 +34,7 @@ http.createServer(async(req,res)=>{
   let file=path.resolve(root,'.'+decoded);if(file!==root&&!file.startsWith(root+path.sep)){res.writeHead(404).end();return;}
   let stat;try{stat=fs.statSync(file);if(stat.isDirectory()){file=path.join(file,'index.html');stat=fs.statSync(file);}}catch{res.writeHead(404).end();return;}
   if(!stat.isFile()||!['GET','HEAD'].includes(req.method)){res.writeHead(404).end();return;}
+  if(decoded!=='/'&&decoded.endsWith('/')){res.writeHead(301,{Location:url.pathname.replace(/\/+$/,'')+url.search}).end();return;}
   const real=fs.realpathSync(file);if(!real.startsWith(root+path.sep)){res.writeHead(404).end();return;}
   res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Cache-Control','no-cache');
   if(/^\/assets\/.*\.html$/i.test(decoded))res.setHeader('Content-Disposition','attachment');

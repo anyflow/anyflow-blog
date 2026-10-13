@@ -10,6 +10,7 @@
   <meta property="og:title" content="{{ (post.title or site.title) | escape }}">
   <meta property="og:description" content="{{ (post.summary or site.description) | escape }}">
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
+  <link rel="canonical" href="{{ (post.url or '/') | absoluteUrl | escape }}">
   <meta property="og:url" content="{{ (post.url or '/') | absoluteUrl | escape }}">
   {% set shareImage = post.thumbnail or post.cover or home.cover or site.cover %}
   {% if shareImage %}<meta property="og:image" content="{{ shareImage | absoluteUrl | escape }}">{% endif %}
