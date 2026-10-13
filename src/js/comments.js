@@ -160,6 +160,13 @@
     return input;
   }
 
+  function updateIdentity(editor) {
+    const admin = Boolean(snapshot?.is_admin);
+    editor.identity.hidden = admin;
+    editor.name.disabled = editor.link.disabled = admin;
+    editor.name.required = !admin;
+  }
+
   function editor(comment = null, editing = false) {
     const form = element('form', 'comments-form');
     if (comment) form.append(element('p', 'comments-reply-target', editing ? '댓글 수정' : comment.author.name + '에게 답글'));
@@ -172,7 +179,8 @@
     const actions = element('div', 'comments-form-actions'), submit = element('button', 'comments-submit', editing ? '수정 저장' : comment ? '답글 등록' : '댓글 등록');
     submit.type = 'submit';
     submit.disabled = !snapshot;
-    const result = {form, name, link, body, submit, target: comment?.id, editing, requestId: null};
+    const result = {form, identity, name, link, body, submit, target: comment?.id, editing, requestId: null};
+    updateIdentity(result);
     actions.append(submit);
     if (comment) actions.append(button('취소', () => {
       if (body.value !== (editing ? comment.body : '') && !confirm('작성 중인 내용을 취소할까요?')) return;
@@ -186,7 +194,8 @@
       if (!form.reportValidity()) return;
       action(submit, async () => {
         const submittedBody = body.value;
-        const payload = {post_id: postId, name: name.value, link: link.value, body: submittedBody};
+        const payload = {post_id: postId, body: submittedBody};
+        if (!snapshot.is_admin) Object.assign(payload, {name: name.value, link: link.value});
         if (!editing) {
           if (comment) payload.parent_id = comment.id;
           const requestBody = JSON.stringify(payload);
@@ -361,6 +370,8 @@
     snapshot = result;
     previewNotice.hidden = !result.preview;
     composer.submit.disabled = false;
+    updateIdentity(composer);
+    if (activeEditor) updateIdentity(activeEditor);
     if (activeEditor) activeEditor.submit.disabled = false;
     count.textContent = result.comments.filter(comment => comment.status !== 'deleted').length + '개 댓글';
     postLike.disabled = false;

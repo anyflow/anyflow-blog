@@ -103,3 +103,27 @@ test('unmerged deleted comments never enter anonymous API snapshots or public ex
   assert.doesNotMatch(JSON.stringify(publicPost(state,'first','owner')),/_unmerged|owner_hash/);
   delete state.comments.draft._unmerged;assert.equal(publicPost(state,'first').comments[0].status,'deleted');
 });
+
+test('authenticated administrators use fixed identity and manage comments from independent browsers',async t=>{
+ const {browser}=await fixture(t),visitor=browser(),adminOne=browser(),adminTwo=browser();
+ const visit=await visitor.request('POST','/api/comments',input('visitor-comment'));
+ const visitorId=visit.data.comment_id,originalAuthor=visit.data.comments[0].author;
+ await adminOne.request('POST','/api/admin/login',{token:adminToken});
+ const created=await adminOne.request('POST','/api/comments',{post_id:'first',request_id:'admin-comment-123',body:'관리자 댓글',name:'가짜 이름',link:'javascript:bad()'});
+ assert.equal(created.status,201);
+ const adminId=created.data.comment_id,own=created.data.comments.find(c=>c.id===adminId);
+ assert.deepEqual(own.author,{name:'관리자',link:'https://www.anyflow.net/',is_admin:true});
+ const reply=await adminOne.request('POST','/api/comments',{post_id:'first',parent_id:visitorId,request_id:'admin-reply-123',body:'관리자 답글'});
+ assert.equal(reply.status,201);assert.equal(reply.data.comments.find(c=>c.id===reply.data.comment_id).author.is_admin,true);
+ await adminTwo.request('POST','/api/admin/login',{token:adminToken});
+ const current=await adminTwo.request('GET','/api/comments?post=first');
+ assert.ok(current.data.comments.every(c=>c.can_edit&&c.can_delete));
+ const edited=await adminTwo.request('PATCH','/api/comments/'+visitorId,{post_id:'first',body:'다른 브라우저에서 수정'});
+ assert.equal(edited.status,200);
+ assert.deepEqual(edited.data.comments.find(c=>c.id===visitorId).author,originalAuthor);
+ assert.equal((await adminTwo.request('PATCH','/api/comments/'+adminId,{post_id:'first',body:'관리자 댓글 수정'})).status,200);
+ assert.equal((await adminTwo.request('DELETE','/api/comments/'+adminId,{post_id:'first'})).status,200);
+ assert.equal((await adminTwo.request('DELETE','/api/comments/'+visitorId,{post_id:'first'})).status,200);
+ await adminTwo.request('DELETE','/api/admin/session',{});
+ assert.equal((await adminTwo.request('PATCH','/api/comments/'+reply.data.comment_id,{post_id:'first',body:'로그아웃 후'})).status,403);
+});

@@ -172,3 +172,29 @@ test('replies start collapsed and expansion persists through Like updates', asyn
   f.document.getElementById('comment-toggle-a').events.click();
   assert.equal(f.document.getElementById('comment-b'),undefined);
 });
+
+test('admin identity fields hide and disable in all editors and return after logout without losing visitor values',async()=>{
+ const f=fixture(snapshot([comment('a',null,{can_edit:true})]));await f.ready();
+ const form=f.find('comments-form'),identity=f.find('comments-identity');
+ const name=identity.children[0].children[1],link=identity.children[1].children[1],body=form.children.find(n=>n.tagName==='label').children[1];
+ name.value='방문자';link.value='https://visitor.example';
+ f.responses.push({...snapshot([comment('a',null,{can_edit:true})]),is_admin:true});
+ f.find('comments-like').events.click();await f.ready();
+ assert.equal(identity.hidden,true);assert.equal(name.disabled,true);assert.equal(link.disabled,true);assert.equal(name.required,false);
+ body.value='관리자 본문';
+ f.responses.push({...snapshot([comment('a',null,{can_edit:true})]),is_admin:true});
+ form.events.submit({preventDefault(){}});await f.ready();
+ const request=f.requests.find(r=>r.options.method==='POST'&&r.url==='/api/comments');
+ assert.equal(request.body.body,'관리자 본문');assert.equal('name' in request.body,false);assert.equal('link' in request.body,false);
+ f.all().find(n=>n.tagName==='button'&&n.textContent==='수정').events.click();await f.ready();
+ const edit=f.all().filter(n=>n.className==='comments-form')[1],editIdentity=edit.children.find(n=>n.className==='comments-identity');
+ assert.equal(editIdentity.hidden,true);
+ edit.children.find(n=>n.tagName==='label').children[1].value='원작성자 유지';
+ f.responses.push({...snapshot([comment('a',null,{can_edit:true})]),is_admin:true});
+ edit.events.submit({preventDefault(){}});await f.ready();
+ const patch=f.requests.find(r=>r.options.method==='PATCH');assert.equal('name' in patch.body,false);assert.equal('link' in patch.body,false);
+ f.responses.push({is_admin:false},snapshot([comment('a',null,{can_edit:true})]));
+ f.all().find(n=>n.tagName==='button'&&n.textContent==='관리자 로그아웃').events.click();await f.ready();
+ assert.equal(identity.hidden,false);assert.equal(name.disabled,false);assert.equal(link.disabled,false);assert.equal(name.required,true);
+ assert.equal(name.value,'방문자');assert.equal(link.value,'https://visitor.example');
+});
