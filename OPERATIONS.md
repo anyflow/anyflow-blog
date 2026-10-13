@@ -2,7 +2,7 @@
 
 ## 현재 단계
 
-마지막으로 확인한 운영 배포는 font-20261013-c3cd15e다. 문단 복원은 Mac에서 구현·검증하고 작성 vault에 반영했다. 문단 복원은 코드 `c792373`·콘텐츠 `7fc3314`·문서 `c1b954e`를 GitHub에 게시했으며 운영 배포를 대기한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
+최신 운영 배포는 `publish-20261013-5371f9a`다. 정적 결과는 코드 `58dbc1f`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
 
 ## 미리보기
 
@@ -198,3 +198,22 @@ Recent·By Category 검색 버튼을 제거하고 상단 Search·태그 버튼�
 Obsidian 기본 Templates의 폴더를 blog vault `_templates`로 지정했다. 원본 날짜·분류·주소를 확인해 Agent 운영 아키텍처·Prompt/Context/Harness·국토 종주 3편을 연결했다. Prompt 글은 기존 Markdown 본문을 보존하고 국토 종주의 noindex 설정을 유지한다. 따옴표 cleanUrl 설정이 노출되던 기존 1편도 원본에 맞춰 설정 코드만 정리했다.
 
 공개 397개 글·참조 첨부 1,144개를 같은 로컬 미리보기로 빌드했고 테스트 21/21을 통과했다. 396개 변환 글을 원본 블록과 대조하고 Prompt 원문 보존을 별도 확인했다. 사용자 요청으로 콘텐츠 `5371f9a`와 본 소스 변경을 commit·push한다. 기존 사용자 테마·Istio 커버 편집은 제외하고 게시할 글 397편의 manifest 해시를 대조했다. 검수 자료와 백업은 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 작성 템플릿/` 및 `work/blog 작성 템플릿/before/`에 보관한다. 운영 배포는 수행하지 않았다.
+
+## 2026-10-13 문단·검색·누락 글 운영 배포
+
+LAN 192.168.0.4:22 접속을 확인하고 깨끗한 서버 작업트리를 GitHub에 게시한 코드·콘텐츠로 fast-forward했다. 서버의 GitHub fetch와 npm DNS 조회가 실패해 Git bundle과 잠금 파일의 npm 캐시를 전달했다. DNS·기본 라우트는 변경하지 않았다.
+
+| 확인 | 결과 |
+| --- | --- |
+| 정적 코드·콘텐츠 | `58dbc1f74ab63061b24a91cbfcff02ecbf07a0d6` · `5371f9acf943d2fd986a528c8b3ac3530f297aa4` |
+| 이미지 | `ghcr.io/anyflow/anyflow-blog:publish-20261013-5371f9a` |
+| 이미지 ID | `sha256:35cab6ccbee437c6bf3ae9c7d1cfb38f8b2f583a5971ae1d095840cf15e29ef4` |
+| 실행 Pod | `anyflow-blog-6966ddf6c7-vqznv`, Ready 1/1·재시작 0·imageID 일치 |
+| 검증·빌드 | 서버 테스트 21/21, 공개 글 397개·참조 첨부 1,144개·미해결 참조 0 |
+| 정적 파일·색인 | 이미지·실행 Pod 파일 2,038개 SHA-256 일치, Pagefind 397편 |
+| 공개 HTTPS | 홈·글 398개·첨부 1,144개·검색 파일 421개, 총 1,963개 최종 200. 초기 연결 시간 초과 8건은 대상 재시도 후 200 |
+| 공개 경계 | Git·Obsidian 설정·Markdown·비공개 manifest 등 6개 경로 404 |
+| 브라우저 | 복원 글·표·커버·아이콘, Harness 본문 검색·kagent 정확한 태그 필터 확인. 모바일 390×844 라이트·다크 가로 넘침 0, 대표 빈 문단 6개 높이 30px |
+| 경로 유지 | Gateway·HTTPRoute·Service spec 배포 전후 일치, 기존 www.anyflow.net DNS 동일 |
+
+검증한 서버 정적 출력을 캐시 nginx 런타임에 패키징해 kind 두 노드에 적재하고 기존 Deployment를 삭제 없이 rollout했다. 표준 다단계 Dockerfile 전체 재빌드와 GHCR 업로드는 수행하지 않았다. 이전 font 이미지와 Deployment 이력을 유지한다. 상시 미리보기도 397편으로 갱신했다. 증거는 Mac의 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 운영 배포/` 및 서버 `.cache/release-20261013-5371f9a/`에 보관한다. 자동 게시·RSS·sitemap·추가 OG 보완은 후속 작업이다.
