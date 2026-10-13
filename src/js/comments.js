@@ -80,14 +80,14 @@
   previewNotice.hidden = true;
   const retry = button('다시 연결', () => load(), 'comments-retry');
   retry.hidden = true;
-  const help = element('p', 'comments-help', '댓글 수정·삭제는 작성한 브라우저에서 가능합니다. 쿠키가 지워지면 권한을 잃으며, Like도 같은 브라우저를 기준으로 처리합니다.');
+  const commentHint = '댓글 (댓글 수정·삭제는 작성한 브라우저에서 가능합니다. 쿠키가 지워지면 권한을 잃으며, Like도 같은 브라우저를 기준으로 처리합니다.)';
   let composer;
   composer = editor();
   const list = element('div', 'comments-list');
   const admin = element('details', 'comments-admin'), adminTitle = element('summary', '', '관리자');
   const adminBody = element('div', 'comments-admin-body');
   admin.append(adminTitle, adminBody);
-  root.append(toolbar, notice, previewNotice, retry, composer.form, help, list, admin);
+  root.append(toolbar, notice, previewNotice, retry, composer.form, list, admin);
   heading.textContent = 'Comments';
 
   async function request(path, method = 'GET', payload) {
@@ -167,6 +167,7 @@
     const name = field(identity, '이름', 'name', editing ? comment.author.name : composer?.name?.value || '');
     const link = field(identity, '이메일 또는 홈페이지 (선택)', 'link', editing ? comment.author.link || '' : composer?.link?.value || '');
     const body = field(form, '댓글', 'body', editing ? comment.body : '', true);
+    body.placeholder = commentHint;
     form.append(identity);
     const actions = element('div', 'comments-form-actions'), submit = element('button', 'comments-submit', editing ? '수정 저장' : comment ? '답글 등록' : '댓글 등록');
     submit.type = 'submit';

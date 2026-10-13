@@ -70,7 +70,8 @@ test('UI renders untrusted text safely and preserves composing state through lik
   assert.ok(f.document.getElementById('comment-c'));
   const composer = f.find('comments-form'), body = composer.children.find(node => node.tagName === 'label').children[1];
   assert.equal(composer.children[0].children[1],body);
-  assert.equal(body.placeholder,'댓글');
+  assert.equal(body.placeholder,'댓글 (댓글 수정·삭제는 작성한 브라우저에서 가능합니다. 쿠키가 지워지면 권한을 잃으며, Like도 같은 브라우저를 기준으로 처리합니다.)');
+  assert.ok(!f.all().some(node => node.className === 'comments-help' && node.textContent.includes('쿠키가 지워지면')));
   assert.deepEqual(composer.children[1].children.map(label => label.children[1].placeholder),['이름','이메일 또는 홈페이지 (선택)']);
   body.value = '작성 중인 댓글';
   body.focus(); body.setSelectionRange(2,4);

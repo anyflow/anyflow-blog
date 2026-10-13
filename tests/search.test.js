@@ -15,6 +15,7 @@ test("search indexes only supplied public pages and keeps an existing index when
 test("home and post share one search dialog; card tags are buttons outside the post link",()=>{
  const env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname,"../src/_includes")));
  env.addFilter("versionedAsset",s=>s);env.addFilter("tagColor",()=>"#fff");env.addFilter("tagStyle",()=>"");env.addFilter("dateLabel",s=>s);
+ env.addFilter('absoluteUrl',url=>new URL(url,require('../src/_data/site.json').url).href);
  const item={title:"Title",url:"/one/",tags:['정확한, 태그','A&B'],category:"Category",tagStyles:{},toc:[],displayDate:"2025/01/01",date:"2025-01-01"};
  const noindex=env.render("base.njk",{site:{title:"Blog"},home:{},post:{...item,noindex:true},content:""});assert.match(noindex,/<meta name="robots" content="noindex">/);
  for(const post of [null,item]){

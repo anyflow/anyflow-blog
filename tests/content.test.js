@@ -174,6 +174,7 @@ test('the home favicon is a referenced asset declared on home and post pages',t=
  const result=loadContent(root,path.join(root,'none'));assert.equal(result.home.favicon,'/assets/home/favicon.png');assert.equal(result.assets.size,1);
  const nunjucks=require('nunjucks'),env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname,'../src/_includes')));
  env.addFilter('versionedAsset',s=>s);env.addFilter('tagColor',()=>"#fff");env.addFilter('tagStyle',()=>"");
+ env.addFilter('absoluteUrl',url=>new URL(url,require('../src/_data/site.json').url).href);
  for(const post of [null,result.posts[0]]){
   const html=env.render('base.njk',{home:result.home,site:{title:'Blog'},post,content:''});
   assert.match(html,/<link rel="icon" href="\/assets\/home\/favicon.png">/);assert.match(html,/<link rel="apple-touch-icon"/);
@@ -243,4 +244,12 @@ test('post URLs omit trailing slashes across authored paths and internal link fo
  require('../lib/validate-content').validateContent(content);
  post(root,'first',{permalink:'/first',post_id:'stable-first-123'});
  assert.equal(loadContent(root,path.join(root,'none')).posts.find(p=>p.id==='stable-first-123').url,'/first');
+});
+
+test('bare Markdown filenames stay text while explicit links and web URLs still linkify',t=>{
+ const root=fixture(t);post(root,'first',{},'CLAUDE.md AGENTS.md CHANGLELOG.md 한국어.md\n\nhttps://example.md https://example.com www.example.com\n\n[Manual](http://README.md)');
+ const html=loadContent(root,path.join(root,'none')).posts[0].html;
+ assert.doesNotMatch(html,/href="http:\/\/(?:CLAUDE|AGENTS|CHANGLELOG|한국어)\.md"/i);
+ assert.match(html,/CLAUDE\.md AGENTS\.md CHANGLELOG\.md 한국어\.md/);
+ for(const url of ['https://example.md','https://example.com','http://www.example.com','http://README.md'])assert.ok(html.includes('href="'+url+'"'));
 });

@@ -31,7 +31,7 @@ test("source block import preserves metadata, image identity, captions, nested b
  assert.match(raw,/post\.md#\^h/);
  const current=loadContent(root,path.join(root,"none"));validateContent(current);
  assert.match(current.posts[0].html,/src="\/assets\/post\/one.png"/);assert.match(current.posts[0].html,/src="\/assets\/post\/two.png"/);assert.match(current.posts[0].html,/<figcaption>/);
- assert.match(current.posts[0].html,/<a href="\/post\/#h">Heading<\/a>/);
+ assert.match(current.posts[0].html,/<a href="\/post#h">Heading<\/a>/);
  assert.match(current.posts[0].html,/<strong>Orchestra\(오케스트라\)<\/strong>는\./);
  assert.match(current.posts[0].html,/<h2[\s\S]*class="code-block"/);
 });
@@ -44,7 +44,7 @@ test("generated link validation rejects missing notes and block anchors",()=>{
 test("empty paragraphs and paragraph line breaks survive import without changing code or previews",t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),"notion-spacing-"));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  fs.mkdirSync(path.join(root,"_assets/visuals"),{recursive:true});
- const header='---\ntitle: Spacing\npermalink: /spacing\ncreated: 2025-01-01\ncategory: test\nkind: post\ndraft: false\nicon: ⭐\n---';
+ const header='---\ntitle: Spacing\npermalink: /spacing\npost_id: spacing-test-123\ncreated: 2025-01-01\ncategory: test\nkind: post\ndraft: false\nicon: ⭐\n---';
  fs.writeFileSync(path.join(root,"spacing.md"),header+'\n\nOld body.');
  fs.writeFileSync(path.join(root,"_assets/visuals/manifest.json"),JSON.stringify({emojis:{},pages:{"/spacing":{pageId:"page",vaultPath:"spacing.md",title:"Spacing"}}}));
  const block=(id,type,title="",content=[])=>({id,type,properties:{title:[[title]]},content});
@@ -81,4 +81,18 @@ test("empty paragraphs and paragraph line breaks survive import without changing
  assert.equal(audit().status,0);
  fs.writeFileSync(path.join(root,"spacing.md"),raw.replace('data-notion-block-id="empty1"','data-notion-block-id="wrong"'));
  const failed=audit();assert.equal(failed.status,1);assert.match(failed.stdout,/empty paragraph order or identity mismatch/);
+});
+
+test('table inline code keeps real newlines and literal Markdown or HTML characters',t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'notion-table-code-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ fs.mkdirSync(path.join(root,'_assets/visuals'),{recursive:true});
+ fs.writeFileSync(path.join(root,'table.md'),'---\ntitle: Table\npermalink: /table\npost_id: table-code-123\ncreated: 2025-01-01\ncategory: test\nkind: post\ndraft: false\n---\n\nOld');
+ fs.writeFileSync(path.join(root,'_assets/visuals/manifest.json'),JSON.stringify({pages:{'/table':{pageId:'table-code-123',vaultPath:'table.md'}}}));
+ const code='A<B> *x* | '+String.fromCharCode(96)+'value'+String.fromCharCode(96)+'\n  y\\z';
+ const blocks=[{id:'page',type:'page',content:['table']},{id:'table',type:'table',content:['head','row'],format:{table_block_column_order:['a','b']}},{id:'head',type:'table_row',properties:{a:[['Code']],b:[['Literal']]}},{id:'row',type:'table_row',properties:{a:[[code,[['c']]]],b:[['literal <br>',[['c']]]]}}];
+ importNotion(root,{'/table':{pageID:'page',vaultPath:'table.md',blocks}});
+ const html=loadContent(root,path.join(root,'none')).posts[0].html;
+ assert.match(html,/<code>A&lt;B&gt; \*x\* \| .value.<br>  y\\z<\/code>/);
+ assert.match(html,/<code>literal &lt;br&gt;<\/code>/);
+ assert.doesNotMatch(html,/<em>x<\/em>/);
 });

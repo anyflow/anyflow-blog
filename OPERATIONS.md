@@ -356,3 +356,15 @@ X 게시물의 첨부 사진·동영상 포스터를 카드 자동 선택·Obsid
 글 주소·내부 링크·검색·canonical·OG·댓글 카탈로그를 슬래시 없는 형식으로 통일했다. 홈 /는 유지하며 /post/는 쿼리 문자열을 보존해 상대 Location /post로 301 이동한다. 실제 운영에서 /는200, /introspective-life/anyway는200, /introspective-life/anyway/?source=test&n=2는301과 정확한 Location을 확인했다. 브라우저 최종 URL과 canonical·OG도 슬래시 없는 주소다. 운영 카탈로그398개를 확인했고397글의 기존 ID·물리 index.html은 유지했다. 관련 테스트5개·미리보기 검색 결과·격리 nginx의 루트/글/자산200 및 잘못된주소404를 확인했다.
 
 API 이미지는 유지하고 변경된 카탈로그만 기존5초 갱신 경로로 읽는다. 기존 anyflow.net·DNS·Gateway·HTTPRoute는 변경하지 않았다. 검증한 정적 결과를 패키징했으며 GHCR 업로드·전체 전수 재검증·앞선 감사에서 발견한 다른 결함 수정은 수행하지 않았다.
+
+## 2026-10-14 전수 점검 후 결함 수정 — 운영 반영 대기
+
+현재운영은 release-20261014-7c87a04다. 아래 변경은 remote작업트리·iCloud작성vault·비공개댓글작업사본·미리보기에만 반영했으며 commit·push·운영API재시작·배포는 수행하지 않았다.
+
+- GitStore rawstate5초캐시·single-flight·호출별복사, 쓰기fresh fetch와성공/실패캐시무효화, Git maintenance/gc autoDetach=false를 적용했다. 관련10개테스트를 통과했다. Node PID1에분리유지보수프로세스가남는경로를 Gittrace로재현했으나 기존84좀비개별원인은확정하지않았고정리하지않았다. API교체후해소를확인한다.
+- Blade Runner원본이미지4댓글·2답글관계를복원하고private작업사본227개·preview230개로반영했다. sourceID재실행중복방지와기존223개·Like·설정보존을확인했다. 일반본문을오인하지않는HTML제목정규화2개테스트를통과했다. 원본MD·이미지·검토자료는private originals/import-20261014-blade-runner/에보관한다.
+- 표코드8개셀의원본개행을공통변환기에서보존하고C++/CLI대상글만재변환했다. bare .md파일명의fuzzy자동링크를막고명시적링크·URL은유지한다. 관련6개테스트통과, 실제preview표에서 multilinecode8·literal BR0, AI글가짜파일명링크0을확인했다. 원본감사의7개수치는다른코드블록의일치로1셀을놓쳐8개로정정했다.
+- 렌더fixture3곳absoluteUrl필터와spacingfixture의유효post_id를보완했다. 중복URLfixture는앞선URL수정에서고쳤다. 실패했던대상test를개별재확인했으며전체test/전수검사를반복하지않았다.
+- 통합preview397글·879자산·미해결0으로빌드하고OpenRC preview만재시작했다. BladeRunner댓글4개·최상위2행·본문백업제거, origin없는preview동시20조회0.242초를확인했다. 이값은GitHub네트워크비용을포함한운영성능측정이아니다.
+
+사용자결정없이Notion참조2개의대상이나과거외부404주소42개를추측해변경하지않는다. 운영API교체후캐시·동시조회·기존좀비해소확인, 실제신규댓글PR·승인·메일은별도대기다. 기존anyflow.net·DNS·Gateway·라우팅은유지한다.

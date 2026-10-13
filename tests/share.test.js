@@ -25,6 +25,7 @@ test('copy is a separate explicit action and closes the popup on success or fail
 test('home and post expose the same accessible share options with local icons',()=>{
  const nunjucks=require('nunjucks'),env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.join(__dirname,'../src/_includes')));
  for(const name of ['versionedAsset','tagColor','tagStyle','dateLabel'])env.addFilter(name,s=>s);
+ env.addFilter('absoluteUrl',url=>new URL(url,require('../src/_data/site.json').url).href);
  for(const post of [null,{title:'Title',url:'/one/',tags:[],toc:[],category:'Category'}]){
   const html=env.render('base.njk',{site:{title:'Blog'},home:{},post,content:''});
   assert.match(html,/popovertarget="share-menu"/);assert.match(html,/id="share-menu"[^>]*popover="auto"[^>]*aria-label="공유"/);

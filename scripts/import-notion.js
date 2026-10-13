@@ -4,6 +4,7 @@ const isNotionMetadata=require("../lib/notion-metadata");
 const text=a=>(a||[]).map(x=>x[0]).join("");
 const escape=s=>String(s).replace(/([\\\x60*_[\]<>#|!~])/g,"\\$1");
 const html=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tableCode=value=>"<code>"+html(value).replace(/[\\\x60*_\[\]\|]/g,c=>"&#"+c.codePointAt(0)+";").replaceAll("\n","<br>")+"</code>";
 const uuid=s=>String(s).replaceAll("-","").toLowerCase();
 // Markdown drops edge breaks and splits repeated breaks into separate paragraphs.
 const paragraph=s=>s.replace(/(?<!\\)(`+)[\s\S]*?\1|^[ \t]*(?:\n[ \t]*)+|\n(?:[ \t]*\n)+|\n[ \t]*$/g,(match,code)=>code?match:match.replaceAll("\n","<br>"));
@@ -30,7 +31,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
   return result;
  }
  const wrap=(tag,body)=>body.split(/(\n\s*\n)/).map(s=>s.trim()?"<"+tag+">"+s+"</"+tag+">":s).join("");
- function rich(a,source) {
+ function rich(a,source,tableCell=false) {
   return (a||[]).map(([value,marks=[]])=>{
    let s=escape(value),url=null;
    for(const mark of marks) {
@@ -41,6 +42,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
     else if(type==="eoi"){const b=blocks.get(arg);s=escape(b?.format?.uri||value);url=b?.format?.original_url||b?.format?.uri;}
     else if(type==="e")s="$"+arg+"$";
     else if(type==="a")url=internal(arg,source);
+    else if(type==="c"&&tableCell&&value.includes("\n"))s=tableCode(value);
     else if(type==="c"){const f="\x60".repeat(Math.max(1,...(value.match(/\x60+/g)||[]).map(x=>x.length+1)));s=f+(value.startsWith("\x60")?" ":"")+value+(value.endsWith("\x60")?" ":"")+f;}
     else if(!["b","i","s","_","h"].includes(type))throw new Error("Unknown rich text annotation: "+type);
    }
@@ -124,7 +126,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
     case "equation":result="$$\n"+text(b.properties?.title)+"\n$$";break;
     case "table": {
      const cols=b.format.table_block_column_order,rows=(b.content||[]).map(id=>byId.get(id));
-     const line=row=>"| "+cols.map(c=>rich(row?.properties?.[c],p.vaultPath).replaceAll("|","\\|").replaceAll("\n","<br>")).join(" | ")+" |";
+     const line=row=>"| "+cols.map(c=>rich(row?.properties?.[c],p.vaultPath,true).replaceAll("|","\\|").replaceAll("\n","<br>")).join(" | ")+" |";
      result=[line(rows[0]),"| "+cols.map(()=>"---").join(" | ")+" |",...rows.slice(1).map(line)].join("\n");
      report.types.table_row=(report.types.table_row||0)+rows.length;break;
     }

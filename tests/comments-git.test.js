@@ -97,6 +97,7 @@ test('reused container PID releases an old process lock while same-process store
   await first.read();
   await fs.mkdir(lock);
   await fs.writeFile(path.join(lock,'owner.json'),JSON.stringify({pid:process.pid,processId:'previous-container-process'}));
+  const expired=Date.now()+5001;t.mock.method(Date,'now',()=>expired);
   await first.read();
   await assert.rejects(fs.access(lock));
   let owner,pending,entered=false;
@@ -113,4 +114,72 @@ test('reused container PID releases an old process lock while same-process store
   });
   await pending;
   assert.equal(entered,true);
+});
+
+
+test('delayed concurrent reads share one refresh, cache for five seconds and isolate caller permissions',async t=>{
+  const {publicPost}=require('../lib/comments/model');
+  const root=await temporary(t),store=new GitStore({directory:root,preview:true});
+  await store.transaction(state=>{state.comments.c1=comment('c1');state.comments.c2=comment('c2','pending');});
+  let now=Date.now();t.mock.method(Date,'now',()=>now);
+  const refresh=store.refresh.bind(store);let calls=0,release,enter;
+  const gate=new Promise(resolve=>{release=resolve;}),entered=new Promise(resolve=>{enter=resolve;});
+  store.refresh=async()=>{calls++;await refresh();if(calls===1){enter();await gate;}};
+  const pending=Array.from({length:20},()=>store.read());
+  await entered;assert.equal(calls,1);release();
+  const states=await Promise.all(pending);assert.equal(calls,1);
+  assert.notEqual(states[0],states[1]);assert.notEqual(states[0].comments.c1,states[1].comments.c1);
+  states[0].comments.c1.body='caller-local';
+  assert.equal((await store.read()).comments.c1.body,'본문');assert.equal(calls,1);
+  const owner=publicPost(states[1],'post_1','PRIVATE_OWNER_HASH'),anonymous=publicPost(states[2],'post_1');
+  assert.equal(owner.comments.length,2);assert.equal(owner.comments[0].can_edit,true);
+  assert.equal(anonymous.comments.length,1);assert.equal(anonymous.comments[0].can_edit,false);
+  now+=4999;await store.read();assert.equal(calls,1);
+  now+=1;await store.read();assert.equal(calls,2);
+});
+
+test('writes refresh independently of the read cache and invalidate it after success or failure',async t=>{
+  const root=await temporary(t),first=new GitStore({directory:root,preview:true}),second=new GitStore({directory:root,preview:true});
+  await first.transaction(state=>{state.comments.c1=comment('c1');});
+  await first.read();
+  await second.transaction(state=>{state.comments.c1.body='external edit';state.likes['post:post_1']={OTHER:true};});
+  assert.equal((await first.read()).comments.c1.body,'본문');
+  await first.transaction(state=>{
+    assert.equal(state.comments.c1.body,'external edit');assert.deepEqual(state.likes['post:post_1'],{OTHER:true});
+    state.comments.c1.body='local edit';
+  });
+  assert.equal((await first.read()).comments.c1.body,'local edit');
+  await second.transaction(state=>{state.comments.c1.body='new external edit';});
+  await assert.rejects(first.transaction(state=>{
+    assert.equal(state.comments.c1.body,'new external edit');throw new Error('rejected write');
+  }),/rejected write/);
+  assert.equal((await first.read()).comments.c1.body,'new external edit');
+});
+
+test('expired cache never substitutes for a failed refresh and concurrent failures can be retried',async t=>{
+  const root=await temporary(t),store=new GitStore({directory:root,preview:true});
+  await store.transaction(state=>{state.comments.c1=comment('c1');});
+  await store.read();
+  const expired=Date.now()+5001;t.mock.method(Date,'now',()=>expired);
+  const refresh=store.refresh.bind(store);let calls=0;
+  store.refresh=async()=>{calls++;throw new Error('remote unavailable');};
+  const failures=await Promise.allSettled(Array.from({length:10},()=>store.read()));
+  assert.equal(calls,1);assert.ok(failures.every(r=>r.status==='rejected'&&/remote unavailable/.test(r.reason.message)));
+  store.refresh=async()=>{calls++;await refresh();};
+  assert.equal((await store.read()).comments.c1.body,'본문');assert.equal(calls,2);
+});
+
+
+test('Git maintenance stays in the foreground instead of leaving detached workers under Node PID 1',async t=>{
+  const root=await temporary(t),remote=path.join(root,'remote.git'),directory=path.join(root,'data'),trace=path.join(root,'trace.json');
+  await fs.mkdir(remote);await git(remote,'init','--bare','--initial-branch=main');
+  const store=new GitStore({directory,remote});await store.read();
+  assert.equal(await store.git('config','--bool','--get','maintenance.autoDetach'),'false');
+  assert.equal(await store.git('config','--bool','--get','gc.autoDetach'),'false');
+  const previous=process.env.GIT_TRACE2_EVENT;process.env.GIT_TRACE2_EVENT=trace;
+  try{await store.git('fetch','origin');}
+  finally{if(previous===undefined)delete process.env.GIT_TRACE2_EVENT;else process.env.GIT_TRACE2_EVENT=previous;}
+  const events=(await fs.readFile(trace,'utf8')).trim().split('\n').map(line=>JSON.parse(line));
+  assert.ok(events.some(e=>e.event==='child_start'&&e.argv?.[1]==='maintenance'));
+  assert.ok(!events.some(e=>e.event==='region_enter'&&e.category==='maintenance'&&e.label==='detach'));
 });

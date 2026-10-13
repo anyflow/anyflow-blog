@@ -86,3 +86,17 @@ test('home guestbook inventory recognizes its Markdown list and exact image bloc
  assert.equal(result.length,1);assert.equal(result[0].note,'blog.md');assert.deepEqual(result[0].images,['Untitled.png','Untitled 1.png','Untitled 2.png']);assert.equal(result[0].raw,block+'\n');assert(!result[0].raw.includes('Next'));
  const source=fs.readFileSync(path.join(root,'blog.md'),'utf8');assert.equal(source.slice(result[0].start,result[0].end),result[0].raw);
 });
+
+
+test('comment backup inventory recognizes exact visible titles split by inline HTML',t=>{
+ const fs=require('fs'),path=require('path'),os=require('os');const root=fs.mkdtempSync(path.join(os.tmpdir(),'comment-backup-title-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const block='> [!abstract]- 댓<strong>글 백업</strong>\n>\n> ![](<backup.webp>)\n';
+ fs.writeFileSync(path.join(root,'post.md'),'Body\n\n---\n\n'+block+'\n## Next\nKeep');const catalog={root,posts:[{id:'post1',permalink:'/post/',note:'post.md'}]},found=backupInventory(catalog);
+ assert.equal(found.length,1);assert.deepEqual(found[0].images,['backup.webp']);assert.equal(fs.readFileSync(path.join(root,'post.md'),'utf8').slice(found[0].start,found[0].end),block+'\n');
+ for(const label of ['<strong>댓글 백업</strong>','댓<span>글</span>&nbsp;백업','댓글백업']){fs.writeFileSync(path.join(root,'post.md'),'> [!abstract]- '+label+'\n> ![](<backup.webp>)\n');assert.equal(backupInventory(catalog).length,1);}
+});
+
+test('comment backup inventory ignores ordinary mentions and different callout titles',t=>{
+ const fs=require('fs'),path=require('path'),os=require('os');const root=fs.mkdtempSync(path.join(os.tmpdir(),'comment-backup-title-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const catalog={root,posts:[{id:'post1',permalink:'/post/',note:'post.md'}]};
+ for(const source of ['본문에서 댓글 백업 설명\n![](<keep.webp>)\n','> [!note] 댓글 백업 안내\n> ![](<keep.webp>)\n','> [!abstract]- 예전 댓글 백업\n> ![](<keep.webp>)\n','> [!abstract]- <script>댓글 백업</script>\n> ![](<keep.webp>)\n']){fs.writeFileSync(path.join(root,'post.md'),source);assert.equal(backupInventory(catalog).length,0);}
+});
