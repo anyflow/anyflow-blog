@@ -2,7 +2,7 @@
 
 ## 현재 단계
 
-메타데이터 후속 작업은 글별 OG 제목·설명·대표 이미지·공개 주소 제공으로 한정한다. RSS·sitemap 추가 구현은 범위에서 제외한다.
+OG·GA4·댓글·Like와 과거 데이터 이관을 구현하고 로컬 미리보기에 반영했다. 3단계 자동 배포·운영 배포·도메인 전환은 보류한다. RSS·sitemap은 추가하지 않는다.
 
 최신 운영 배포는 `profile-20261013-5371f9a`다. 정적 결과는 코드 `6699059`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편과 원본 Share 동작을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
 
@@ -15,7 +15,7 @@ BLOG_OUTPUT_DIR=_preview npm run build
 
 콘텐츠를 변경한 경우에만 `make sync`를 수행한다. 관련 테스트와 대표 동작 확인은 아래 검증 기준을 따른다.
 
-새 콘텐츠 원본은 비공개 `anyflow/blog` 저장소 루트다. 현재 Mac의 SSH 터널 미리보기는 `http://127.0.0.1:8765/`이며 운영 `blog.anyflow.net`과 분리한다. 빌드는 성공한 결과만 전환하고 이전 생성 결과 한 개를 `.cache/previous-build`에 보관한다.
+새 콘텐츠 원본은 비공개 `anyflow/blog` 저장소 루트다. 현재 Mac의 SSH 터널 미리보기는 `http://127.0.0.1:8765/`이며 OpenRC의 Node 서버가 정적 파일·댓글 API를 함께 제공한다. 댓글은 운영 저장소에서 분리한 preview Git을 사용하며 운영 `blog.anyflow.net`과 분리한다. 빌드는 성공한 결과만 전환하고 이전 생성 결과 한 개를 `.cache/previous-build`에 보관한다.
 
 ## 빌드/배포
 
@@ -60,10 +60,10 @@ manifest의 고유 이미지 태그로 빌드·kind 적재 후 삭제 없이 rol
 ## 후속 단계
 
 후속 작업:
-- 전체 콘텐츠 검수와 누락 글·링크 정리
-- GitHub 제공 runner의 빌드·GHCR 등록·배포 선언 갱신과 홈 서버 Argo CD 자동 Sync 구성. 별도 Argo CD 설치 후 재개
-- Disqus 댓글·좋아요 보존 확인
-- 전체 검증과 별도 승인 후 anyflow.net 전환
+- 3단계 GitHub runner·GHCR·배포 선언·Argo CD 자동 Sync 구성. 별도 Argo CD 설치 후 재개
+- 운영 댓글 API 이미지·Secret·Service 연결과 실제 새 댓글 PR·승인 OFF/ON·메일 수신 확인
+- GA4 실제 수신, UA 통계 export 백업 유무, Cassandra 백업의 잘린 날짜 확인
+- 모든 구현 TODO 완료 후 UUID 주소 일괄 정리·최종 전수 검증 1회·별도 승인에 따른 anyflow.net 전환
 
 이 문서는 단계가 진행될 때마다 갱신한다.
 
@@ -286,3 +286,25 @@ YouTube iframe도 사진·Mermaid와 같은 본문 순서에서 카드 이미지
 X 게시물의 첨부 사진·동영상 포스터를 카드 자동 선택·Obsidian 갤러리·OG에 연결한다. 직접 X/Twitter iframe과 Notion iframe으로 감싼 주소를 지원한다. 빌드 캐시 `.cache/x-thumbnails.json`을 재사용하고 새 게시물만 조회한다. X 공개 임베드 응답에 의존하며 조회 실패 시 다음 그림을 사용한다. 텍스트 게시물의 별도 이미지 생성은 하지 않는다.
 
 관련 테스트 5개와 Mike Portnoy is Back 글의 카드·OG·이미지 응답·Obsidian 갤러리만 확인했다. 선택기 0.3.0을 설치·재로드하고 미리보기를 갱신한다. 전수 검사·전체 회귀 테스트·운영 배포는 수행하지 않는다.
+
+## 2026-10-14 GA4·댓글·Like — 구현·미리보기 완료, 운영 연결 보류
+
+기존 GA4·댓글 전용 Git 저장·과거 데이터 이관을 구성했다. 이번 작업은 운영 Deployment·DNS·라우팅을 변경하지 않는다.
+
+| 대상 | 완료 범위 | 남은 확인 |
+| --- | --- | --- |
+| GA4 | 계정 100207646·속성 333773406·스트림 4090770035·ID G-YWPHXJFYET 확인, 운영 두 hostname만 측정, 중복 태그 방지, 관련 테스트 4/4 | 새 코드의 실제 page_view 수신, UA 시절 export 백업 유무 |
+| 댓글 API·UI | 고정 글 ID·공개 카탈로그·쿠키 권한·관리자 인증·답글·Like·승인 기본 OFF·공개 비밀값 제외·충돌 재시도·PID 잠금 복구 | 운영 Service·Secret 연결·이미지 생성·배포 후 실요청 |
+| 댓글 저장·게시 | 비공개 anyflow/blog-comments, incoming PR·승인 OFF 자동 merge/ON 대기·public JSON 생성 | 실제 신규 댓글 PR·관리자 승인·GitHub 알림함·메일 수신 |
+| 데이터 | 댓글 198(Disqus 79·이미지 119, 공개 196·삭제 2, 답글 102), 62개 글과 홈, Like 95개 대상(댓글 77대상 합24·글과 홈 18대상 합27, 0명시62) | Cassandra 1백업 블록의 잘린 날짜 |
+| 원본 보존 | XML·OCR·텍스트·이미지 46개를 비공개 저장소에 보관, 대조 완료한 본문 백업 44블록 제거, vault 원본 자산 유지 | 미확인 Cassandra 백업은 본문 유지 |
+
+데이터 revision은 `73c64351c9fe479ff05f2fd2c0fe061b566a91e6`이며 [댓글 공개 Actions](https://github.com/anyflow/blog-comments/actions/runs/38418854320)가 성공했다. Like·공개 댓글의 직접 수정·삭제는 main에 기록하고 신규 댓글·답글만 PR을 만든다. 댓글 전용 Actions는 3단계 블로그 전체 자동 배포와 구분한다. 운영 저장소의 SSH 쓰기 키는 비추적 `.cache/comments-runtime/`에서 0600으로 관리하며 관리자 설정은 비공개 JSON에 보관한다. 키·토큰 값은 문서·이미지·Git에 넣지 않는다.
+
+미리보기 Node 서버에는 운영 Git과 분리한 preview Git으로 과거 댓글·Like를 넣었다. xDS 글에서 댓글 13개·글 Like 2와 로컬 검증 댓글의 등록·답글·Like 추가를 확인했다. 검증 댓글 2개는 preview Git에만 보관한다. 방문자 쿠키는 1년, 관리자 쿠키는 7일이다. `_preview/comments/catalog.json`에 공개 글·홈의 고정 ID를 넣고 운영 API는 `COMMENTS_CATALOG_URL=http://anyflow-blog/comments/catalog.json`을 5초 캐시로 갱신한다. 이미지에 포함한 카탈로그를 초기값으로 사용한다.
+
+`Dockerfile`의 comments-api target과 `deployment/comments-api.yaml`은 작성했으며 API 이미지는 미빌드·태그 pending이다. 데이터 작업 사본은 emptyDir에 복제하고 SSH 키·config JSON·known_hosts는 Secret에서 읽는다. Secret root 소유·0440·fsGroup 1000 조합을 사용한다. nginx는 공식 entrypoint가 `/etc/resolv.conf`의 DNS를 템플릿에 넣고 API hostname을 요청 시 해석한다. API Service 없이도 nginx가 시작되도록 `nginx -t` 1회 통과했다. 운영 apply·rollout·GHCR 등록·도메인 전환은 수행하지 않았다.
+
+관련 테스트와 대표 사례만 확인했다. 전체 콘텐츠·URL·이미지·화면 조합 검사와 최종 UUID 주소 정리는 수행하지 않았다. 전수 검증은 3단계를 포함한 전체 구현 TODO 완료 후 최종에서 한 번만 수행한다.
+
+댓글 저장소 Watch는 Custom → Pull requests만 선택해 저장했다. 실제 신규 PR·메일 수신 시험은 운영 연결 후 수행한다. 관리자 미리보기 로그인 값은 Mac의 `~/Library/Application Support/anyflow-blog/comments-preview-admin.txt`에 0600으로 보관한다. 운영 Secret은 별도로 연결하며 값은 Git에 넣지 않는다. 홈 서버의 GitHub SSH가 간헐적으로 시간 초과되어 이번 Git 게시에는 임시 역터널을 사용했다. 운영 배포 전 서버의 GitHub 접근 경로를 확인한다.

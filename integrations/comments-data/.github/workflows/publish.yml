@@ -1,0 +1,29 @@
+name: Publish comments
+on:
+  push:
+    branches: [main, 'incoming/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: comments-publication
+  cancel-in-progress: false
+  queue: max
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Review request and publish sanitized data
+        run: node scripts/publish.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENTS_REPOSITORY: ${{ github.repository }}
+          COMMENTS_EVENT_BRANCH: ${{ github.ref_name }}

@@ -21,5 +21,10 @@
     }
   ],
   "cover": "/images/reference/home-cover.webp",
-  "icon": "🌼"
+  "icon": "🌼",
+  "analyticsId": "G-YWPHXJFYET",
+  "analyticsHosts": [
+    "anyflow.net",
+    "www.anyflow.net"
+  ]
 }

@@ -22,3 +22,8 @@ layout: base.njk
 <section class="category-section" aria-labelledby="by-category"><h2 id="by-category">By Category</h2>
 {% for group in categories %}<details class="category-group" open><summary>{{ group.name | escape }} <span class="category-count">{{ group.posts.length }}</span></summary><div id="category-{{ loop.index }}">{% for item in group.posts %}<a class="category-row" href="{{ item.url }}" {% if loop.index>10 %}hidden{% endif %}>{{ icon(item) }}<span class="row-title">{{ item.title | escape }}</span><time datetime="{{ item.date }}">{{ item.displayDate }}</time></a>{% endfor %}</div>{% if group.posts.length>10 %}<button class="load-more" data-load-more="category-{{ loop.index }}" type="button">↓ &nbsp;Load more</button>{% endif %}</details>{% endfor %}
 </section>
+
+<section id="comments" class="comments" data-post-id="{{ home.id | escape }}" data-pagefind-ignore aria-labelledby="comments-title">
+  <h2 id="comments-title">댓글</h2>
+  <noscript>댓글을 보려면 JavaScript를 켜 주세요.</noscript>
+</section>

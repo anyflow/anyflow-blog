@@ -1,9 +1,9 @@
 #!/sbin/openrc-run
 name="anyflow blog preview"
-description="Loopback-only static blog review server"
+description="Loopback-only blog and isolated Git comment review server"
 supervisor="supervise-daemon"
-command="/usr/bin/python3"
-command_args="-u -m http.server 18765 --bind 127.0.0.1 --directory /home/anyflow/workspace/my-cluster/apps/anyflow-blog/_preview"
+command="/usr/bin/node"
+command_args="/home/anyflow/workspace/my-cluster/apps/anyflow-blog/scripts/comments-server.js"
 command_user="anyflow:anyflow"
 directory="/home/anyflow/workspace/my-cluster/apps/anyflow-blog"
 pidfile="/run/${RC_SVCNAME}.pid"

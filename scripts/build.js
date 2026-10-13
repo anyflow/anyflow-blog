@@ -18,6 +18,8 @@ const {loadContent}=require("../lib/content");
     const destination=path.join(staging,decodeURIComponent(url));
     fs.mkdirSync(path.dirname(destination),{recursive:true});fs.copyFileSync(source,destination);
   }
+  fs.mkdirSync(path.join(staging,"comments"),{recursive:true});
+  fs.writeFileSync(path.join(staging,"comments/catalog.json"),JSON.stringify([...content.posts.map(({id,title,url,aliases})=>({id,title,url,aliases})),{id:content.home?.id||"home",title:content.home?.title||require("../src/_data/site.json").title,url:"/",aliases:content.home?.aliases||["/"]}]));
   await require("../lib/search-index").buildSearchIndex(staging,content.posts);
   if(fs.existsSync(output)) {
     const previous=path.resolve(".cache/previous-build");

@@ -223,3 +223,10 @@ test('X post images participate in card source order and explicit choices take p
  assert.equal(find('x-first').thumbnail,image);assert.equal(find('photo-first').thumbnail,'/assets/photo-first/photo.png');assert.equal(find('chosen-x').thumbnail,'/assets/chosen-x/photo.png');assert.deepEqual(result.xPosts,[id]);
  result=loadContent(root,path.join(root,'none'),{});assert.equal(find('x-first').thumbnail,'/assets/x-first/photo.png');
 });
+
+test('comment post IDs remain fixed across permalink changes and reject collisions',t=>{
+ const root=fixture(t);post(root,'first',{post_id:'stable-post-123',permalink:'/old'});
+ assert.equal(loadContent(root,path.join(root,'none')).posts[0].id,'stable-post-123');
+ post(root,'first',{post_id:'stable-post-123',permalink:'/new'});assert.equal(loadContent(root,path.join(root,'none')).posts[0].id,'stable-post-123');
+ post(root,'second',{post_id:'stable-post-123'});assert.throws(()=>loadContent(root,path.join(root,'none')),/Duplicate post_id/);
+});

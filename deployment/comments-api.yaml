@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: anyflow-blog-comments
+  namespace: service
+spec:
+  selector:
+    app: anyflow-blog-comments
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anyflow-blog-comments
+  namespace: service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anyflow-blog-comments
+  template:
+    metadata:
+      labels:
+        app: anyflow-blog-comments
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: api
+          image: ghcr.io/anyflow/anyflow-blog-comments:pending
+          ports:
+            - containerPort: 3000
+          env:
+            - name: COMMENTS_PREVIEW
+              value: "false"
+            - name: COMMENTS_DATA_DIR
+              value: /data/repository
+            - name: COMMENTS_GIT_REMOTE
+              value: git@github.com:anyflow/blog-comments.git
+            - name: COMMENTS_CONFIG
+              value: /etc/comments/config.json
+            - name: COMMENTS_CATALOG_URL
+              value: http://anyflow-blog/comments/catalog.json
+            - name: GIT_SSH_COMMAND
+              value: ssh -i /etc/comments/github-comment-deploy -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/comments/known_hosts
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: credentials
+              mountPath: /etc/comments
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: credentials
+          secret:
+            secretName: anyflow-blog-comments
+            defaultMode: 0440
