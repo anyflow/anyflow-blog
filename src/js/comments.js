@@ -5,16 +5,24 @@
   }
 
   function commentDate(value) {
+    if (!value) return '작성일 미상';
     if (/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2})?$/.test(value)) return value.replace('T', ' ');
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : date.toLocaleString('ko-KR', {dateStyle: 'medium', timeStyle: 'short'});
   }
 
   function commentRows(comments) {
-    const ordered = [...comments].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)) || String(a.id).localeCompare(String(b.id)));
+    const byId = new Map(comments.map(comment => [comment.id, comment]));
+    const ordered = comments.filter(comment => comment.status !== 'deleted').sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)) || String(a.id).localeCompare(String(b.id)));
     const ids = new Set(ordered.map(comment => comment.id)), children = new Map(), visited = new Set(), rows = [];
     for (const comment of ordered) {
-      const parent = ids.has(comment.parent_id) && comment.parent_id !== comment.id ? comment.parent_id : null;
+      let parent = comment.parent_id;
+      const seen = new Set([comment.id]);
+      while (byId.get(parent)?.status === 'deleted' && !seen.has(parent)) {
+        seen.add(parent);
+        parent = byId.get(parent).parent_id;
+      }
+      if (!ids.has(parent) || parent === comment.id) parent = null;
       if (!children.has(parent)) children.set(parent, []);
       children.get(parent).push(comment);
     }
@@ -30,7 +38,13 @@
           stack.push({comment: replies[index], depth: row.depth + 1, ancestors: [...row.ancestors, row.comment.id]});
       }
     }
-    append(children.get(null) || []);
+    const roots = children.get(null) || [];
+    roots.sort((a, b) => {
+      if (!a.created_at && b.created_at) return 1;
+      if (a.created_at && !b.created_at) return -1;
+      return String(b.created_at || '').localeCompare(String(a.created_at || '')) || String(a.id).localeCompare(String(b.id));
+    });
+    append(roots);
     append(ordered.filter(comment => !visited.has(comment.id)));
     return rows;
   }
@@ -39,7 +53,7 @@
   if (typeof document === 'undefined') return;
   const root = document.querySelector('.comments[data-post-id]');
   if (!root) return;
-  const postId = root.dataset.postId, collapsed = new Set();
+  const postId = root.dataset.postId, expanded = new Set();
   let snapshot = null, activeEditor = null;
 
   function element(tag, className, text) {
@@ -58,7 +72,7 @@
   const count = element('span', 'comments-count');
   const postLike = likeButton(null, 0, false);
   postLike.disabled = true;
-  toolbar.append(count, postLike);
+  toolbar.append(heading, postLike, count);
   const notice = element('p', 'comments-notice');
   notice.setAttribute('role', 'status');
   notice.setAttribute('aria-live', 'polite');
@@ -74,7 +88,7 @@
   const adminBody = element('div', 'comments-admin-body');
   admin.append(adminTitle, adminBody);
   root.append(toolbar, notice, previewNotice, retry, composer.form, help, list, admin);
-  heading.textContent = '댓글';
+  heading.textContent = 'Comments';
 
   async function request(path, method = 'GET', payload) {
     const response = await fetch(path, {
@@ -108,6 +122,12 @@
     } finally { retry.disabled = false; }
   }
 
+  function updateLike(node, commentId, likes, liked) {
+    node.textContent = (likes === 0 ? '🩶 ' : '❤️ ') + likes;
+    node.setAttribute('aria-label', (commentId === null ? '이 글 좋아요 ' : '댓글 좋아요 ') + likes);
+    node.setAttribute('aria-pressed', String(liked));
+  }
+
   function likeButton(commentId, likes, liked) {
     const node = button('', () => action(node, async () => {
       const result = await request('/api/likes', 'PUT', {post_id: postId, comment_id: commentId, liked: node.getAttribute('aria-pressed') !== 'true'});
@@ -118,8 +138,7 @@
       if (restoreFocus) next?.focus({preventScroll: true});
     }), 'comments-like');
     if (commentId !== null) node.id = 'comment-like-' + commentId;
-    node.textContent = (commentId === null ? '♡ 이 글 좋아요 ' : '♡ 좋아요 ') + likes;
-    node.setAttribute('aria-pressed', String(liked));
+    updateLike(node, commentId, likes, liked);
     return node;
   }
 
@@ -127,6 +146,7 @@
     const label = element('label', 'comments-field'), caption = element('span', '', labelText);
     const input = element(multiline ? 'textarea' : 'input');
     input.name = name;
+    input.placeholder = labelText;
     input.value = value;
     input.required = name !== 'link';
     input.maxLength = name === 'body' ? 10000 : name === 'name' ? 80 : 2048;
@@ -146,8 +166,8 @@
     const identity = element('div', 'comments-identity');
     const name = field(identity, '이름', 'name', editing ? comment.author.name : composer?.name?.value || '');
     const link = field(identity, '이메일 또는 홈페이지 (선택)', 'link', editing ? comment.author.link || '' : composer?.link?.value || '');
-    form.append(identity);
     const body = field(form, '댓글', 'body', editing ? comment.body : '', true);
+    form.append(identity);
     const actions = element('div', 'comments-form-actions'), submit = element('button', 'comments-submit', editing ? '수정 저장' : comment ? '답글 등록' : '댓글 등록');
     submit.type = 'submit';
     submit.disabled = !snapshot;
@@ -194,6 +214,7 @@
     if (activeEditor?.submit.disabled) { notice.textContent = '댓글 저장이 끝난 뒤 다른 답글을 작성해 주세요.'; return; }
     if (activeEditor && activeEditor.body.value.trim() && !confirm('작성 중인 내용을 취소하고 다른 댓글을 작성할까요?')) return;
     activeEditor = editor(comment, editing);
+    if (!editing) expanded.add(comment.id);
     renderList();
     activeEditor.body.focus({preventScroll: true});
   }
@@ -205,37 +226,36 @@
     const rows = commentRows(snapshot.comments);
     for (const row of rows) {
       const comment = row.comment;
-      if (row.ancestors.some(id => collapsed.has(id))) continue;
+      if (row.ancestors.some(id => !expanded.has(id))) continue;
       const article = element('article', 'comment');
       article.id = 'comment-' + comment.id;
       article.tabIndex = -1;
       article.style.setProperty('--comment-depth', Math.min(row.depth, 2));
       article.style.setProperty('--comment-depth-mobile', Math.min(row.depth, 1));
-      const header = element('header', 'comment-header'), deleted = comment.status === 'deleted';
-      const authorLink = safeAuthorLink(comment.author.link), author = element(!deleted && authorLink ? 'a' : 'strong', 'comment-author', deleted ? '삭제된 댓글' : comment.author.name);
-      if (!deleted && authorLink) {
+      const header = element('header', 'comment-header');
+      const authorLink = safeAuthorLink(comment.author.link), author = element(authorLink ? 'a' : 'strong', 'comment-author', comment.author.name);
+      if (authorLink) {
         author.href = authorLink;
         author.rel = 'nofollow ugc noopener noreferrer';
         if (!authorLink.startsWith('mailto:')) author.target = '_blank';
       }
       header.append(author);
-      if (!deleted && comment.author.is_admin) header.append(element('span', 'comment-badge', '관리자'));
-      if (comment.legacy) header.append(element('span', 'comment-badge', '이전 댓글'));
+      if (comment.author.is_admin) header.append(element('span', 'comment-badge', '관리자'));
       if (comment.status === 'pending') header.append(element('span', 'comment-badge', '승인 대기'));
-      const time = element('time', 'comment-date');
-      time.dateTime = comment.created_at;
+      const time = element(comment.created_at ? 'time' : 'span', 'comment-date');
+      if (comment.created_at) time.dateTime = comment.created_at;
       time.textContent = commentDate(comment.created_at);
       header.append(time);
-      if (comment.updated_at && comment.updated_at !== comment.created_at && !deleted) header.append(element('span', 'comment-edited', '수정됨'));
+      if (comment.updated_at && comment.updated_at !== comment.created_at) header.append(element('span', 'comment-edited', '수정됨'));
       article.append(header);
       if (row.depth >= 2 && comment.parent_id) {
-        const parent = snapshot.comments.find(item => item.id === comment.parent_id);
+        const parent = snapshot.comments.find(item => item.id === row.ancestors.at(-1));
         if (parent) {
-          const reference = element('a', row.depth >= 3 ? 'comment-parent' : 'comment-parent comment-parent-mobile', '↳ ' + (parent.status === 'deleted' ? '삭제된 댓글' : parent.author.name) + '에게 답글');
+          const reference = element('a', row.depth >= 3 ? 'comment-parent' : 'comment-parent comment-parent-mobile', '↳ ' + parent.author.name + '에게 답글');
           reference.href = '#' + encodeURIComponent('comment-' + parent.id);
           reference.addEventListener('click', event => {
             event.preventDefault();
-            for (const id of row.ancestors) collapsed.delete(id);
+            for (const id of row.ancestors) expanded.add(id);
             renderList();
             const target = document.getElementById('comment-' + parent.id);
             target?.scrollIntoView({block: 'center'});
@@ -244,12 +264,12 @@
           article.append(reference);
         }
       }
-      article.append(element('div', 'comment-body', deleted ? '삭제된 댓글입니다.' : comment.body));
+      article.append(element('div', 'comment-body', comment.body));
       const actions = element('div', 'comment-actions');
-      if (!deleted) actions.append(likeButton(comment.id, comment.likes, comment.liked));
+      actions.append(likeButton(comment.id, comment.likes, comment.liked));
       actions.append(button('답글', () => openEditor(comment, false)));
-      if (comment.can_edit && !deleted) actions.append(button('수정', () => openEditor(comment, true)));
-      if (comment.can_delete && !deleted) {
+      if (comment.can_edit) actions.append(button('수정', () => openEditor(comment, true)));
+      if (comment.can_delete) {
         const remove = button('삭제', () => action(remove, async () => {
           if (!confirm('댓글을 삭제할까요? 답글은 유지됩니다.')) return;
           if (activeEditor?.target === comment.id) activeEditor = null;
@@ -268,17 +288,17 @@
         actions.append(approve);
       }
       if (row.replies) {
-        const toggle = button((collapsed.has(comment.id) ? '답글 펼치기 ' : '답글 접기 ') + row.replies, () => {
-          if (!collapsed.has(comment.id) && activeEditor && (activeEditor.target === comment.id || rows.some(item => item.comment.id === activeEditor.target && item.ancestors.includes(comment.id)))) {
+        const toggle = button('답글 ' + row.replies + '개', () => {
+          if (expanded.has(comment.id) && activeEditor && (activeEditor.target === comment.id || rows.some(item => item.comment.id === activeEditor.target && item.ancestors.includes(comment.id)))) {
             notice.textContent = '작성 중인 답글을 등록하거나 취소한 뒤 접어 주세요.';
             return;
           }
-          if (collapsed.has(comment.id)) collapsed.delete(comment.id); else collapsed.add(comment.id);
+          if (expanded.has(comment.id)) expanded.delete(comment.id); else expanded.add(comment.id);
           renderList();
           document.getElementById('comment-toggle-' + comment.id)?.focus({preventScroll: true});
-        });
+        }, 'comment-toggle');
         toggle.id = 'comment-toggle-' + comment.id;
-        toggle.setAttribute('aria-expanded', String(!collapsed.has(comment.id)));
+        toggle.setAttribute('aria-expanded', String(expanded.has(comment.id)));
         actions.append(toggle);
       }
       article.append(actions);
@@ -286,6 +306,7 @@
       list.append(article);
     }
     if (!rows.length) list.append(element('p', 'comments-empty', '첫 댓글을 남겨 주세요.'));
+    if (activeEditor && snapshot.comments.some(comment => comment.id === activeEditor.target && comment.status === 'deleted')) list.append(activeEditor.form);
     if (focused && root.contains(focused)) {
       focused.focus({preventScroll: true});
       if (selection) focused.setSelectionRange(...selection);
@@ -342,8 +363,7 @@
     if (activeEditor) activeEditor.submit.disabled = false;
     count.textContent = result.comments.filter(comment => comment.status !== 'deleted').length + '개 댓글';
     postLike.disabled = false;
-    postLike.textContent = '♡ 이 글 좋아요 ' + result.post_likes;
-    postLike.setAttribute('aria-pressed', String(result.post_liked));
+    updateLike(postLike, null, result.post_likes, result.post_liked);
     renderList();
     renderAdmin();
     const setting = adminBody.querySelector('input[type=checkbox]');

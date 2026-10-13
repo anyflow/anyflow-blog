@@ -4,12 +4,12 @@ const source = fs.readFileSync(require.resolve('../src/js/comments'), 'utf8');
 function comment(id, parent_id = null, extra = {}) {
   return {id, parent_id, author: {name: '이름', link: '', is_admin: false}, body: '본문', created_at: '2026-10-13T01:00:00Z', status: 'published', likes: 0, liked: false, ...extra};
 }
-test('comment hierarchy keeps chronological siblings, actual parents and unlimited stored depth', () => {
+test('comment hierarchy keeps newest roots, actual parents and unlimited stored depth', () => {
   const rows = commentRows([comment('d','c'),comment('b','a'),comment('a'),comment('c','b'),comment('early',null,{created_at:'2026-01-01'}),comment('orphan','missing')]);
-  assert.deepEqual(rows.map(row => row.comment.id), ['early','a','b','c','d','orphan']);
-  assert.equal(rows[4].depth, 3);
-  assert.deepEqual(rows[4].ancestors, ['a','b','c']);
-  assert.equal(rows[1].replies, 1);
+  assert.deepEqual(rows.map(row => row.comment.id), ['a','b','c','d','orphan','early']);
+  assert.equal(rows.find(row => row.comment.id === 'd').depth, 3);
+  assert.deepEqual(rows.find(row => row.comment.id === 'd').ancestors, ['a','b','c']);
+  assert.equal(rows.find(row => row.comment.id === 'a').replies, 1);
   assert.equal(commentRows([comment('a','b'),comment('b','a')]).length, 2);
 });
 test('author links allow only web or email URLs', () => {
@@ -21,6 +21,7 @@ test('author links allow only web or email URLs', () => {
 test('legacy date without a timezone keeps the original wall clock', () => {
   assert.equal(commentDate('2008-01-15T08:34:00'),'2008-01-15 08:34:00');
   assert.equal(commentDate('2008-01-15'),'2008-01-15');
+  assert.equal(commentDate(null),'작성일 미상');
 });
 
 function fixture(initial) {
@@ -63,9 +64,14 @@ test('UI renders untrusted text safely and preserves composing state through lik
   await f.ready();
   assert.equal(f.find('comment-author').tagName, 'strong');
   assert.equal(f.find('comment-body').textContent, '<script>bad()</script>');
-  assert.equal(f.all().filter(node => node.className === 'comment').length, 3);
-  assert.ok(f.all().some(node => node.textContent === '삭제된 댓글입니다.'));
+  f.document.getElementById('comment-toggle-a').events.click();
+  assert.equal(f.all().filter(node => node.className === 'comment').length, 2);
+  assert.ok(!f.all().some(node => node.textContent.includes('삭제된 댓글')));
+  assert.ok(f.document.getElementById('comment-c'));
   const composer = f.find('comments-form'), body = composer.children.find(node => node.tagName === 'label').children[1];
+  assert.equal(composer.children[0].children[1],body);
+  assert.equal(body.placeholder,'댓글');
+  assert.deepEqual(composer.children[1].children.map(label => label.children[1].placeholder),['이름','이메일 또는 홈페이지 (선택)']);
   body.value = '작성 중인 댓글';
   body.focus(); body.setSelectionRange(2,4);
   f.responses.push({...snapshot([malicious]),post_likes:1,post_liked:true});
@@ -108,4 +114,60 @@ test('reply draft stays mounted through snapshot updates and folding protects it
   toggle.events.click();
   assert.equal(toggle.getAttribute('aria-expanded'),'true');
   assert.match(f.find('comments-notice').textContent,/작성 중인 답글/);
+  f.responses.push(snapshot([comment('a',null,{status:'deleted'}),comment('b','a')]));
+  f.find('comments-like').events.click(); await f.ready();
+  assert.ok(f.root.contains(draft));
+  assert.equal(draft.value,'답글 초안');
+  assert.equal(f.document.getElementById('comment-a'),undefined);
+  assert.ok(f.document.getElementById('comment-b'));
+});
+
+test('post and comment Likes show a heart emoji and count, retaining accessible names', async () => {
+  const f = fixture({...snapshot([comment('a',null,{likes:1}),comment('b')]),post_likes:7});
+  await f.ready();
+  const likes = f.all().filter(node => node.className === 'comments-like');
+  assert.deepEqual(likes.map(node => node.textContent), ['❤️ 7','❤️ 1','🩶 0']);
+  assert.deepEqual(likes.map(node => node.getAttribute('aria-label')), ['이 글 좋아요 7','댓글 좋아요 1','댓글 좋아요 0']);
+});
+
+test('deleted rows disappear while replies attach to the closest visible ancestor', () => {
+  const rows = commentRows([comment('a'),comment('b','a',{status:'deleted'}),comment('c','b'),comment('d','c'),comment('gone',null,{status:'deleted'}),comment('child','gone')]);
+  assert.deepEqual(rows.map(row => row.comment.id), ['a','c','d','child']);
+  assert.equal(rows[1].depth,1);
+  assert.deepEqual(rows[1].ancestors,['a']);
+  assert.equal(rows[3].depth,0);
+  assert.equal(commentRows([comment('gone',null,{status:'deleted'})]).length,0);
+  assert.equal(commentRows([comment('x','y',{status:'deleted'}),comment('y','x',{status:'deleted'}),comment('child','x')]).length,1);
+});
+
+test('newest top-level comments precede older threads while replies stay chronological', () => {
+  const rows = commentRows([
+    comment('old',null,{created_at:'2025-01-01'}),comment('new',null,{created_at:'2026-01-01'}),comment('unknown',null,{created_at:null}),
+    comment('later','new',{created_at:'2026-03-01'}),comment('earlier','new',{created_at:'2026-02-01'}),
+    comment('nested','earlier',{created_at:'2026-04-01'}),comment('undated-reply','new',{created_at:null})
+  ]);
+  assert.deepEqual(rows.map(row => row.comment.id), ['new','earlier','nested','later','undated-reply','old','unknown']);
+});
+
+test('replies start collapsed and expansion persists through Like updates', async () => {
+  const comments=[comment('a'),comment('b','a'),comment('c','b')];
+  const f=fixture(snapshot(comments)); await f.ready();
+  assert.equal(f.find('comments-like').textContent,'🩶 0');
+  assert.equal(f.document.getElementById('comment-toggle-a').getAttribute('aria-expanded'),'false');
+  assert.equal(f.document.getElementById('comment-toggle-a').textContent,'답글 1개');
+  assert.equal(f.document.getElementById('comment-b'),undefined);
+  f.document.getElementById('comment-toggle-a').events.click();
+  assert.ok(f.document.getElementById('comment-b'));
+  assert.equal(f.document.getElementById('comment-c'),undefined);
+  f.document.getElementById('comment-toggle-b').events.click();
+  assert.ok(f.document.getElementById('comment-c'));
+  f.responses.push({...snapshot(comments),post_likes:1,post_liked:true});
+  f.find('comments-like').events.click(); await f.ready();
+  assert.equal(f.find('comments-like').textContent,'❤️ 1');
+  assert.ok(f.document.getElementById('comment-c'));
+  f.responses.push(snapshot(comments));
+  f.find('comments-like').events.click(); await f.ready();
+  assert.equal(f.find('comments-like').textContent,'🩶 0');
+  f.document.getElementById('comment-toggle-a').events.click();
+  assert.equal(f.document.getElementById('comment-b'),undefined);
 });

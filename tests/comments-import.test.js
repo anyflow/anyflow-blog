@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
-const {alias,matchPost,plainBody,disqusImport,ocrCandidates,approvedBackups,mergeImports}=require('../lib/comments/import');
+const {alias,matchPost,plainBody,disqusImport,ocrCandidates,approvedBackups,mergeImports,backupInventory}=require('../lib/comments/import');
 const catalog={aliases:new Map([['/example/','post1'],['Post title','post1'],['post1','post1']])};
 const xml=posts=>`<disqus><thread dsq:id="t1"><id>https://www.anyflow.net/example</id><title>Post title</title></thread>${posts}</disqus>`;
 const post=(id,parent='',extra='')=>`<post dsq:id="${id}"><message><![CDATA[<p>Hello &amp; <b>world</b></p><p>Line<br>two</p>]]></message><createdAt>2020-01-02T03:04:05Z</createdAt><author><name>Alice</name><email>PRIVATE@example.com</email><url>https://alice.example/</url></author><thread dsq:id="t1"/>${parent?`<parent dsq:id="${parent}"/>`:''}${extra}</post>`;
@@ -54,4 +54,35 @@ test('verified admin usernames and deleted tombstones are preserved without expo
  const result=mergeImports([disqusImport(raw,catalog,{adminUsernames:['verified_owner']})]);
  assert.equal(result.comments.length,2);assert.equal(result.comments[0].status,'deleted');assert.equal(result.comments[0].body,'삭제된 댓글입니다');assert.equal(result.comments[0].author.is_admin,true);assert.equal(result.comments[1].parent_id,'disqus-1');
  assert.throws(()=>disqusImport('<disqus><thread dsq:id="x">',catalog),/Incomplete/);
+});
+
+
+test('reviewed image backups may preserve explicitly unknown dates without fabricating time',()=>{
+ const entry={candidate_id:'backup-undated',post_id:'post1',author:{name:'..'},body:'Confirmed image text',created_at:null,reviewed:true,source:{provider:'backup-image',id:'image#1',image:'image.webp',precision:'unknown'}};
+ const result=approvedBackups([entry],catalog);assert.equal(result.comments.length,1);assert.equal(result.comments[0].created_at,null);assert.equal(result.comments[0].legacy,true);
+ for(const invalid of [{reviewed:false},{created_at:undefined},{created_at:'bad-date'},{source:{...entry.source,precision:'minute'}},{source:{...entry.source,provider:'backup-text'}},{source:{...entry.source,image:''}}])assert.equal(approvedBackups([{...entry,...invalid}],catalog).comments.length,0);
+});
+
+test('undated backup import is idempotent by source ID and never guesses cross-provider duplicates',()=>{
+ const entry={candidate_id:'backup-undated',post_id:'post1',author:{name:'..'},body:'Same text',created_at:null,reviewed:true,source:{provider:'backup-image',id:'image#1',image:'image.webp',precision:'unknown'}};
+ const imported=approvedBackups([entry],catalog),dated=disqusImport(xml(post('dated')),catalog);dated.comments[0].body='Same text';dated.comments[0].author.name='..';
+ const repeated=mergeImports([dated,imported,imported]);assert.equal(repeated.comments.length,2);assert.equal(repeated.comments[1].created_at,null);assert.equal(repeated.duplicates.length,1);
+ const other={comments:[{...imported.comments[0],id:'other-undated',source:{provider:'backup-text',id:'text#1'}}]};assert.equal(mergeImports([imported,other]).comments.length,2);
+});
+
+
+test('private imported guestbook comments and replies stay pending',()=>{
+ const entry={candidate_id:'guest-private',post_id:'post1',author:{name:'Guest'},body:'Private source text',created_at:'2010-04-14T07:20:00',reviewed:true,source:{provider:'backup-image',id:'guestbook/image#1',image:'image.png',precision:'minute',visibility:'private'}};
+ const parent=approvedBackups([entry],catalog);assert.equal(parent.comments[0].status,'pending');
+ const reply=approvedBackups([{...entry,candidate_id:'guest-reply',parent_id:'guest-private',body:'Reply',source:{...entry.source,id:'guestbook/image#2',visibility:'public'}}],catalog);
+ const result=mergeImports([parent,reply]);assert.equal(result.comments.length,2);assert(result.comments.every(comment=>comment.status==='pending'));
+});
+
+test('home guestbook inventory recognizes its Markdown list and exact image block only',t=>{
+ const fs=require('fs'),path=require('path'),os=require('os');const root=fs.mkdtempSync(path.join(os.tmpdir(),'guestbook-import-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const block='* **방명록 백업**\n\n  ![Untitled](<./Untitled.png>)\n\n  ![Untitled](<./Untitled 1.png>)\n\n  ![Untitled](<./Untitled 2.png>)\n';
+ fs.writeFileSync(path.join(root,'blog.md'),'Home\n\n***\n\n'+block+'\n## Next\nKeep');fs.writeFileSync(path.join(root,'post.md'),block);
+ const result=backupInventory({root,posts:[{id:'home',permalink:'/',note:'blog.md'},{id:'post1',permalink:'/post/',note:'post.md'}]});
+ assert.equal(result.length,1);assert.equal(result[0].note,'blog.md');assert.deepEqual(result[0].images,['Untitled.png','Untitled 1.png','Untitled 2.png']);assert.equal(result[0].raw,block+'\n');assert(!result[0].raw.includes('Next'));
+ const source=fs.readFileSync(path.join(root,'blog.md'),'utf8');assert.equal(source.slice(result[0].start,result[0].end),result[0].raw);
 });

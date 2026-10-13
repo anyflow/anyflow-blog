@@ -36,7 +36,7 @@
 - Obsidian 선택기 원본은 `integrations/obsidian-card-image/`다. blog vault에 Blog 카드 이미지 플러그인으로 설치·활성화했다. `npm test`의 pretest가 picker.js·diagrams.js와 기존 Markdown-it 14.1.1을 설치용 main.js로 패키징한다.
 - 카드 갤러리 최초 구현 시 회귀 테스트 35/35를 확인했다. 이번 OG·YouTube 보완은 관련 테스트 4개와 폴스타4의 홈 카드·OG·Obsidian 갤러리만 확인했다. `_preview`를 갱신했으며 현재 Mac 미리보기는 `http://127.0.0.1:8765/`다. Git 게시 후 2026-10-14 사용자 요청으로 release-20261014-6dab388 운영 배포에 포함했다.
 
-## 5·6단계 방문 통계·댓글 — 운영 반영, Git 연결 안정화 대기
+## 5·6단계 방문 통계·댓글 — 운영 반영, 신규 댓글 게시 검증 대기
 
 - 기존 GA4 계정 `100207646`·속성 `333773406`·웹 스트림 `4090770035`의 측정 ID `G-YWPHXJFYET`를 확인했다. `src/js/analytics.js`는 `anyflow.net`·`www.anyflow.net`에서만 로드하며 localhost·`blog.anyflow.net`은 측정하지 않는다. 기존 gtag·GTM·UA와 중복 초기화를 막는다. 새 코드의 실제 GA 수신과 UA 시절 export 백업 유무는 미확인이다.
 - `lib/comments/`·`scripts/comments-server.js`·`src/js/comments.js`가 수신 API·Git 저장·Disqus와 유사한 UI를 제공한다. 방문자 쿠키는 1년, 관리자 쿠키는 7일이며 HTTPS에서 HttpOnly·Secure·SameSite=Lax를 적용한다. 공개 JSON에서 작성 권한 검증값·대기 댓글을 제외한다. Git 충돌 재시도와 재시작 후 PID 잠금 복구를 처리한다.
@@ -111,4 +111,26 @@ GOAL.md, PLAN.md, ARCHITECTURE.md, CONTENT_CONTRACT.md, OPERATIONS.md를 함께 
 
 ## 2026-10-14 운영 배포
 
-현재 정적 사이트와 댓글 API의 태그는 release-20261014-6dab388이다. 정적 코드 6dab388·콘텐츠 2d06f6c를 사용했다. GitHub SSH 초기 연결 종료로 댓글·Like 저장 확인은 미완료다. API Pod Ready와 기능 완료를 구분한다. 최신 상태·이미지 ID·대표 확인 근거는 OPERATIONS.md에 기록한다. 기존 anyflow.net·DNS·Gateway·HTTPRoute·호스트 DNS·기본 라우트는 변경하지 않았다. 3단계·최종 UUID 정리·전수 검증은 보류한다.
+현재 정적 사이트와 댓글 API의 태그는 release-20261014-6dab388이다. 정적 코드 6dab388·콘텐츠 2d06f6c를 사용했다. 유선·Wi-Fi의 비대칭 경로와 strict RPF 드롭을 확인하고 Wi-Fi 런타임·부팅 자동 연결을 해제했다. 운영 조회·Like 추가·중복 방지·취소와 게시 Actions를 확인했다. 신규 댓글 PR·승인·메일 수신 검증은 대기하며 API Pod Ready와 기능 완료를 구분한다. 최신 상태·이미지 ID·대표 확인 근거는 OPERATIONS.md에 기록한다. 기존 anyflow.net·DNS·Gateway·HTTPRoute·호스트 DNS·기본 라우트는 변경하지 않았다. 3단계·최종 UUID 정리·전수 검증은 보류한다.
+
+## 2026-10-14 댓글 표시·이미지 복원 미리보기
+
+삭제 행·이전 댓글 태그와 댓글 위 수평선을 숨기고 Like는 0개일 때 🩶 0, 1개 이상일 때 실제 ❤️ 이모지와 숫자로 표시한다. 삭제된 댓글의 답글은 가까운 표시 중인 상위 댓글에 연결하며 작성 중인 답글을 보존한다. 본문 끝에 남은 댓글 백업용 hr도 화면에서 숨긴다. 관련 UI 테스트와 대표 미리보기를 확인했다.
+
+Cassandra 이미지에서 이름·본문을 복원하고 원본에 없는 작성일은 created_at:null·source.precision:unknown으로 보관한다. 검토 완료한 이미지 백업에만 날짜 미상을 허용하며 importer 관련 테스트 3개와 날짜 표시 테스트 1개를 확인했다. 이미지 댓글은 119→120개, 이관 작업 사본은 198→199개이며 preview는 검증 댓글 2개를 포함해 201개다. 원본 198개·기존 Like·설정을 보존했다. 작성 vault와 .cache/blog에서 Cassandra 본문 백업을 제거하고 원본 이미지는 유지했다. 미리보기는 397편·참조 자산 880개를 생성했다.
+
+코드·추가 복원 자료·작성 vault·개인 TODO/spec의 commit·push와 운영 배포는 진행하지 않았다. .cache/blog-comments 작업 사본은 최신 origin/main을 받은 뒤 Cassandra 댓글·검토 자료만 미커밋으로 추가했으며 운영 데이터에 새 댓글을 push하지 않았다. 전수 검증은 실행하지 않았다.
+
+## root 방명록 복원 미리보기
+
+홈 문서의 방명록 이미지 3장에서 24개와 답글 관계 12쌍을 복원했다. 답글 위·아래 위치와 이미지 경계의 원댓글 관계를 대조했고 기존 홈 Disqus의 3단 답글·Like를 유지했다. 잠금 표시 원글·답글 2개는 비공개 대기로 보존해 공개 API·JSON에서 제외하고 관리자에게만 제공한다. 원본 3장·blog.md·검토 자료는 비공개 댓글 작업 사본의 originals/import-20261014-guestbook/에 보존했다.
+
+이관 작업 사본은 223개(Disqus 79·이미지 144), preview는 검증 댓글 2개를 포함해 225개다. 홈은 공개 28개·삭제 2개·비공개 대기 2개이며 UI는 공개 28개를 표시한다. importer의 홈 방명록 목록 수집과 비공개 부모의 답글 보호를 수정하고 관련 테스트 2개와 실제 anonymous API·답글 바로 아래 배치를 확인했다. 작성 vault·.cache/blog에서 root 방명록 백업 섹션을 정리했고 원본 파일은 유지한다. 공개 미리보기의 원본 이미지 URL은 404다.
+
+소스·콘텐츠·추가 복원 자료·문서의 commit·push와 운영 배포는 대기한다. 전수 검증은 실행하지 않았다.
+
+답글은 기본으로 접고 사용자가 펼친 상태는 댓글·Like 갱신에도 유지한다. 답글 작성 시 해당 가지를 펼치며 작성 중인 초안을 보존한다. 댓글 정렬은 최상위 댓글 최신순·각 댓글의 답글 작성순으로 표시한다. 답글의 답글은 해당 답글 바로 아래에 유지하며 작성일 미상 항목은 마지막에 둔다. 정렬 관련 테스트 2개와 미리보기 빌드를 확인했고 commit·push·운영 배포는 대기한다.
+
+## 2026-10-14 댓글 UI 후속 배포
+
+Comments 표제는 본문 첫 제목 크기를 사용하고 같은 행 오른쪽에 14px Like·댓글 수를 배치한다. 답글은 기본 접힘이며 답글 X개와 상태별 꺾쇠를 표시한다. 댓글 입력 후 이름·선택 링크를 입력하고 각 표제는 placeholder와 접근성 이름으로 제공한다. 작성 폼은 외부 박스 없는 무채색 UI다. UI·이관 관련 테스트 21개를 통과했다. 복원 댓글 25개·원본 자료를 비공개 댓글 저장소에 게시하고 잠금 원글·답글 2개는 pending으로 유지한다. 작성 vault의 해당 본문 백업 2블록을 정리했다. 사용자 요청으로 코드 게시와 blog.anyflow.net 정적 배포를 진행하며 기존 anyflow.net과 API 이미지는 유지한다. 최종 revision·운영 근거는 OPERATIONS.md에 기록한다.

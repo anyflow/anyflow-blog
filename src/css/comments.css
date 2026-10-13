@@ -1,20 +1,24 @@
-.comments { margin-top:56px; border-top:2px solid var(--faint); padding-top:20px; font-size:14px; }
-.content .comments>h2 { font-size:22px; margin:0 0 12px; padding:0; }
-.comments-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--faint); padding-bottom:12px; margin-bottom:16px; }
-.comments-count { font-weight:600; }
+.comments { margin-top:32px; padding-top:0; font-size:14px; }
+.post-body>hr:last-child { display:none; }
+.content .comments h2 { margin:0; padding:0; }
+.comments-toolbar { display:flex; justify-content:flex-start; align-items:baseline; gap:12px; border-bottom:1px solid var(--faint); padding-bottom:12px; margin-bottom:16px; }
+.comments-count { font-size:14px; font-weight:600; line-height:20px; }
 .comments button { padding:6px 9px; min-height:36px; }
 .comments button:disabled { opacity:.5; cursor:wait; }
-.comments-like[aria-pressed=true] { color:#2eaadc; font-weight:600; background:var(--hover); }
-.comments-form { background:var(--soft); border:1px solid var(--faint); border-radius:6px; padding:14px; }
-.comments-identity { display:grid; grid-template-columns:1fr 1.7fr; gap:12px; }
-.comments-field { display:flex; flex-direction:column; gap:5px; min-width:0; margin-bottom:12px; }
-.comments-field>span { font-size:12px; color:var(--muted); }
-.comments input,.comments textarea { min-width:0; width:100%; font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--faint); border-radius:4px; padding:9px 10px; }
+.comments .comments-like { font:inherit; line-height:1.2; }
+.comments .comments-toolbar .comments-like { margin-left:auto; font-size:14px; font-weight:600; line-height:20px; }
+.comments-like[aria-pressed=true] { font-weight:600; background:var(--hover); }
+.comments-form { padding:0; }
+.comments-identity { display:grid; grid-template-columns:1fr 1.7fr; gap:20px; }
+.comments-field { display:flex; flex-direction:column; gap:6px; min-width:0; margin-bottom:16px; }
+.comments-field>span { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.comments input::placeholder,.comments textarea::placeholder { color:var(--muted); opacity:1; }
+.comments input,.comments textarea { min-width:0; width:100%; font:inherit; color:var(--text); background:transparent; border:0; border-bottom:1px solid var(--faint); border-radius:0; padding:8px 0; }
 .comments input:focus-visible,.comments textarea:focus-visible { outline:2px solid #2eaadc; outline-offset:2px; }
-.comments textarea { resize:vertical; min-height:100px; }
+.comments textarea { resize:vertical; min-height:100px; border:1px solid var(--faint); border-radius:3px; padding:10px 12px; }
 .comments-form-actions { display:flex; justify-content:flex-end; gap:6px; }
-.comments .comments-submit { background:#287dac; color:white; padding:7px 14px; font-weight:600; }
-.comments .comments-submit:hover { background:#20688f; }
+.comments .comments-submit { background:var(--soft); color:var(--text); padding:6px 14px; font-size:13px; font-weight:500; }
+.comments .comments-submit:hover { background:var(--hover); }
 .content .comments-help,.content .comments-notice { color:var(--muted); font-size:12px; margin:12px 0; padding:0; }
 .comments-notice:empty { display:none; }
 .comments-list { margin-top:24px; }
@@ -27,6 +31,9 @@ a.comment-author { text-decoration:underline; text-underline-offset:3px; text-de
 .comment-body { margin:8px 0; white-space:pre-wrap; line-height:1.65; }
 .comment-actions { display:flex; gap:3px; flex-wrap:wrap; color:var(--muted); font-size:12px; }
 .comments .comment-actions button { padding:3px 7px; min-height:32px; }
+.comments .comment-toggle { display:inline-flex; align-items:center; gap:10px; color:var(--text); }
+.comment-toggle::after { content:''; width:8px; height:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:translateY(-2px) rotate(45deg); }
+.comment-toggle[aria-expanded=true]::after { transform:translateY(2px) rotate(225deg); }
 .comment-parent { display:block; font-size:12px; color:var(--muted); margin-top:7px; text-decoration:underline; text-underline-offset:3px; }
 .comment-parent-mobile { display:none; }
 .comment .comments-form { margin-top:12px; }
