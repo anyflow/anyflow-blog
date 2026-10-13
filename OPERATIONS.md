@@ -348,3 +348,11 @@ X 게시물의 첨부 사진·동영상 포스터를 카드 자동 선택·Obsid
 코드 21ecc28·콘텐츠 d5b6645를 사용해 정적 이미지 ghcr.io/anyflow/anyflow-blog:release-20261014-21ecc28을 패키징했다. imageID는 sha256:cf8c319fb701f7016ac5302bc1a133a71a8ae3ea8a270d8360b671b376ffbcfa다. kind 두 노드에 적재하고 Deployment 선언을 apply해 rollout을 완료했다. 새 Pod anyflow-blog-69885f48db-9nnpm은 Ready 1/1·재시작 0이다. API 이미지와 기존 anyflow.net·DNS·라우팅은 유지한다.
 
 운영 홈에서 카테고리 제목의 원본 배경색·굵기 400·삼각형 없음, 목록 제목 16px·500, 대표 Recent 카드 346×354.625px, Load more 14px·높이 30px·문구 opacity .4·화살표 .3을 확인했다. 미리보기에서 더보기 클릭 후 카드 10→20개 표시를 확인했다. 기존 카드 선택 이미지·태그 색상 계산은 유지한다. 검증한 정적 결과를 기존 nginx 런타임으로 패키징했으며 정규 Dockerfile 재빌드·GHCR 업로드·모바일 조합·전수 검증은 수행하지 않았다. 전수 검증은 전체 TODO 완료 후 최종 1회다.
+
+## 2026-10-14 글 URL trailing slash 제거 운영 반영
+
+코드 7c87a04·콘텐츠 d5b6645를 사용해 정적 이미지 ghcr.io/anyflow/anyflow-blog:release-20261014-7c87a04를 패키징하고 kind 두 노드에 적재했다. imageID는 sha256:d0f7630690af06c11bc57b8039829b519c5556f0055f392147f4d3df6fcf31e2다. nginx 템플릿과 정적 결과를 함께 반영했고 Deployment rollout을 완료했다. 새 Pod anyflow-blog-865d67d6cb-tftsk는 Ready 1/1·재시작 0이다.
+
+글 주소·내부 링크·검색·canonical·OG·댓글 카탈로그를 슬래시 없는 형식으로 통일했다. 홈 /는 유지하며 /post/는 쿼리 문자열을 보존해 상대 Location /post로 301 이동한다. 실제 운영에서 /는200, /introspective-life/anyway는200, /introspective-life/anyway/?source=test&n=2는301과 정확한 Location을 확인했다. 브라우저 최종 URL과 canonical·OG도 슬래시 없는 주소다. 운영 카탈로그398개를 확인했고397글의 기존 ID·물리 index.html은 유지했다. 관련 테스트5개·미리보기 검색 결과·격리 nginx의 루트/글/자산200 및 잘못된주소404를 확인했다.
+
+API 이미지는 유지하고 변경된 카탈로그만 기존5초 갱신 경로로 읽는다. 기존 anyflow.net·DNS·Gateway·HTTPRoute는 변경하지 않았다. 검증한 정적 결과를 패키징했으며 GHCR 업로드·전체 전수 재검증·앞선 감사에서 발견한 다른 결함 수정은 수행하지 않았다.
