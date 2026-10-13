@@ -2,16 +2,18 @@
 
 ## 현재 단계
 
+메타데이터 후속 작업은 글별 OG 제목·설명·대표 이미지·공개 주소 제공으로 한정한다. RSS·sitemap 추가 구현은 범위에서 제외한다.
+
 최신 운영 배포는 `profile-20261013-5371f9a`다. 정적 결과는 코드 `6699059`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편과 원본 Share 동작을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
 
 ## 미리보기
 
 ```sh
 make sync
-npm test
 BLOG_OUTPUT_DIR=_preview npm run build
-sudo rc-service anyflow-blog-preview status
 ```
+
+콘텐츠를 변경한 경우에만 `make sync`를 수행한다. 관련 테스트와 대표 동작 확인은 아래 검증 기준을 따른다.
 
 새 콘텐츠 원본은 비공개 `anyflow/blog` 저장소 루트다. 현재 Mac의 SSH 터널 미리보기는 `http://127.0.0.1:8765/`이며 운영 `blog.anyflow.net`과 분리한다. 빌드는 성공한 결과만 전환하고 이전 생성 결과 한 개를 `.cache/previous-build`에 보관한다.
 
@@ -43,16 +45,23 @@ manifest의 고유 이미지 태그로 빌드·kind 적재 후 삭제 없이 rol
 - Gateway: public-gateway (cluster namespace), blog.anyflow.net listener
 - HTTPRoute: anyflow-blog (service namespace)
 
-## 검증
+## 검증 기준
 
-- 기준 사이트와 나란히 눈으로 비교
-- 체크 항목: 내부 링크, 이미지 로드, 반응형, 다크모드, 검색, OG metadata
+전수 검증은 개인 vault의 `NOW/NEW BLOG/blog 이전 TODO.md`와 관련 spec의 구현 TODO를 모두 완료한 뒤 최종 단계에서 한 번만 수행한다. 보류 중인 GitHub Actions·Argo CD 자동 게시도 완료 조건에 포함한다. 공통 변환기 변경과 중간 배포에도 같은 기준을 적용한다.
+
+- 기능별로 변경한 로직의 관련 테스트와 대표 사례만 확인한다. 새 복잡한 로직의 작은 테스트와 글 저장 시 데이터 손상 방지 확인을 유지한다.
+- PC·모바일·라이트·다크는 해당 변경에 직접 영향을 받는 화면만 확인한다. 수정하지 않은 기능과 이미 통과한 화면을 반복 검사하지 않는다.
+- 전체 글·원본 블록·본문 보존 대조, 전체 이미지 디코딩·자산 해시, 전체 공개 URL, 모든 화면 조합 검사는 최종 전수 검증으로 모은다.
+- 미리보기 갱신에 필요한 빌드와 생성기의 기본 입력 검증은 유지한다. 매 기능마다 전체 회귀 테스트나 별도 콘텐츠 전수 검사를 실행하지 않는다.
+- 미배포 작업에서는 운영 상태를 재확인하지 않는다. 실제 배포 시 상태·변경 파일·대표 동작만 확인한다.
+- UI 자동화 도구 복구에 오래 매달리지 않는다. 실패하면 간단한 대체 확인 방법으로 전환한다. 별도 검수 보고서·JSON·스크린샷은 필요할 때만 남기고 기본 결과는 TODO에 기록한다.
+- 최종 전수 검증에서 발견한 문제는 수정한 부분만 다시 확인한다. 전체 검증을 반복하지 않는다. anyflow.net 전환은 별도 승인을 받는다.
 
 ## 후속 단계
 
 후속 작업:
 - 전체 콘텐츠 검수와 누락 글·링크 정리
-- GitHub Actions와 self-hosted runner의 공유 볼륨 게시 구성
+- GitHub 제공 runner의 빌드·GHCR 등록·배포 선언 갱신과 홈 서버 Argo CD 자동 Sync 구성. 별도 Argo CD 설치 후 재개
 - Disqus 댓글·좋아요 보존 확인
 - 전체 검증과 별도 승인 후 anyflow.net 전환
 
@@ -216,7 +225,7 @@ LAN 192.168.0.4:22 접속을 확인하고 깨끗한 서버 작업트리를 GitHu
 | 브라우저 | 복원 글·표·커버·아이콘, Harness 본문 검색·kagent 정확한 태그 필터 확인. 모바일 390×844 라이트·다크 가로 넘침 0, 대표 빈 문단 6개 높이 30px |
 | 경로 유지 | Gateway·HTTPRoute·Service spec 배포 전후 일치, 기존 www.anyflow.net DNS 동일 |
 
-검증한 서버 정적 출력을 캐시 nginx 런타임에 패키징해 kind 두 노드에 적재하고 기존 Deployment를 삭제 없이 rollout했다. 표준 다단계 Dockerfile 전체 재빌드와 GHCR 업로드는 수행하지 않았다. 이전 font 이미지와 Deployment 이력을 유지한다. 상시 미리보기도 397편으로 갱신했다. 증거는 Mac의 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 운영 배포/` 및 서버 `.cache/release-20261013-5371f9a/`에 보관한다. 자동 게시·RSS·sitemap·추가 OG 보완은 후속 작업이다.
+검증한 서버 정적 출력을 캐시 nginx 런타임에 패키징해 kind 두 노드에 적재하고 기존 Deployment를 삭제 없이 rollout했다. 표준 다단계 Dockerfile 전체 재빌드와 GHCR 업로드는 수행하지 않았다. 이전 font 이미지와 Deployment 이력을 유지한다. 상시 미리보기도 397편으로 갱신했다. 증거는 Mac의 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 운영 배포/` 및 서버 `.cache/release-20261013-5371f9a/`에 보관한다. 자동 게시·글별 OG 메타데이터 보완은 후속 작업이다.
 
 ## 2026-10-13 Share 동작 보정
 
@@ -237,3 +246,37 @@ LAN 192.168.0.4:22 접속을 확인하고 깨끗한 서버 작업트리를 GitHu
 사용자가 지정한 app.notion.com 링크가 연결되는 `anyflower.notion.site`의 실제 CSS `77281-c4b3c46f690b55b2.css`에서 `.notion-dark-theme` 팔레트를 추출했다. 배경 `#191919`, 본문 `#f0efed`, 보조 글자 `#ada9a3`, 구분선 `#383836`, 보조면 `#202020`, 팝업 `#252525`와 카드·코드·알림 상자의 색상을 맞췄다. 다크 선택자만 수정했고 라이트·폰트·레이아웃·태그 이름별 색상 계산은 유지한다.
 
 서버 테스트 24/24·397편 미리보기 빌드와 PC·모바일의 홈·검색·기술 글·알림 상자·라이트 전환을 확인했다. Mac 검토 주소는 `http://127.0.0.1:8765/`다. 사용자 요청으로 commit·push까지만 수행하고 Deployment 이미지·generation과 배포 manifest를 유지한다. 운영 색상은 아직 기존 profile 버전이다. 근거와 화면은 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 다크 테마/`에 보관한다.
+
+
+## 2026-10-13 4단계 미리보기 검증 — 운영 배포 대기
+
+Mermaid의 전역 SVG 16px 축소를 아이콘 범위 제한으로 수정하고, 커버 좌표를 선택 속성으로 처리하며 본문 사진 확대 팝업을 추가했다. 소스 수정·테스트·빌드는 alpine에서 수행했다.
+
+- 테스트 29/29, 공개 글 397개·참조 첨부 1,144개·미해결 참조 0으로 `_preview` 빌드를 완료했다.
+- Mermaid 글 9개·다이어그램 13개의 PC 1280×720·모바일 390×844·라이트·다크 36개 화면 조합에서 SVG 52개와 테마 전환을 확인했다. 대표 SVG 폭은 16px에서 676px로 복원되며 UI 아이콘은 16px를 유지한다.
+- 새 커버의 미입력·빈 좌표는 중앙이며 기존 숫자·이전 CSS 좌표를 보존한다. 현재 공개 글·홈의 생성 데이터를 수정 전 HEAD와 대조해 동일함을 확인했다. Obsidian에서 좌표 없는 검증 노트의 배경 위치 50% 50%·커버 높이 240px을 확인하고 검증 노트는 OS 휴지통으로 이동했다.
+- 사진 확대는 원본 자산을 사용한다. PC·모바일·라이트·다크에서 화면 안에 표시되며 사진·배경·닫기 버튼 클릭과 Esc로 닫힌다. Enter·Space 열기와 닫은 뒤 포커스·스크롤 복원을 확인했다. 닫기 버튼은 최소 44px이다.
+- 현재 Deployment는 generation 55, `ghcr.io/anyflow/anyflow-blog:profile-20261013-5371f9a`, Available 1이다. commit·push·배포와 배포 환경 변경은 수행하지 않았다.
+- 검수 자료는 Mac의 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 4단계/`에 보관한다. 운영 검증은 배포 후 별도로 수행한다.
+
+Mermaid 확대도 일반 사진과 같은 팝업으로 연결했다. 9개 글·13개 다이어그램의 PC·모바일·라이트·다크 총 52개 열기·닫기 조합에서 SVG ID 중복 없음, 본문 SVG·높이·포커스 복원과 테마 전환을 확인했다. 접힌 블록은 펼친 뒤 검증했다. Enter·Space·Esc·배경 클릭과 Mermaid 이후 일반 사진 열기도 확인했다. native dialog의 close 이벤트 완료 후 본문 복원을 확인하며 commit·push·운영 배포는 수행하지 않았다.
+
+
+## 2026-10-13 카드 이미지 갤러리 — 운영 배포 대기
+
+카드는 `thumbnail` 선택값 → 본문 순서상 첫 사진·Mermaid → 텍스트 순서로 표시한다. 커버와 독립적이며 이전 export의 hero_image는 자동 선택에서 제외한다. 사진은 채워서 자르고 Mermaid는 전체 도형을 맞춰 표시한다.
+
+- 테스트 35/35, 공개 글 397개·참조 첨부 926개·미해결 참조 0으로 미리보기 빌드를 완료했다. 기존 397개 글의 본문 HTML·제목·태그·주소·커버·위치는 수정 전과 동일하다.
+- 현재 카드: 사진 237개·Mermaid 3개·텍스트 157개. 기존 참고값 제외와 첫 그림 기준으로 카드 221개가 재산정되었다. 원본 자산은 삭제하지 않았으며 공개 산출물에서 불필요한 이전 힌트 자산을 제외한다.
+- 홈의 처음 10개 카드에는 Mermaid 1개를 렌더링하고 숨긴 카드 2개는 렌더링하지 않는다. Recent의 Load more로 70개를 표시한 뒤 Mermaid 3개를 확인했다. PC·모바일·라이트·다크, 그림 영역 클릭의 글 이동과 상세 Mermaid 확대를 확인했다.
+- blog vault에 Blog 카드 이미지 플러그인을 설치·활성화했다. 현재 글의 사진·Mermaid 및 vault의 다른 이미지 선택, 검색과 자동 선택 복원을 확인했다. 실제 Obsidian에서 저장한 중첩 Mermaid의 표준 블록 참조를 웹 loadContent로 읽어 같은 도형을 선택하는지 확인했다. 선택 중 글 변경·닫히지 않은 코드 블록은 저장을 거부한다.
+- 패키징은 기존 Markdown-it 14.1.1 배포 번들을 재사용한다. 추가 npm 의존성은 없고 Obsidian용 단일 main.js를 생성한다. 원본은 integrations/obsidian-card-image/picker.js·diagrams.js다. npm test의 pretest가 패키징과 라이브러리 바이트 보존 검사를 실행한다.
+- 검수 자료는 Mac `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 카드 이미지/`에 보관한다. commit·push·운영 배포와 배포 환경 변경은 수행하지 않았다. Obsidian 모바일 실기기는 미검증이다.
+
+## 2026-10-13 OG·YouTube 카드 개선 — 운영 배포 보류
+
+OG에 글별 절대 URL과 대표 이미지를 추가했다. 이미지 우선순위는 카드 사진·YouTube 썸네일 → 글 커버 → 홈 커버다. 현재 공유 URL은 blog.anyflow.net이며 기존 anyflow.net은 유지한다.
+
+YouTube iframe도 사진·Mermaid와 같은 본문 순서에서 카드 이미지로 취급하며 Obsidian 갤러리에서 선택할 수 있다. 폴스타4는 첫 영상 yonRGtMDDH8의 썸네일을 자동 사용한다. 선택기 0.2.0을 작성 vault에 설치·재로드했다.
+
+관련 테스트 4개만 실행해 통과했고 폴스타4의 미리보기 카드·OG·YouTube 이미지 HTTP 200과 Obsidian 갤러리 표시를 확인했다. 미리보기 갱신 빌드 외 전수 검사·전체 회귀 테스트는 실행하지 않았다. 사용자 요청 범위는 Git 게시까지이며 이미지 생성·운영 배포는 수행하지 않는다.

@@ -35,4 +35,4 @@ GitHub Actions와 홈 서버의 runner가 commit 이후 게시 작업을 수행�
 
 `수동 commit → 자동 push → GitHub Actions → 검증·빌드 → 공개 결과 전환`
 
-공유 볼륨을 이용한 nginx 파일 교체, 게시 동시 실행 제어, 실패·복구 검증은 후속 단계다. Disqus 댓글·좋아요 보존과 기존 UUID 주소 연결도 별도로 확인한다.
+공유 볼륨을 이용한 nginx 파일 교체, 게시 동시 실행 제어, 실패·복구 검증은 후속 단계다. Disqus 댓글·좋아요를 보존하며 원본 UUID·URL은 내부 글 식별 대응표에 보관한다. UUID 별도 주소·redirect는 구현하지 않는다. UUID 주소로 발행된 글은 모든 기능 구현 후 최종 전수 검증 직전에 일반 permalink로 일괄 변경하고 관련 참조를 갱신한다.

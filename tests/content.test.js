@@ -103,6 +103,29 @@ test('Pixel Banner image links and numeric crop coordinates match the published 
  }
 });
 
+test('cover crop defaults to center without coordinates, preserves explicit and legacy positions',t=>{
+ const root=fixture(t),cases=[
+  ['automatic',{},'50% 50%'],
+  ['blank',{cover_x:'',cover_y:'  '},'50% 50%'],
+  ['partial',{cover_x:0,cover_y:''},'0% 50%'],
+  ['vertical',{cover_x:null,cover_y:100},'50% 100%'],
+  ['legacy',{cover_position:'25% 75%'},'25% 75%'],
+  ['legacy-partial',{cover_position:'25% 75%',cover_x:'',cover_y:0},'25% 0%']
+ ];
+ for(const [name,data] of cases){
+  const source=post(root,name,{cover:'./cover.png',...data});
+  fs.writeFileSync(path.join(path.dirname(source),'cover.png'),'cover');
+ }
+ const home=post(root,'home',{kind:'page',permalink:'/',cover:'./cover.png'});
+ fs.writeFileSync(path.join(path.dirname(home),'cover.png'),'cover');
+ const reference=path.join(root,'reference.json');
+ fs.writeFileSync(reference,JSON.stringify({'/automatic':{coverPosition:'0% 0%'},'/':{coverPosition:'0% 0%'}}));
+ const result=loadContent(root,reference);
+ for(const [name,,expected] of cases) assert.equal(result.posts.find(p=>p.title===name).coverPosition,expected);
+ assert.equal(result.home.coverPosition,'50% 50%');
+ assert.equal(result.unresolved.length,0);
+});
+
 test('native Obsidian callouts preserve nested quotes, folding, figures and math',t=>{
  const root=fixture(t),file=post(root,'native',{},'> [!notion]\n>\n> **Title**\n>\n> Body.\n>\n> > Nested quotation.\n\n> [!info] Custom title\n> More information.\n\n> [!warning]- Collapsed\n> Hidden details.\n\n![First paragraph. Second paragraph.|528](<image one.png>)\n\nFirst paragraph.\n\nSecond paragraph.\n\nAfter caption.\n\n$$\n\\frac{a}{b}=c\n$$\n\nInline $x^2$.\n\n^equation\n\n[Jump](#^equation)\n\n![[native/image one.png|240]]');
  fs.writeFileSync(path.join(path.dirname(file),'image one.png'),'image');
@@ -156,4 +179,39 @@ test('the home favicon is a referenced asset declared on home and post pages',t=
   assert.match(html,/<link rel="icon" href="\/assets\/home\/favicon.png">/);assert.match(html,/<link rel="apple-touch-icon"/);
  }
  fs.unlinkSync(path.join(path.dirname(home),'favicon.png'));assert.throws(()=>loadContent(root,path.join(root,'none')),/Missing favicon attachment/);
+});
+
+test('cards use the first image or Mermaid in body order and ignore obsolete export hints',t=>{
+ const root=fixture(t),cases=[
+  ['photo-first','![Photo](first.png)\n\n```mermaid\ngraph TD;A-->B;\n```',false],
+  ['diagram-first','```mermaid\ngraph TD;A-->B;\n```\n\n![Photo](first.png)',true],
+  ['html-first','<img src="first.png">\n\n```mermaid\ngraph TD;A-->B;\n```',false],
+  ['no-picture','```html\n<img src="first.png">\n```\n\nText.',null]
+ ];
+ for(const [name,body] of cases){const file=post(root,name,{hero_image:'other.png'},body);fs.writeFileSync(path.join(path.dirname(file),'first.png'),'first');fs.writeFileSync(path.join(path.dirname(file),'other.png'),'other');}
+ const result=loadContent(root,path.join(root,'none'));
+ for(const [name,,diagram] of cases){const current=result.posts.find(p=>p.title===name);if(diagram===true){assert.equal(current.thumbnail,'');assert.match(current.thumbnailDiagram,/A-->B/);}else if(diagram===false){assert.match(current.thumbnail,/\/first\.png$/);assert.equal(current.thumbnailDiagram,'');}else{assert.equal(current.thumbnail,'');assert.equal(current.thumbnailDiagram,'');}}
+});
+test('explicit card selection supports image links and stable Mermaid block references',t=>{
+ const root=fixture(t),body='```mermaid\ngraph TD;FIRST-->X;\n```\n\n> ```mermaid\n> graph LR;CHOSEN-->Y;\n> ```\n> ^chosen-diagram\n\n![Photo](first.png)';
+ const file=post(root,'selected',{thumbnail:'![[selected/second.png]]'},body);fs.writeFileSync(path.join(path.dirname(file),'first.png'),'first');fs.writeFileSync(path.join(path.dirname(file),'second.png'),'second');
+ let current=loadContent(root,path.join(root,'none')).posts[0];assert.equal(current.thumbnail,'/assets/selected/second.png');assert.equal(current.thumbnailDiagram,'');
+ post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},body);current=loadContent(root,path.join(root,'none')).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);assert.doesNotMatch(current.thumbnailDiagram,/FIRST/);assert.equal(current.thumbnail,'');
+ post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},'```mermaid\ngraph TD;NEW-->Z;\n```\n\n'+body);current=loadContent(root,path.join(root,'none')).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);
+});
+test('invalid explicit card selections fail rather than silently selecting another picture',t=>{
+ const root=fixture(t);
+ for(const thumbnail of ['missing.png','[[#^missing-diagram]]','note.md']){post(root,'bad',{thumbnail},'```mermaid\ngraph TD;A-->B;\n```');assert.throws(()=>loadContent(root,path.join(root,'none')),/thumbnail/);}
+});
+
+test('YouTube embeds participate in card source order and explicit photos still win',t=>{
+ const root=fixture(t),video='<iframe src="https://www.youtube.com/embed/yonRGtMDDH8?rel=0" title="video"></iframe>',photo='![Photo](photo.png)',diagram='```mermaid\ngraph TD;A-->B;\n```';
+ for(const [name,body,selected] of [['video',video+'\n\n'+photo],['photo',photo+'\n\n'+video],['diagram',diagram+'\n\n'+video],['chosen',video+'\n\n'+photo,'./photo.png']]){
+  const source=post(root,name,selected?{thumbnail:selected}:{},body);fs.writeFileSync(path.join(path.dirname(source),'photo.png'),'photo');
+ }
+ const posts=loadContent(root,path.join(root,'none')).posts,find=name=>posts.find(p=>p.title===name);
+ assert.equal(find('video').thumbnail,'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
+ assert.equal(find('photo').thumbnail,'/assets/photo/photo.png');
+ assert.match(find('diagram').thumbnailDiagram,/A-->B/);assert.equal(find('diagram').thumbnail,'');
+ assert.equal(find('chosen').thumbnail,'/assets/chosen/photo.png');
 });

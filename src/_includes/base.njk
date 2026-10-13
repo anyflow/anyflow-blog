@@ -10,6 +10,9 @@
   <meta property="og:title" content="{{ (post.title or site.title) | escape }}">
   <meta property="og:description" content="{{ (post.summary or site.description) | escape }}">
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
+  <meta property="og:url" content="{{ (post.url or '/') | absoluteUrl | escape }}">
+  {% set shareImage = post.thumbnail or post.cover or home.cover or site.cover %}
+  {% if shareImage %}<meta property="og:image" content="{{ shareImage | absoluteUrl | escape }}">{% endif %}
   {% if post %}<meta data-pagefind-meta="tags[content]" content="{{ post.tags | join(' ') | escape }}">{% for name in post.tags %}<meta data-pagefind-filter="tag[content]" content="{{ name | escape }}">{% endfor %}{% endif %}
   {% if home.favicon %}<link rel="icon" href="{{ home.favicon | escape }}"><link rel="apple-touch-icon" href="{{ home.favicon | escape }}">{% endif %}
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'light'}catch{}</script>
@@ -18,6 +21,7 @@
   <script defer src="/js/vendor/highlight.min.js"></script><script defer src="{{ '/js/main.js' | versionedAsset }}"></script>
   <script defer src="{{ '/js/search.js' | versionedAsset }}"></script>
   <script defer src="{{ '/js/share.js' | versionedAsset }}"></script>
+  {% if post %}<script defer src="{{ '/js/image-viewer.js' | versionedAsset }}"></script>{% endif %}
 </head>
 <body>
 <header class="site-header">

@@ -14,7 +14,7 @@ layout: base.njk
 </section>
 <section class="recent" aria-labelledby="recent"><h2 id="recent">Recent</h2>
   <div class="card-grid" id="recent-cards">{% for item in posts %}<article class="card" {% if loop.index>10 %}hidden{% endif %}>
-    {% if item.thumbnail %}<div class="card-preview"><img src="{{ item.thumbnail }}" alt="" loading="lazy"></div>{% else %}<div class="card-preview text-preview" aria-hidden="true">{{ item.preview | safe }}</div>{% endif %}
+    {% if item.thumbnail %}<div class="card-preview"><img src="{{ item.thumbnail | escape }}" alt="" loading="lazy"></div>{% elif item.thumbnailDiagram %}<div class="card-preview diagram-preview" aria-hidden="true"><pre class="mermaid">{{ item.thumbnailDiagram | escape }}</pre></div>{% else %}<div class="card-preview text-preview" aria-hidden="true">{{ item.preview | safe }}</div>{% endif %}
     <div class="card-body"><h3 class="card-title"><a class="card-link" href="{{ item.url }}">{{ icon(item) }} {{ item.title | escape }}</a></h3><div class="card-category">{{ tag(item.category,item.tagStyles) }}</div><div class="card-tags">{% for name in item.tags %}{{ tag(name,item.tagStyles,true) }}{% endfor %}</div><time datetime="{{ item.date }}">{{ item.displayDate }}</time></div>
   </article>{% endfor %}</div>
   {% if posts.length>10 %}<button class="load-more" data-load-more="recent-cards" type="button">↓ &nbsp;Load more</button>{% endif %}

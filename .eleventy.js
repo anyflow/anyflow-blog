@@ -1,12 +1,14 @@
 const {loadContent} = require("./lib/content");
 const fs=require("node:fs"),path=require("node:path"),{createHash}=require("node:crypto");
 const tagReference = require("./src/_data/tagStyles.json");
+const site=require("./src/_data/site.json");
 module.exports = function(config) {
+  config.addFilter("absoluteUrl",url=>new URL(url,site.url).href);
   config.addFilter("versionedAsset",url=>`${url}?v=${createHash("sha256").update(fs.readFileSync(path.join(__dirname,"src",url))).digest("hex").slice(0,12)}`);
   const content=loadContent();
   config.addGlobalData("posts",content.posts);
-  config.addGlobalData("home",{...require("./src/_data/site.json"),coverPosition:"50% 0%",...content.home});
-  const names=require("./src/_data/site.json").categories.map(c=>c.name);
+  config.addGlobalData("home",{...site,coverPosition:"50% 50%",...content.home});
+  const names=site.categories.map(c=>c.name);
   config.addGlobalData("categories",names.map(name=>({name,posts:content.posts.filter(p=>p.category===name)})));
   config.addFilter("tagColor",name=>{const palette=["#f1f0ef","#e7f3e6","#e3f2fb","#ffe8f3","#fef5e6","#f9eee2","#f6edfa","#ffe8e7"];const fixed={"as S/W 엔지니어":"#e7f3e6","프로젝트s":"#ebebec","as 음악인":"#f1f0ef","예술/인문 소감":"#fef5e6","自省(Introspection) / 세상살이":"#e3f2fb"};return (Object.hasOwn(tagReference.backgrounds,name)?tagReference.backgrounds[name]:null)||(Object.hasOwn(fixed,name)?fixed[name]:null)||palette[Array.from(String(name)).reduce((n,c)=>n+c.codePointAt(0),0)%palette.length];});
   config.addFilter("tagStyle",bg=>{

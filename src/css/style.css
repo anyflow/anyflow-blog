@@ -5,11 +5,11 @@ body { margin:0; background:var(--bg); color:var(--text); font-family:ui-sans-se
 [data-theme=dark] { color-scheme:dark; --bg:#191919; --text:#f0efed; --muted:#ada9a3; --faint:#383836; --soft:#202020; --hover:rgba(255,255,255,.055); --popup:#252525; --card:rgba(255,255,255,.055); }
 a { color:inherit; text-decoration:none}
 button { font:inherit; color:inherit; cursor:pointer}
-button:focus-visible,a:focus-visible,summary:focus-visible { outline:2px solid #2eaadc; outline-offset:3px}
+button:focus-visible,a:focus-visible,summary:focus-visible,.post-body [role=button]:focus-visible { outline:2px solid #2eaadc; outline-offset:3px}
 button { border:0; background:none; border-radius:3px}
 button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 [hidden] { display:none!important}
-svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; flex-shrink:0}
+.site-header svg,.property-label>svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; flex-shrink:0}
 .site-header { height:47px; position:sticky; top:0; z-index:20; background:var(--bg); display:flex; align-items:center; justify-content:space-between; padding:0 12px 0 20px; gap:16px; font-size:14px}
 .breadcrumbs { min-width:0; display:flex; align-items:center; gap:12px; white-space:nowrap; overflow:hidden}
 .site-logo,.post-crumb { min-width:0; display:flex; align-items:center; gap:6px; padding:3px 0}
@@ -307,3 +307,17 @@ svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5;
 [data-theme=dark] .search-dialog { background:var(--popup) }
 [data-theme=dark] .profile-links a,[data-theme=dark] .post-body a { border-bottom-color:var(--faint) }
 [data-theme=dark] .crumb-divider { color:var(--muted) }
+
+.post-body img[role=button],.post-body .mermaid[role=button] { cursor:zoom-in }
+html:has(.image-viewer[open]) { overflow:hidden }
+.image-viewer { width:100vw; height:100dvh; max-width:100vw; max-height:100dvh; margin:0; border:0; padding:48px 24px 24px; background:transparent; color:white }
+.image-viewer[open] { display:flex; align-items:center; justify-content:center }
+.image-viewer::backdrop { background:rgba(0,0,0,.86) }
+.image-viewer img { max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; cursor:zoom-out }
+.image-viewer-close { position:absolute; top:8px; right:12px; min-width:44px; min-height:44px; padding:6px 10px; font-size:24px; color:white }
+
+.image-viewer>svg { width:100%; height:100%; max-width:none!important; background:var(--soft); cursor:zoom-out }
+
+.diagram-preview .mermaid { width:100%; height:100%; margin:0; padding:8px; overflow:hidden; display:flex; align-items:center; justify-content:center }
+.diagram-preview .mermaid:not([data-processed=true]) { visibility:hidden }
+.diagram-preview .mermaid>svg { width:100%; height:100%; max-width:none!important }

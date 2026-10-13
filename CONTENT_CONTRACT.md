@@ -8,6 +8,7 @@
 - frontmatter가 없는 문서와 초안은 생성 대상에서 제외한다.
 - 글 폴더에 Markdown과 참조 첨부를 함께 둔다.
 - `permalink`는 문서 위치와 독립적으로 공개 URL을 결정한다.
+- 일반 글의 기존 permalink를 유지하고 UUID 별도 주소·redirect는 구현하지 않는다. UUID 주소로 발행된 글은 모든 기능 구현 후 최종 전수 검증 직전에 일반 permalink로 일괄 변경한다. 내부 링크·댓글 주소 대응과 OG 메타데이터를 함께 갱신한다.
 
 ## 속성
 
@@ -23,12 +24,12 @@
 | `icon_image` | Pixel Banner에서 선택한 사용자 이미지 아이콘. 지정하면 이모지보다 우선 |
 | `favicon` | 홈 blog.md의 브라우저 탭·Apple Touch 아이콘 경로. 페이지 이모지와 별도로 지정 |
 | `cover` | 상세 커버의 상대경로 또는 Obsidian 이미지 링크. 빈 커버는 제거 |
-| `cover_x`, `cover_y` | Pixel Banner가 저장하는 0–100 범위의 가로·세로 자르기 위치 |
+| `cover_x`, `cover_y` | 선택 속성. 미입력·빈 값은 기본 중앙 위치를 사용하며 Pixel Banner 위치 조절 UI로 저장한 0–100 값은 유지 |
 | `cover_position` | 이전 CSS 위치 형식. 숫자 좌표가 없을 때 읽는 호환 속성 |
-| `thumbnail` | 목록 썸네일 |
-| `hero_image` | 기존 목록 썸네일 속성과의 호환 |
+| `thumbnail` | 카드 갤러리 선택값. 이미지의 상대경로·Obsidian 이미지 링크·YouTube 썸네일 URL 또는 현재 글의 Mermaid 블록 참조 `[[#^ID]]` |
+| `hero_image` | 이전 export의 참고값. 카드 선택과 자동 기본값에는 사용하지 않음 |
 
-목록은 `created` 내림차순이며 날짜는 `YYYY/MM/DD`로 표시한다. 커버와 썸네일은 서로 다른 역할로 처리한다. 썸네일은 유효한 지정 이미지 또는 본문의 첫 이미지를 사용하며, 이미지가 없으면 본문 미리보기를 표시한다.
+목록은 `created` 내림차순이며 날짜는 `YYYY/MM/DD`로 표시한다. 커버와 카드 이미지는 독립적이다. `thumbnail` 선택이 있으면 해당 사진·Mermaid·YouTube 썸네일을 사용하고, 선택이 없거나 비어 있으면 본문 순서상 첫 사진·Mermaid·YouTube iframe의 썸네일을 사용한다. 모두 없을 때만 텍스트 미리보기를 표시한다. 카드의 Mermaid는 전체 도형을 보이게 맞추고 숨겨진 카드는 Load more로 공개된 뒤 렌더링한다. 명시적으로 선택한 파일·Mermaid 블록이 없으면 빌드를 실패시켜 이전 결과를 유지한다.
 
 시각 자산은 콘텐츠 저장소의 `_assets/visuals/covers/`, `_assets/visuals/icons/`에 보관한다. `_assets/visuals/manifest.json`은 이모지 문자와 로컬 이미지의 대응, 원본 페이지별 시각 정보와 주소 대응을 기록하며 공개하지 않는다. 글의 `cover`, `cover_x`, `cover_y`, `icon`이 작성 원본이다. Pixel Banner 3.6.18의 커버 갤러리와 이모지 선택기로 편집한다. 저장 형식은 일반 경로와 `[[이미지]]`, `![[이미지]]`를 지원한다. 홈은 루트 `blog.md`의 같은 속성을 사용한다.
 
@@ -47,17 +48,18 @@
 - 참조한 허용 형식의 첨부만 `/assets/` 아래에 출력한다.
 - 콘텐츠 루트 밖의 파일과 바깥을 가리키는 symlink를 허용하지 않는다.
 - Markdown 원문, `.git`, `.obsidian`, 설정 파일과 미참조 첨부는 출력하지 않는다.
-- Mermaid와 코드 블록은 로컬 브라우저 라이브러리로 표시한다.
+- Mermaid와 코드 블록은 로컬 브라우저 라이브러리로 표시한다. Mermaid SVG는 본문 폭에 맞춰 표시하며 UI 아이콘의 크기·선 스타일을 적용하지 않는다.
+- 본문 사진과 Mermaid는 클릭·Enter·Space로 같은 확대 팝업을 연다. 원본 이미지·SVG를 사용하며 그림·배경·닫기 버튼 클릭과 Esc로 닫고 원래 그림으로 포커스를 돌려준다. Mermaid SVG는 본문과 팝업 사이에서 이동하고 닫을 때 원래 위치·높이를 복원한다. 링크가 있는 이미지·페이지 참조 아이콘·알림 상자 아이콘은 기존 동작을 유지한다.
 
 ## 검증
 
-잘못된 게시 속성·날짜·permalink와 중복 주소는 빌드를 실패시킨다. 전체 공개 글의 참조 누락은 0개이며, 변환과 검증의 범위는 아래 본문 형식 기준을 따른다. 기존 UUID 주소·댓글 보존은 후속 단계에서 검증한다.
+잘못된 게시 속성·날짜·permalink와 중복 주소는 빌드를 실패시킨다. 전체 공개 글의 참조 누락은 0개이며, 변환과 검증의 범위는 아래 본문 형식 기준을 따른다. UUID 주소로 발행된 글의 주소 일괄 변경과 댓글 보존은 후속 단계에서 처리하고 모든 구현 TODO 완료 후 최종에서 한 번만 전수 검증한다.
 
 ## Obsidian 선택기
 
 blog vault에 Pixel Banner를 설치하고 커버 필드를 `cover`, 위치 필드를 `cover_x`·`cover_y`, 이모지 필드를 `icon`, 이미지 아이콘 필드를 `icon_image`로 연결했다. 커버 선택기는 `_assets/visuals/covers/`, 이미지 아이콘 선택기는 `_assets/visuals/icons/`를 기본 필터로 사용한다. 기존 문서 395개의 CSS 좌표를 같은 숫자 좌표로 변환했으며 본문은 유지했다. 플러그인의 다른 편집기 꾸밈 속성은 공개 블로그의 고정 UI와 별개다.
 
-커버는 `Pixel Banner: 💾 Select Banner from Vault`, 이모지는 `Pixel Banner: 📰 Set Banner Icon Text / Emoji`, 위치는 `Pixel Banner: 🎯 Adjust Position, Size, & Style` 명령을 사용한다. 이모지 선택기는 기존 문자열에 붙이는 방식이므로 교체할 때 입력칸을 비운 뒤 선택하고 Insert / Update를 누른다.
+새 글은 커버만 선택하며 좌표를 입력할 필요가 없다. 위치가 없으면 Obsidian과 웹에서 `50% 50%`로 자동 적용한다. 커버는 `Pixel Banner: 💾 Select Banner from Vault`, 이모지는 `Pixel Banner: 📰 Set Banner Icon Text / Emoji` 명령을 사용한다. 위치를 직접 바꿀 때만 `Pixel Banner: 🎯 Adjust Position, Size, & Style` 명령을 사용하며 기존 글의 좌표·이전 `cover_position`은 유지한다. 이모지 선택기는 기존 문자열에 붙이는 방식이므로 교체할 때 입력칸을 비운 뒤 선택하고 Insert / Update를 누른다.
 
 ## 본문 형식과 전체 변환 검증
 
@@ -101,3 +103,12 @@ blog vault의 `_templates/블로그 글.md`를 Obsidian 기본 Templates에 연�
 2026-10-13에 원본의 날짜·분류·태그·주소·커버·아이콘을 대조해 누락 3편을 연결했다. 공개 글은 397개·참조 첨부 1,144개다. 원본의 분류별 글 수 13·139·73·74·98개와 일치한다. 새 이미지 6개를 파일 해시·실제 디코딩으로 검증했다. 원본에서 숨긴 빈 값·따옴표 cleanUrl의 YAML 설정과 robots noindex head 주입 코드는 본문 코드로 표시하지 않는다.
 
 Notion 블록 대조 범위는 변환 글 396개이며 원문 Markdown을 보존한 Prompt 글 1개는 본문 바이트와 게시 속성을 별도로 검증했다. 해당 범위의 이미지 645개·캡션 225개·표 32개·270행·인용문 119개·제목 1,249개·표시 코드 259개·빈 문단 1,050개가 원본과 일치한다. 기존 글 1편의 따옴표 cleanUrl 설정 코드는 숨김 메타데이터로 정리했다. 기존 본문 대조의 394개 글·코드 260개 기록은 당시 검증 범위이며 추가 복원 결과와 구분한다.
+
+
+## 카드 이미지 갤러리
+
+`integrations/obsidian-card-image/`가 선택기의 코드 원본이며 blog vault의 Blog 카드 이미지 플러그인으로 설치한다. 글에서 `카드 이미지 선택` 명령을 실행하고 사진·Mermaid·YouTube 썸네일을 고른다. 현재 글의 그림과 vault의 다른 이미지를 표시하며 자동 선택으로 되돌릴 수 있다. Mermaid 선택은 표준 블록 참조를 사용하므로 앞에 다른 그림을 추가해도 선택 대상이 유지된다.
+
+## OG 메타데이터
+
+공통 템플릿에서 글의 제목·summary·공개 주소를 `og:title`·`og:description`·`og:url`로 제공한다. 주소는 `src/_data/site.json`의 `url`을 기준으로 절대 URL을 사용하며 현재는 `https://blog.anyflow.net`이다. `og:image`는 카드 사진·YouTube 썸네일, 글 커버, 홈 커버 순으로 선택한다. Mermaid의 별도 OG 이미지 생성은 하지 않으며 해당 글의 커버로 대체한다. YouTube 썸네일은 YouTube의 공개 이미지 URL을 사용한다. RSS·sitemap은 추가하지 않는다.
