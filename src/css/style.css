@@ -2,7 +2,7 @@
 html { scroll-behavior:smooth; scroll-padding-top:100px}
 body { margin:0; background:var(--bg); color:var(--text); font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol"; font-size:16px; line-height:1.5}
  :root { --bg:#fff; --text:rgb(55,53,47); --muted:rgb(120,119,116); --faint:rgba(55,53,47,.09); --soft:#f7f6f3; --hover:rgba(55,53,47,.06); --padding:96px}
-[data-theme=dark] { color-scheme:dark; --bg:#2f3437; --text:rgba(255,255,255,.9); --muted:#9b9b9b; --faint:rgba(255,255,255,.12); --soft:#373c3f; --hover:rgba(255,255,255,.08)}
+[data-theme=dark] { color-scheme:dark; --bg:#191919; --text:#f0efed; --muted:#ada9a3; --faint:#383836; --soft:#202020; --hover:rgba(255,255,255,.055); --popup:#252525; --card:rgba(255,255,255,.055); }
 a { color:inherit; text-decoration:none}
 button { font:inherit; color:inherit; cursor:pointer}
 button:focus-visible,a:focus-visible,summary:focus-visible { outline:2px solid #2eaadc; outline-offset:3px}
@@ -39,8 +39,8 @@ svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5;
 .property-label>span { width:16px; text-align:center; color:#aaa; font-size:18px; line-height:18px}
 .property-label>svg { width:16px; height:16px; color:rgba(55,53,47,.45)}
 .property-row:not(:last-child) { padding-bottom:4px }
-[data-theme=dark] .property-label { color:rgba(255,255,255,.6) }
-[data-theme=dark] .property-label>svg { color:rgba(255,255,255,.45) }
+[data-theme=dark] .property-label { color:var(--muted) }
+[data-theme=dark] .property-label>svg { color:#7d7a75 }
 .property-value { padding:8px 8px 2px; display:flex; align-items:flex-start; flex-wrap:wrap; min-width:0}
 .date-property { padding-bottom:8px; line-height:18px}
 .tag { display:inline-block; vertical-align:middle; max-width:100%; font-size:14px; line-height:18px; border-radius:3px; padding:0 6px; margin:0 6px 6px 0; background:var(--tag-bg,#f1f0ef); color:var(--text); overflow-wrap:anywhere}
@@ -220,7 +220,7 @@ svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5;
 .callout-icon { flex:none; width:24px; text-align:center; line-height:24px}
 .callout-content { min-width:0; padding:0 2px; flex:1}
 .callout-content p { margin:0; padding:0}
-[data-theme=dark] .post-body blockquote.callout { background:#3c4144}
+[data-theme=dark] .post-body blockquote.callout { background:rgba(255,255,235,.1)}
 
 .visual-icon { display:inline-block; width:1em; height:1em; object-fit:contain; flex-shrink:0; vertical-align:-.12em}
 .page-icon .visual-icon { width:78px; height:78px; display:block}
@@ -235,7 +235,7 @@ svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5;
 .page-mention-icon { display:inline-block; width:1.2em; margin-left:.1em; margin-right:.5em; white-space:nowrap; position:relative}
 .page-mention-icon img { display:inline; width:1.2em; height:1.2em; margin:0; object-fit:contain; border-radius:0}
 .page-mention-title { border-bottom:.05em solid rgba(55,53,47,.25); font-weight:500}
-[data-theme=dark] .page-mention-title { border-bottom-color:rgba(255,255,255,.25)}
+[data-theme=dark] .page-mention-title { border-bottom-color:var(--faint)}
 
 /* Native Obsidian figures, nested callouts and equations. */
 .post-body figure { margin:16px auto; padding:0; max-width:100% }
@@ -297,5 +297,13 @@ svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5;
 .share-option img { display:block; width:30px; height:30px }
 .share-copy { box-shadow:0 0 4px 2px rgba(0,0,0,.15) }
 .share-copy svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round }
-[data-theme="dark"] .share-menu { background:rgb(63,68,71); box-shadow:0 0 0 1px rgba(15,15,15,.1),0 3px 6px rgba(15,15,15,.2),0 9px 24px rgba(15,15,15,.4) }
-[data-theme="dark"] .share-copy { background:rgb(35,33,27); box-shadow:none }
+[data-theme="dark"] .share-menu { background:var(--popup); box-shadow:0 0 0 1px rgba(15,15,15,.1),0 3px 6px rgba(15,15,15,.2),0 9px 24px rgba(15,15,15,.4) }
+[data-theme="dark"] .share-copy { background:var(--soft); box-shadow:none }
+
+[data-theme=dark] .card { background:var(--card) }
+[data-theme=dark] .card:hover { background:linear-gradient(var(--hover),var(--hover)),var(--card) }
+[data-theme=dark] .code-block pre { background:rgba(252,252,252,.03) }
+[data-theme=dark] .profile-links code,[data-theme=dark] .post-body :not(pre)>code { background:rgba(255,255,255,.055) }
+[data-theme=dark] .search-dialog { background:var(--popup) }
+[data-theme=dark] .profile-links a,[data-theme=dark] .post-body a { border-bottom-color:var(--faint) }
+[data-theme=dark] .crumb-divider { color:var(--muted) }

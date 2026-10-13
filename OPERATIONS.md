@@ -231,3 +231,9 @@ LAN 192.168.0.4:22 접속을 확인하고 깨끗한 서버 작업트리를 GitHu
 코드 `66990592fcadf0477dcef8d13f69695591a4e831`에서 bookmark의 `height:74px`·`align-self:flex-start`를 `height:auto`·`align-self:stretch`로 바꿨다. 운영 PC와 미리보기 PC·태블릿의 목록·카드가 모두 97px이며 모바일 390px의 세로 카드 228px·이미지 154px과 라이트·다크를 유지한다. 서버 테스트 24/24와 397편 빌드를 통과했다.
 
 이미지는 `ghcr.io/anyflow/anyflow-blog:profile-20261013-5371f9a`, ID는 `sha256:d3b41be0c7fc77713e957de8785f2f2e083e8c0e60770e57d1a35f37c6b2713b`다. Pod `anyflow-blog-54686f7cb7-svst5` Ready 1/1·재시작 0, 정적 파일 2,043개 일치와 Gateway·HTTPRoute spec 유지를 확인했다. 기존 캐시 nginx 패키징·kind 적재 방식과 콘텐츠 `5371f9a`를 유지한다. 검수 자료는 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 소개 높이/`에 보관한다.
+
+## 2026-10-13 Notion 다크 팔레트 — Git 게시, 운영 배포 대기
+
+사용자가 지정한 app.notion.com 링크가 연결되는 `anyflower.notion.site`의 실제 CSS `77281-c4b3c46f690b55b2.css`에서 `.notion-dark-theme` 팔레트를 추출했다. 배경 `#191919`, 본문 `#f0efed`, 보조 글자 `#ada9a3`, 구분선 `#383836`, 보조면 `#202020`, 팝업 `#252525`와 카드·코드·알림 상자의 색상을 맞췄다. 다크 선택자만 수정했고 라이트·폰트·레이아웃·태그 이름별 색상 계산은 유지한다.
+
+서버 테스트 24/24·397편 미리보기 빌드와 PC·모바일의 홈·검색·기술 글·알림 상자·라이트 전환을 확인했다. Mac 검토 주소는 `http://127.0.0.1:8765/`다. 사용자 요청으로 commit·push까지만 수행하고 Deployment 이미지·generation과 배포 manifest를 유지한다. 운영 색상은 아직 기존 profile 버전이다. 근거와 화면은 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 다크 테마/`에 보관한다.
