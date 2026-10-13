@@ -2,7 +2,7 @@
 
 ## 현재 단계
 
-최신 운영 배포는 `share-20261013-5371f9a`다. 정적 결과는 코드 `c3517f6`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편과 원본 Share 동작을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
+최신 운영 배포는 `profile-20261013-5371f9a`다. 정적 결과는 코드 `6699059`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편과 원본 Share 동작을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
 
 ## 미리보기
 
@@ -225,3 +225,9 @@ LAN 192.168.0.4:22 접속을 확인하고 깨끗한 서버 작업트리를 GitHu
 배포 태그는 `share-20261013-5371f9a`이며 콘텐츠 `5371f9a`를 유지한다. 이전 publish 런타임에 검증한 정적 결과를 패키징하는 방식을 사용한다. 검수와 배포 증거는 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog Share/` 및 서버 `.cache/share-review/`에 보관한다.
 
 운영 검증: 코드 `c3517f63051c5aa5b70be353c9e5e47ebc2f7b71`, 이미지 ID `sha256:df6df31a4c48bd0904c3c2a111ecca1341c280e3fe19a883f04483bf0297a2ae`, Pod `anyflow-blog-cc6c6757c-98fsp` Ready 1/1·재시작 0이다. 이미지·실행 Pod의 정적 파일 2,043개 해시가 일치하고 공개 홈·대표 글·CSS·공유 JS·메인 JS·아이콘 4개의 실제 응답 9개가 200이며 바이트 해시도 일치한다. 공개 HTML에 격리 검수용 API override는 없다. Gateway·HTTPRoute spec과 기존 anyflow.net은 유지한다.
+
+## 2026-10-13 홈 소개 링크 높이
+
+코드 `66990592fcadf0477dcef8d13f69695591a4e831`에서 bookmark의 `height:74px`·`align-self:flex-start`를 `height:auto`·`align-self:stretch`로 바꿨다. 운영 PC와 미리보기 PC·태블릿의 목록·카드가 모두 97px이며 모바일 390px의 세로 카드 228px·이미지 154px과 라이트·다크를 유지한다. 서버 테스트 24/24와 397편 빌드를 통과했다.
+
+이미지는 `ghcr.io/anyflow/anyflow-blog:profile-20261013-5371f9a`, ID는 `sha256:d3b41be0c7fc77713e957de8785f2f2e083e8c0e60770e57d1a35f37c6b2713b`다. Pod `anyflow-blog-54686f7cb7-svst5` Ready 1/1·재시작 0, 정적 파일 2,043개 일치와 Gateway·HTTPRoute spec 유지를 확인했다. 기존 캐시 nginx 패키징·kind 적재 방식과 콘텐츠 `5371f9a`를 유지한다. 검수 자료는 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 소개 높이/`에 보관한다.
