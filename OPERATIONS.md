@@ -2,7 +2,7 @@
 
 ## 현재 단계
 
-최신 운영 배포는 `publish-20261013-5371f9a`다. 정적 결과는 코드 `58dbc1f`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
+최신 운영 배포는 `share-20261013-5371f9a`다. 정적 결과는 코드 `c3517f6`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편과 원본 Share 동작을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
 
 ## 미리보기
 
@@ -223,3 +223,5 @@ LAN 192.168.0.4:22 접속을 확인하고 깨끗한 서버 작업트리를 GitHu
 원본의 공개 공유 코드를 확인해 Web Share 지원 시 OS 공유창을 사용하고, 미지원·권한 오류 시 링크 복사·Facebook·X·LinkedIn·Pinterest 메뉴를 표시한다. 취소는 추가 동작 없이 끝낸다. 공유 아이콘은 로컬 자산이며 URL을 매개변수로 인코딩하고 메뉴는 Esc·바깥 클릭으로 닫힌다. 테스트 24/24와 전체 397편 미리보기 빌드, Web Share 미지원 상태를 재현한 격리 브라우저의 PC·모바일·다크·키보드 조작을 검증했다. SNS 실제 게시·전송은 수행하지 않았다.
 
 배포 태그는 `share-20261013-5371f9a`이며 콘텐츠 `5371f9a`를 유지한다. 이전 publish 런타임에 검증한 정적 결과를 패키징하는 방식을 사용한다. 검수와 배포 증거는 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog Share/` 및 서버 `.cache/share-review/`에 보관한다.
+
+운영 검증: 코드 `c3517f63051c5aa5b70be353c9e5e47ebc2f7b71`, 이미지 ID `sha256:df6df31a4c48bd0904c3c2a111ecca1341c280e3fe19a883f04483bf0297a2ae`, Pod `anyflow-blog-cc6c6757c-98fsp` Ready 1/1·재시작 0이다. 이미지·실행 Pod의 정적 파일 2,043개 해시가 일치하고 공개 홈·대표 글·CSS·공유 JS·메인 JS·아이콘 4개의 실제 응답 9개가 200이며 바이트 해시도 일치한다. 공개 HTML에 격리 검수용 API override는 없다. Gateway·HTTPRoute spec과 기존 anyflow.net은 유지한다.
