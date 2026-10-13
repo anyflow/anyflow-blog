@@ -405,5 +405,110 @@
   },
   "/trip-northen-europe/prologue": {
     "icon": "🎯"
+  },
+  "/sw-engineer/agent-based-service-operation-via-kagent": {
+    "properties": [
+      {
+        "text": "as S/W 엔지니어",
+        "style": ""
+      },
+      {
+        "text": "kagent",
+        "style": ""
+      },
+      {
+        "text": "agentgateway",
+        "style": ""
+      },
+      {
+        "text": "k8s",
+        "style": ""
+      },
+      {
+        "text": "multi-agent",
+        "style": ""
+      },
+      {
+        "text": "mcp",
+        "style": ""
+      },
+      {
+        "text": "A2A",
+        "style": ""
+      }
+    ],
+    "sourceTags": [
+      "kagent",
+      "agentgateway",
+      "k8s",
+      "multi-agent",
+      "mcp",
+      "A2A"
+    ]
+  },
+  "/sw-engineer/ai-engineering": {
+    "properties": [
+      {
+        "text": "as S/W 엔지니어",
+        "style": ""
+      },
+      {
+        "text": "LLM",
+        "style": ""
+      },
+      {
+        "text": "prompt engineering",
+        "style": ""
+      },
+      {
+        "text": "context engineering",
+        "style": ""
+      },
+      {
+        "text": "harness engineering",
+        "style": ""
+      },
+      {
+        "text": "agent",
+        "style": ""
+      },
+      {
+        "text": "AI",
+        "style": ""
+      }
+    ],
+    "sourceTags": [
+      "LLM",
+      "prompt-engineering",
+      "context-engineering",
+      "harness-engineering",
+      "agent",
+      "AI"
+    ]
+  },
+  "/3f0e57e2-3bcd-8049-bd6f-c3f475ae9196": {
+    "properties": [
+      {
+        "text": "프로젝트s",
+        "style": ""
+      },
+      {
+        "text": "국토 종주",
+        "style": ""
+      },
+      {
+        "text": "Monza",
+        "style": ""
+      },
+      {
+        "text": "Factor",
+        "style": ""
+      }
+    ],
+    "sourceTags": [
+      "국토-종주",
+      "Monza",
+      "Factor"
+    ]
   }
 }

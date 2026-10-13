@@ -16,6 +16,7 @@ test("home and post share one search dialog; card tags are buttons outside the p
  const env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname,"../src/_includes")));
  env.addFilter("versionedAsset",s=>s);env.addFilter("tagColor",()=>"#fff");env.addFilter("tagStyle",()=>"");env.addFilter("dateLabel",s=>s);
  const item={title:"Title",url:"/one/",tags:['정확한, 태그','A&B'],category:"Category",tagStyles:{},toc:[],displayDate:"2025/01/01",date:"2025-01-01"};
+ const noindex=env.render("base.njk",{site:{title:"Blog"},home:{},post:{...item,noindex:true},content:""});assert.match(noindex,/<meta name="robots" content="noindex">/);
  for(const post of [null,item]){
   const html=env.render("base.njk",{site:{title:"Blog"},home:{},post,content:""});
   assert.equal((html.match(/class="search-button"/g)||[]).length,1);assert.equal((html.match(/<dialog /g)||[]).length,1);

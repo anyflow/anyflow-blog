@@ -38,6 +38,15 @@ test('invalid or duplicate public URLs stop the build',t=>{
   assert.throws(()=>loadContent(other),/Invalid permalink/);
  }
 });
+test('noindex is an explicit boolean setting, not a truthy string',t=>{
+ const root=fixture(t);post(root,'first',{noindex:true});assert.equal(loadContent(root,path.join(root,'none')).posts[0].noindex,true);
+ post(root,'first',{noindex:false});assert.equal(loadContent(root,path.join(root,'none')).posts[0].noindex,false);
+ for(const noindex of ['false',1,null]){post(root,'first',{noindex});assert.throws(()=>loadContent(root),/noindex must be a boolean/);}
+});
+test('author titles and summaries keep quotes, ampersands and code text after Markdown rendering',t=>{
+ const root=fixture(t);post(root,'first',{title:'검증 "한글" & 기호',summary:'**요약** & `Array<T>`'});
+ const current=loadContent(root,path.join(root,'none')).posts[0];assert.equal(current.title,'검증 "한글" & 기호');assert.equal(current.summary,'요약 & Array<T>');
+});
 
 test('author metadata takes priority over captured reference metadata',t=>{
  const root=fixture(t), file=post(root,'first',{tags:['new'],icon:'⭐',cover:'./cover.png',cover_position:'50% 20%'});

@@ -1,5 +1,6 @@
 const fs=require("node:fs"),path=require("node:path"),{createHash}=require("node:crypto");
 const matter=require("gray-matter"),md=new (require("markdown-it"))({html:true});
+const isNotionMetadata=require("../lib/notion-metadata");
 const text=a=>(a||[]).map(x=>x[0]).join("");
 const escape=s=>String(s).replace(/([\\\x60*_[\]<>#|!~])/g,"\\$1");
 const html=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -98,7 +99,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
     case "code": {
      const code=text(b.properties?.title),language=text(b.properties?.language).toLowerCase().replace(/\s+/g,"-");
      // Oopy reads these configuration blocks as page metadata and hides them.
-     if(/(?:^|\n)cleanUrl:\s*\//.test(code)&&/(?:^|\n)(?:title|description|floatFirstTOC):/.test(code)){report.omittedMetadata++;break;}
+     if(isNotionMetadata(b)){report.omittedMetadata++;break;}
      const fence="\x60".repeat(Math.max(3,...(code.match(/\x60+/g)||[]).map(x=>x.length+1)));
      result=fence+language+"\n"+code+"\n"+fence;break;
     }

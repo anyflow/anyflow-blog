@@ -6,6 +6,7 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% if post %}{{ post.title | escape }}{% else %}{{ site.title | escape }}{% endif %}</title>
   <meta name="description" content="{{ (post.summary or site.description) | escape }}">
+  {% if post.noindex %}<meta name="robots" content="noindex">{% endif %}
   <meta property="og:title" content="{{ (post.title or site.title) | escape }}">
   <meta property="og:description" content="{{ (post.summary or site.description) | escape }}">
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">

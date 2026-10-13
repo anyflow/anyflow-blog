@@ -192,3 +192,9 @@ BLOG_OUTPUT_DIR=_preview npm run build
 Recent·By Category 검색 버튼을 제거하고 상단 Search·태그 버튼에 Pagefind 1.5.2 공통 팝업을 연결했다. 공개 글 394개만 색인하고 전체 테스트 18/18을 통과했다. PC 1280×720·모바일 390×844·라이트·다크, 본문·제목·태그 검색, 태그 해제, 결과 추가·이동과 Esc·Tab·포커스 복원을 검증했다. 새 검색 색인도 기존 빌드의 성공 시 전환 절차에 포함한다.
 
 로컬 확인 URL은 `http://127.0.0.1:8766/`이며 파일 제공 LaunchAgent를 그대로 사용한다. 검수 자료는 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 검색/`에 보관한다. 검색 코드·문서는 GitHub에서 관리하며 운영 배포는 수행하지 않았다. 홈 서버의 배포 이미지 검증은 접속 복구 후 진행한다.
+
+## 작성 템플릿·누락 글 — Git 게시, 운영 배포 대기
+
+Obsidian 기본 Templates의 폴더를 blog vault `_templates`로 지정했다. 원본 날짜·분류·주소를 확인해 Agent 운영 아키텍처·Prompt/Context/Harness·국토 종주 3편을 연결했다. Prompt 글은 기존 Markdown 본문을 보존하고 국토 종주의 noindex 설정을 유지한다. 따옴표 cleanUrl 설정이 노출되던 기존 1편도 원본에 맞춰 설정 코드만 정리했다.
+
+공개 397개 글·참조 첨부 1,144개를 같은 로컬 미리보기로 빌드했고 테스트 21/21을 통과했다. 396개 변환 글을 원본 블록과 대조하고 Prompt 원문 보존을 별도 확인했다. 사용자 요청으로 콘텐츠 `5371f9a`와 본 소스 변경을 commit·push한다. 기존 사용자 테마·Istio 커버 편집은 제외하고 게시할 글 397편의 manifest 해시를 대조했다. 검수 자료와 백업은 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 작성 템플릿/` 및 `work/blog 작성 템플릿/before/`에 보관한다. 운영 배포는 수행하지 않았다.

@@ -1,5 +1,13 @@
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs"),os=require("node:os"),path=require("node:path");
 const {importNotion}=require("../scripts/import-notion"),{loadContent}=require("../lib/content"),{validateContent}=require("../lib/validate-content");
+test("Notion metadata includes empty clean URLs and noindex head injection, preserving ordinary code",()=>{
+ const metadata=require("../lib/notion-metadata"),b=code=>({type:"code",properties:{title:[[code]]}});
+ assert.equal(metadata(b('title: Trip\ndescription: ""\ncleanUrl: \nfloatFirstTOC: right')),true);
+ assert.equal(metadata(b('title: Trip\ncleanUrl: "/trip"')),true);
+ assert.equal(metadata(b('<head>\n  <meta name="robots" content="noindex">\n</head>')),true);
+ assert.equal(metadata(b('const title = "Trip";')),false);
+ assert.equal(metadata(b('<meta name="robots" content="noindex">')),false);
+});
 test("source block import preserves metadata, image identity, captions, nested blocks and links",t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),"notion-import-"));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  fs.mkdirSync(path.join(root,"_assets/visuals"),{recursive:true});fs.mkdirSync(path.join(root,"post"));
