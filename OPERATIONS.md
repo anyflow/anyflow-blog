@@ -342,3 +342,9 @@ X 게시물의 첨부 사진·동영상 포스터를 카드 자동 선택·Obsid
 - HTTPS 홈·Cassandra 200, 본문 백업 제거, Comments 표제 30px·같은 행 오른쪽 Like/댓글 수 14px, 댓글→이름→선택 링크 입력 순서·placeholder·투명 폼을 운영 브라우저에서 확인했다. 홈 댓글 수의 오른쪽 여백은 0px이며 답글 1개 버튼은 기본 aria-expanded=false다. 이전 댓글 배지를 제거했다.
 - 운영 API는 홈 공개 28개·Cassandra 1개·preview=false를 반환하고 pending을 제외한다. 전체 이관 223개 중 잠금 원글·답글 2개는 비공개로 보존한다. Cassandra 작성일은 미상으로 표시한다. UI·이관 관련 테스트 21개를 통과했다.
 - 기존 anyflow.net·DNS·Gateway·HTTPRoute는 유지했다. 신규 댓글 PR·승인 OFF/ON·메일 수신, 모바일 화면·전체 콘텐츠 전수 검증은 이번 배포에서 실행하지 않았다. 전수 검증은 전체 TODO 완료 후 최종 1회다.
+
+## 2026-10-14 홈 목록·카드 원본 스타일 반영
+
+코드 21ecc28·콘텐츠 d5b6645를 사용해 정적 이미지 ghcr.io/anyflow/anyflow-blog:release-20261014-21ecc28을 패키징했다. imageID는 sha256:cf8c319fb701f7016ac5302bc1a133a71a8ae3ea8a270d8360b671b376ffbcfa다. kind 두 노드에 적재하고 Deployment 선언을 apply해 rollout을 완료했다. 새 Pod anyflow-blog-69885f48db-9nnpm은 Ready 1/1·재시작 0이다. API 이미지와 기존 anyflow.net·DNS·라우팅은 유지한다.
+
+운영 홈에서 카테고리 제목의 원본 배경색·굵기 400·삼각형 없음, 목록 제목 16px·500, 대표 Recent 카드 346×354.625px, Load more 14px·높이 30px·문구 opacity .4·화살표 .3을 확인했다. 미리보기에서 더보기 클릭 후 카드 10→20개 표시를 확인했다. 기존 카드 선택 이미지·태그 색상 계산은 유지한다. 검증한 정적 결과를 기존 nginx 런타임으로 패키징했으며 정규 Dockerfile 재빌드·GHCR 업로드·모바일 조합·전수 검증은 수행하지 않았다. 전수 검증은 전체 TODO 완료 후 최종 1회다.
