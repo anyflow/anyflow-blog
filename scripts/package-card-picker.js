@@ -1,13 +1,14 @@
 const fs=require('node:fs'),path=require('node:path');
 const root=path.join(__dirname,'../integrations/obsidian-card-image');
 const vendor=fs.readFileSync(path.join(root,'vendor/markdown-it.min.js'),'utf8');
-const helper=fs.readFileSync(path.join(root,'diagrams.js'),'utf8').replace("const MarkdownIt=require('./vendor/markdown-it.min.js');\n",'').replace("const youtubeThumbnail=require('../../lib/youtube');\n",'').replace('module.exports={diagrams,withBlockId,youtubeEmbeds};','');
+const helper=fs.readFileSync(path.join(root,'diagrams.js'),'utf8').replace("const MarkdownIt=require('./vendor/markdown-it.min.js');\n",'').replace("const youtubeThumbnail=require('../../lib/youtube');\n",'').replace("const {xPostId}=require('../../lib/x');\n",'').replace('module.exports={diagrams,withBlockId,socialEmbeds};','');
 const picker=fs.readFileSync(path.join(root,'picker.js'),'utf8');
 const youtube=fs.readFileSync(path.join(root,'../../lib/youtube.js'),'utf8').replace('module.exports=youtubeThumbnail;','');
-const marker="const {diagrams,withBlockId,youtubeEmbeds}=require('./diagrams');";
+const x=fs.readFileSync(path.join(root,'../../lib/x.js'),'utf8').replace('module.exports={xPostId,xThumbnail};','');
+const marker="const {diagrams,withBlockId,socialEmbeds}=require('./diagrams');";
 if(!picker.includes(marker))throw new Error('Card picker module entry changed');
 const parser='const MarkdownIt=(()=>{const module={exports:{}};const exports=module.exports;\n'+vendor+'\nreturn module.exports;})();\n';
-const output=picker.replace(marker,()=>parser+youtube+helper);
+const output=picker.replace(marker,()=>parser+youtube+x+helper).replace("const {xThumbnail}=require('../../lib/x');\n",'');
 if(!output.includes(vendor))throw new Error('Bundled parser bytes changed');
 if(output.includes(marker))throw new Error('Unbundled card picker dependency');
 fs.copyFileSync(path.join(root,'vendor/markdown-it.LICENSE'),path.join(root,'markdown-it.LICENSE'));

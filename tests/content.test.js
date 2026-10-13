@@ -215,3 +215,11 @@ test('YouTube embeds participate in card source order and explicit photos still 
  assert.match(find('diagram').thumbnailDiagram,/A-->B/);assert.equal(find('diagram').thumbnail,'');
  assert.equal(find('chosen').thumbnail,'/assets/chosen/photo.png');
 });
+
+test('X post images participate in card source order and explicit choices take priority',t=>{
+ const root=fixture(t),id='1717179344110358638',image='https://pbs.twimg.com/media/F9SlgpVWkAAXsNw.jpg',video='<iframe src="https://embed.notion.co/api/iframe?url=https%3A%2F%2Fx.com%2Fband%2Fstatus%2F'+id+'&amp;key=test"></iframe>',photo='![Photo](photo.png)';
+ for(const [name,body,selected] of [['x-first',video+'\n\n'+photo],['photo-first',photo+'\n\n'+video],['chosen-x',video+'\n\n'+photo,'./photo.png']]){const source=post(root,name,selected?{thumbnail:selected}:{},body);fs.writeFileSync(path.join(path.dirname(source),'photo.png'),'photo');}
+ let result=loadContent(root,path.join(root,'none'),{[id]:image}),find=name=>result.posts.find(p=>p.title===name);
+ assert.equal(find('x-first').thumbnail,image);assert.equal(find('photo-first').thumbnail,'/assets/photo-first/photo.png');assert.equal(find('chosen-x').thumbnail,'/assets/chosen-x/photo.png');assert.deepEqual(result.xPosts,[id]);
+ result=loadContent(root,path.join(root,'none'),{});assert.equal(find('x-first').thumbnail,'/assets/x-first/photo.png');
+});

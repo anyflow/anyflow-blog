@@ -26,10 +26,10 @@
 | `cover` | 상세 커버의 상대경로 또는 Obsidian 이미지 링크. 빈 커버는 제거 |
 | `cover_x`, `cover_y` | 선택 속성. 미입력·빈 값은 기본 중앙 위치를 사용하며 Pixel Banner 위치 조절 UI로 저장한 0–100 값은 유지 |
 | `cover_position` | 이전 CSS 위치 형식. 숫자 좌표가 없을 때 읽는 호환 속성 |
-| `thumbnail` | 카드 갤러리 선택값. 이미지의 상대경로·Obsidian 이미지 링크·YouTube 썸네일 URL 또는 현재 글의 Mermaid 블록 참조 `[[#^ID]]` |
+| `thumbnail` | 카드 갤러리 선택값. 이미지의 상대경로·Obsidian 이미지 링크·YouTube·X 이미지 URL 또는 현재 글의 Mermaid 블록 참조 `[[#^ID]]` |
 | `hero_image` | 이전 export의 참고값. 카드 선택과 자동 기본값에는 사용하지 않음 |
 
-목록은 `created` 내림차순이며 날짜는 `YYYY/MM/DD`로 표시한다. 커버와 카드 이미지는 독립적이다. `thumbnail` 선택이 있으면 해당 사진·Mermaid·YouTube 썸네일을 사용하고, 선택이 없거나 비어 있으면 본문 순서상 첫 사진·Mermaid·YouTube iframe의 썸네일을 사용한다. 모두 없을 때만 텍스트 미리보기를 표시한다. 카드의 Mermaid는 전체 도형을 보이게 맞추고 숨겨진 카드는 Load more로 공개된 뒤 렌더링한다. 명시적으로 선택한 파일·Mermaid 블록이 없으면 빌드를 실패시켜 이전 결과를 유지한다.
+목록은 `created` 내림차순이며 날짜는 `YYYY/MM/DD`로 표시한다. 커버와 카드 이미지는 독립적이다. `thumbnail` 선택이 있으면 해당 사진·Mermaid·YouTube·X 이미지을 사용하고, 선택이 없거나 비어 있으면 본문 순서상 첫 사진·Mermaid·YouTube·X iframe의 이미지을 사용한다. 모두 없을 때만 텍스트 미리보기를 표시한다. 카드의 Mermaid는 전체 도형을 보이게 맞추고 숨겨진 카드는 Load more로 공개된 뒤 렌더링한다. 명시적으로 선택한 파일·Mermaid 블록이 없으면 빌드를 실패시켜 이전 결과를 유지한다.
 
 시각 자산은 콘텐츠 저장소의 `_assets/visuals/covers/`, `_assets/visuals/icons/`에 보관한다. `_assets/visuals/manifest.json`은 이모지 문자와 로컬 이미지의 대응, 원본 페이지별 시각 정보와 주소 대응을 기록하며 공개하지 않는다. 글의 `cover`, `cover_x`, `cover_y`, `icon`이 작성 원본이다. Pixel Banner 3.6.18의 커버 갤러리와 이모지 선택기로 편집한다. 저장 형식은 일반 경로와 `[[이미지]]`, `![[이미지]]`를 지원한다. 홈은 루트 `blog.md`의 같은 속성을 사용한다.
 
@@ -107,8 +107,8 @@ Notion 블록 대조 범위는 변환 글 396개이며 원문 Markdown을 보존
 
 ## 카드 이미지 갤러리
 
-`integrations/obsidian-card-image/`가 선택기의 코드 원본이며 blog vault의 Blog 카드 이미지 플러그인으로 설치한다. 글에서 `카드 이미지 선택` 명령을 실행하고 사진·Mermaid·YouTube 썸네일을 고른다. 현재 글의 그림과 vault의 다른 이미지를 표시하며 자동 선택으로 되돌릴 수 있다. Mermaid 선택은 표준 블록 참조를 사용하므로 앞에 다른 그림을 추가해도 선택 대상이 유지된다.
+`integrations/obsidian-card-image/`가 선택기의 코드 원본이며 blog vault의 Blog 카드 이미지 플러그인으로 설치한다. 글에서 `카드 이미지 선택` 명령을 실행하고 사진·Mermaid·YouTube·X 이미지을 고른다. 현재 글의 그림과 vault의 다른 이미지를 표시하며 자동 선택으로 되돌릴 수 있다. Mermaid 선택은 표준 블록 참조를 사용하므로 앞에 다른 그림을 추가해도 선택 대상이 유지된다.
 
 ## OG 메타데이터
 
-공통 템플릿에서 글의 제목·summary·공개 주소를 `og:title`·`og:description`·`og:url`로 제공한다. 주소는 `src/_data/site.json`의 `url`을 기준으로 절대 URL을 사용하며 현재는 `https://blog.anyflow.net`이다. `og:image`는 카드 사진·YouTube 썸네일, 글 커버, 홈 커버 순으로 선택한다. Mermaid의 별도 OG 이미지 생성은 하지 않으며 해당 글의 커버로 대체한다. YouTube 썸네일은 YouTube의 공개 이미지 URL을 사용한다. RSS·sitemap은 추가하지 않는다.
+공통 템플릿에서 글의 제목·summary·공개 주소를 `og:title`·`og:description`·`og:url`로 제공한다. 주소는 `src/_data/site.json`의 `url`을 기준으로 절대 URL을 사용하며 현재는 `https://blog.anyflow.net`이다. `og:image`는 카드 사진·YouTube·X 이미지, 글 커버, 홈 커버 순으로 선택한다. Mermaid의 별도 OG 이미지 생성은 하지 않으며 해당 글의 커버로 대체한다. YouTube·X 이미지는 서비스의 공개 이미지 URL을 사용한다. X는 첨부 사진·동영상 포스터를 사용하고 조회 결과를 빌드 캐시에 보관한다. 이미지가 없거나 조회에 실패하면 다음 그림을 사용한다. 텍스트 X 게시물의 별도 이미지 생성은 하지 않는다. RSS·sitemap은 추가하지 않는다.

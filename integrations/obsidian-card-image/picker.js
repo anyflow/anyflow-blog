@@ -1,5 +1,6 @@
-const {Plugin,Modal,Notice,Component,MarkdownRenderer}=require('obsidian');
-const {diagrams,withBlockId,youtubeEmbeds}=require('./diagrams');
+const {Plugin,Modal,Notice,Component,MarkdownRenderer,requestUrl}=require('obsidian');
+const {diagrams,withBlockId,socialEmbeds}=require('./diagrams');
+const {xThumbnail}=require('../../lib/x');
 const isImage=file=>/\.(?:png|jpe?g|webp|gif|svg|avif)$/i.test(file.path);
 class CardImagePicker extends Modal{
  constructor(plugin,file){super(plugin.app);this.plugin=plugin;this.file=file;this.component=new Component();this.choices=[];}
@@ -8,27 +9,31 @@ class CardImagePicker extends Modal{
   try{
    this.snapshot=await this.app.vault.read(this.file);
    const cache=this.app.metadataCache.getFileCache(this.file)||{},selected=cache.frontmatter?.thumbnail||'';
-   const auto=this.contentEl.createEl('button',{text:'자동 · 본문의 첫 사진·Mermaid·YouTube'});
+   const auto=this.contentEl.createEl('button',{text:'자동 · 본문의 첫 사진·Mermaid·YouTube·X'});
    auto.classList.toggle('mod-cta',!selected);auto.addEventListener('click',()=>this.choose(null));
-   this.contentEl.createEl('p',{text:'선택하지 않으면 본문의 첫 사진·Mermaid·YouTube 썸네일을 사용합니다. 모두 없는 글은 텍스트로 표시합니다.',cls:'setting-item-description'});
+   this.contentEl.createEl('p',{text:'선택하지 않으면 본문의 첫 사진·Mermaid·YouTube·X 이미지를 사용합니다. 모두 없는 글은 텍스트로 표시합니다.',cls:'setting-item-description'});
    const search=this.contentEl.createEl('input',{type:'search',placeholder:'이미지 이름으로 검색',cls:'blog-card-search'});
    search.setAttribute('aria-label','카드 이미지 검색');
    const current=[];
    for(const embed of cache.embeds||[]){const file=this.app.metadataCache.getFirstLinkpathDest(embed.link,this.file.path);if(file&&isImage(file))current.push({type:'image',file,position:embed.position.start.offset});}
    for(const diagram of diagrams(this.snapshot))current.push({type:'mermaid',diagram,position:diagram.start});
-   current.push(...youtubeEmbeds(this.snapshot));
+   const embeds=await Promise.all(socialEmbeds(this.snapshot).map(async item=>{
+    if(item.type!=='x')return item;
+    try{item.url=await xThumbnail(item.id,async url=>(await requestUrl(url)).json);return item.url?item:null;}catch{return null;}
+   }));
+   current.push(...embeds.filter(Boolean));
    current.sort((a,b)=>a.position-b.position);
    const used=new Set(),drawSection=(title,items)=>{
     if(!items.length)return;
     this.contentEl.createEl('h3',{text:title});const grid=this.contentEl.createDiv('blog-card-grid');
     for(const item of items){
-     const label=item.type==='mermaid'?'Mermaid '+(current.filter(c=>c.type==='mermaid').indexOf(item)+1):item.type==='youtube'?'YouTube '+(current.filter(c=>c.type==='youtube').indexOf(item)+1):item.file.name;
+     const label=item.type==='mermaid'?'Mermaid '+(current.filter(c=>c.type==='mermaid').indexOf(item)+1):item.type==='youtube'?'YouTube '+(current.filter(c=>c.type==='youtube').indexOf(item)+1):item.type==='x'?'X '+item.id:item.file.name;
      const button=grid.createEl('button',{cls:'blog-card-choice',attr:{'aria-label':label}});
-     const value=item.type==='mermaid'&&item.diagram.id?'[[#^'+item.diagram.id+']]':item.type==='youtube'?item.url:item.type==='image'?'[['+item.file.path+']]':'';
+     const value=item.type==='mermaid'&&item.diagram.id?'[[#^'+item.diagram.id+']]':['youtube','x'].includes(item.type)?item.url:item.type==='image'?'[['+item.file.path+']]':'';
      button.setAttribute('aria-pressed',String(Boolean(value)&&selected===value));
      const preview=button.createDiv('blog-card-thumb');button.createSpan({text:label,cls:'blog-card-label'});
      button.addEventListener('click',event=>{event.preventDefault();this.choose(item);});
-     if(item.type==='image'||item.type==='youtube')preview.createEl('img',{attr:{src:item.type==='youtube'?item.url:this.app.vault.getResourcePath(item.file),alt:'',loading:'lazy'}});
+     if(item.type!=='mermaid')preview.createEl('img',{attr:{src:item.type==='image'?this.app.vault.getResourcePath(item.file):item.url,alt:'',loading:'lazy'}});
      else MarkdownRenderer.render(this.app,item.diagram.markdown,preview,this.file.path,this.component).catch(()=>preview.setText('미리보기를 표시할 수 없습니다.'));
      this.choices.push({button,label:(label+' '+(item.file?.path||item.url||'')).toLowerCase()});
     }
@@ -62,7 +67,7 @@ module.exports=class BlogCardImagePlugin extends Plugin{
    const id=item.diagram.id||'card-'+crypto.randomUUID().replaceAll('-','');
    await this.app.vault.process(file,current=>{if(current!==snapshot)throw new Error('노트가 변경되었습니다. 갤러리를 다시 열어 선택해 주세요.');return withBlockId(current,item.diagram,id);});
    value='[[#^'+id+']]';
-  }else if(item?.type==='youtube')value=item.url;
+  }else if(['youtube','x'].includes(item?.type))value=item.url;
   else if(item)value='[['+item.file.path+']]';
   await this.app.fileManager.processFrontMatter(file,frontmatter=>{if(value)frontmatter.thumbnail=value;else delete frontmatter.thumbnail;});
  }

@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{createRequire}=require('node:module'),{webcrypto}=require('node:crypto');
 const pluginPath=path.join(__dirname,'../integrations/obsidian-card-image/main.js');
-const {diagrams,withBlockId,youtubeEmbeds}=require('../integrations/obsidian-card-image/diagrams');
+const {diagrams,withBlockId,socialEmbeds}=require('../integrations/obsidian-card-image/diagrams');
 function fixture(text){
  let content=text,writes=0;const properties={title:'Keep title',cover:'keep.png'};
  const app={vault:{async process(file,fn){content=fn(content);}},fileManager:{async processFrontMatter(file,fn){writes++;fn(properties);}}};
@@ -27,10 +27,16 @@ test('gallery refuses a stale or unfinished Mermaid selection without overwritin
 });
 
 test('YouTube gallery extracts real embeds, ignores code examples and stores the thumbnail URL',async()=>{
- const iframe='<iframe src="https://www.youtube.com/embed/yonRGtMDDH8?rel=0"></iframe>',source='```html\n'+iframe+'\n```\n\n'+iframe+'\n',videos=youtubeEmbeds(source);
+ const iframe='<iframe src="https://www.youtube.com/embed/yonRGtMDDH8?rel=0"></iframe>',source='```html\n'+iframe+'\n```\n\n'+iframe+'\n',videos=socialEmbeds(source);
  assert.equal(videos.length,1);assert.equal(videos[0].position,source.lastIndexOf(iframe));
  const f=fixture(source);await f.plugin.select({},source,videos[0]);assert.equal(f.properties.thumbnail,'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');assert.equal(f.properties.cover,'keep.png');assert.equal(f.read(),source);
  const thumbnail=require('../lib/youtube');
  for(const url of ['https://youtu.be/yonRGtMDDH8','https://www.youtube.com/watch?v=yonRGtMDDH8','https://www.youtube-nocookie.com/embed/yonRGtMDDH8','https://youtube.com/shorts/yonRGtMDDH8'])assert.equal(thumbnail(url),videos[0].url);
  for(const url of ['https://youtube.com.evil.test/embed/yonRGtMDDH8','https://notyoutube.com/embed/yonRGtMDDH8','https://youtube.com/embed/invalid','javascript:alert(1)'])assert.equal(thumbnail(url),'');
+});
+
+test('X gallery extracts direct and Notion embeds and stores the selected photo URL',async()=>{
+ const id='1717179344110358638',iframe='<iframe src="https://x.com/band/status/'+id+'"></iframe>',wrapped='<iframe src="https://embed.notion.co/api/iframe?app=1&amp;url='+encodeURIComponent('https://twitter.com/band/status/'+id)+'"></iframe>',source='```html\n'+iframe+'\n```\n\n'+iframe+'\n\n'+wrapped;
+ const items=socialEmbeds(source);assert.equal(items.length,2);assert.equal(items[0].type,'x');assert.equal(items[0].id,id);assert.equal(items[0].position,source.lastIndexOf(iframe));
+ items[0].url='https://pbs.twimg.com/media/F9SlgpVWkAAXsNw.jpg';const f=fixture(source);await f.plugin.select({},source,items[0]);assert.equal(f.properties.thumbnail,items[0].url);assert.equal(f.properties.cover,'keep.png');assert.equal(f.read(),source);
 });

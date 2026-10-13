@@ -1,5 +1,6 @@
 const MarkdownIt=require('./vendor/markdown-it.min.js');
 const youtubeThumbnail=require('../../lib/youtube');
+const {xPostId}=require('../../lib/x');
 const markdown=new MarkdownIt({html:true});
 function diagrams(source){
  const lines=source.split('\n'),offsets=[];let offset=0;
@@ -18,7 +19,7 @@ function withBlockId(source,diagram,id){
  const before=source.slice(0,diagram.end),after=source.slice(diagram.end);
  return before+(before.endsWith('\n')?'':newline)+diagram.prefix+'^'+id+newline+after;
 }
-function youtubeEmbeds(source){
+function socialEmbeds(source){
  const offsets=[];let offset=0;
  for(const line of source.split('\n')){offsets.push(offset);offset+=line.length+1;}
  const videos=[];
@@ -26,11 +27,12 @@ function youtubeEmbeds(source){
   for(const part of token.type==='inline'?token.children||[]:[token]){
    if(!['html_block','html_inline'].includes(part.type))continue;
    for(const match of part.content.matchAll(/<iframe\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)){
-    const url=youtubeThumbnail(match[1]);
-    if(url)videos.push({type:'youtube',url,position:source.indexOf(match[0],offsets[token.map?.[0]]||0)});
+    const url=youtubeThumbnail(match[1]),id=xPostId(match[1]),position=source.indexOf(match[0],offsets[token.map?.[0]]||0);
+    if(url)videos.push({type:'youtube',url,position});
+    else if(id)videos.push({type:'x',id,position});
    }
   }
  }
  return videos;
 }
-module.exports={diagrams,withBlockId,youtubeEmbeds};
+module.exports={diagrams,withBlockId,socialEmbeds};

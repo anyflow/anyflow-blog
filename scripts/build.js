@@ -9,6 +9,7 @@ const {loadContent}=require("../lib/content");
   const content=loadContent();
   require("../lib/validate-content").validateContent(content);
   if(!content.posts.length) throw new Error("Build requires at least one published post");
+  await require("../lib/x-cache").cacheXThumbnails(content.xPosts);
   process.env.BLOG_OUTPUT_DIR=staging;
   const engine=new Eleventy("src",staging);
   await engine.write();
