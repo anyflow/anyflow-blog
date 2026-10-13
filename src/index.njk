@@ -13,13 +13,12 @@ layout: base.njk
   </ul><a class="bookmark" href="/introspective-life/anyway/" target="_blank" rel="noopener noreferrer"><div><span>어쨌건간에</span><small>{{ icon(home) }} https://www.anyflow.net/introspective-life/anyway</small></div>{% if home.cover %}<img src="{{ home.cover | escape }}" alt="">{% endif %}</a></div>
 </section>
 <section class="recent" aria-labelledby="recent"><h2 id="recent">Recent</h2>
-  <div class="gallery-tools"><button class="search-button" type="button" aria-label="Recent 검색"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg>Search</button></div>
-  <div class="card-grid" id="recent-cards">{% for item in posts %}<a href="{{ item.url }}" class="card" {% if loop.index>10 %}hidden{% endif %}>
+  <div class="card-grid" id="recent-cards">{% for item in posts %}<article class="card" {% if loop.index>10 %}hidden{% endif %}>
     {% if item.thumbnail %}<div class="card-preview"><img src="{{ item.thumbnail }}" alt="" loading="lazy"></div>{% else %}<div class="card-preview text-preview" aria-hidden="true">{{ item.preview | safe }}</div>{% endif %}
-    <div class="card-body"><h3 class="card-title">{{ icon(item) }} {{ item.title | escape }}</h3><div class="card-category">{{ tag(item.category,item.tagStyles) }}</div><div class="card-tags">{% for name in item.tags %}{{ tag(name,item.tagStyles) }}{% endfor %}</div><time datetime="{{ item.date }}">{{ item.displayDate }}</time></div>
-  </a>{% endfor %}</div>
+    <div class="card-body"><h3 class="card-title"><a class="card-link" href="{{ item.url }}">{{ icon(item) }} {{ item.title | escape }}</a></h3><div class="card-category">{{ tag(item.category,item.tagStyles) }}</div><div class="card-tags">{% for name in item.tags %}{{ tag(name,item.tagStyles,true) }}{% endfor %}</div><time datetime="{{ item.date }}">{{ item.displayDate }}</time></div>
+  </article>{% endfor %}</div>
   {% if posts.length>10 %}<button class="load-more" data-load-more="recent-cards" type="button">↓ &nbsp;Load more</button>{% endif %}
 </section>
-<section class="category-section" aria-labelledby="by-category"><h2 id="by-category">By Category</h2><div class="gallery-tools"><button class="search-button" type="button" aria-label="카테고리 검색"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg>Search</button></div>
+<section class="category-section" aria-labelledby="by-category"><h2 id="by-category">By Category</h2>
 {% for group in categories %}<details class="category-group" open><summary>{{ group.name | escape }} <span class="category-count">{{ group.posts.length }}</span></summary><div id="category-{{ loop.index }}">{% for item in group.posts %}<a class="category-row" href="{{ item.url }}" {% if loop.index>10 %}hidden{% endif %}>{{ icon(item) }}<span class="row-title">{{ item.title | escape }}</span><time datetime="{{ item.date }}">{{ item.displayDate }}</time></a>{% endfor %}</div>{% if group.posts.length>10 %}<button class="load-more" data-load-more="category-{{ loop.index }}" type="button">↓ &nbsp;Load more</button>{% endif %}</details>{% endfor %}
 </section>

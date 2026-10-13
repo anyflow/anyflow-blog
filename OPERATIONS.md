@@ -2,7 +2,7 @@
 
 ## 현재 단계
 
-마지막으로 확인한 운영 배포는 font-20261013-c3cd15e다. 문단 복원은 Mac에서 구현·검증하고 작성 vault에 반영했다. GitHub commit·push는 승인되었으며 운영 배포를 대기한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
+마지막으로 확인한 운영 배포는 font-20261013-c3cd15e다. 문단 복원은 Mac에서 구현·검증하고 작성 vault에 반영했다. 문단 복원은 코드 `c792373`·콘텐츠 `7fc3314`·문서 `c1b954e`를 GitHub에 게시했으며 운영 배포를 대기한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
 
 ## 미리보기
 
@@ -184,4 +184,11 @@ rsync -a --exclude=.git --exclude=.obsidian "$HOME/Library/Mobile Documents/iClo
 BLOG_OUTPUT_DIR=_preview npm run build
 ```
 
-검수 자료와 작성본 백업은 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 문단 간격/` 및 `work/blog paragraph spacing/before-local-20261013/`에 보관한다. 문단 복원은 GitHub commit·push까지 승인되었다. 사용자 커버 편집과 Obsidian 화면 설정은 게시 범위에서 제외한다. 운영 배포는 수행하지 않으며 서버 접속 복구 후 원격 작업트리의 변경과 대조해 반영한다.
+검수 자료와 작성본 백업은 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 문단 간격/` 및 `work/blog paragraph spacing/before-local-20261013/`에 보관한다. 문단 복원은 코드 `c792373`·콘텐츠 `7fc3314`를 GitHub에 게시했다. 사용자 커버 편집과 Obsidian 화면 설정은 게시 범위에서 제외한다. 운영 배포는 수행하지 않으며 서버 접속 복구 후 원격 작업트리의 변경과 대조해 반영한다.
+
+
+## 검색 — 구현·검증 완료, 운영 배포 대기
+
+Recent·By Category 검색 버튼을 제거하고 상단 Search·태그 버튼에 Pagefind 1.5.2 공통 팝업을 연결했다. 공개 글 394개만 색인하고 전체 테스트 18/18을 통과했다. PC 1280×720·모바일 390×844·라이트·다크, 본문·제목·태그 검색, 태그 해제, 결과 추가·이동과 Esc·Tab·포커스 복원을 검증했다. 새 검색 색인도 기존 빌드의 성공 시 전환 절차에 포함한다.
+
+로컬 확인 URL은 `http://127.0.0.1:8766/`이며 파일 제공 LaunchAgent를 그대로 사용한다. 검수 자료는 `/Users/anyflow/Documents/Codex/2026-10-12/any/outputs/blog 검색/`에 보관한다. 검색 코드·문서는 GitHub에서 관리하며 운영 배포는 수행하지 않았다. 홈 서버의 배포 이미지 검증은 접속 복구 후 진행한다.

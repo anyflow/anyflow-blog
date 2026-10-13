@@ -11,7 +11,9 @@ Obsidian의 글과 블로그 코드를 분리해 정적 결과를 생성한다.
                                       ↓
                          Eleventy의 홈·상세 템플릿
                                       ↓
-                          임시 빌드 → _site/_preview
+                     임시 빌드 + Pagefind 검색 색인
+                                      ↓
+                              _site/_preview
                                       ↓
                      agentgateway → nginx → 정적 파일
 ```
@@ -23,6 +25,7 @@ Obsidian의 글과 블로그 코드를 분리해 정적 결과를 생성한다.
 - 참조 첨부만 별도로 복사하며 Markdown 원문을 passthrough하지 않는다.
 - 기존 `src/posts/`는 현재 생성 입력으로 사용하지 않는다.
 - 빌드는 별도 경로에서 완료한 뒤 결과를 교체하고 이전 결과 한 개를 보관한다.
+- `lib/search-index.js`는 공개 글의 생성 HTML만 Pagefind 1.5.2로 색인한다. 브라우저의 `src/js/search.js`가 전체 검색·태그 필터를 같은 팝업으로 제공하며 별도 검색 서버를 요구하지 않는다. 검색은 로컬 검증을 완료했고 운영 배포는 대기한다.
 - Dockerfile은 콘텐츠를 빌드 단계에서 읽고 생성 결과만 nginx 이미지에 포함한다.
 - 현재 운영 경로는 `blog.anyflow.net`의 기존 배포이며, UI 변경 검증은 별도 localhost 미리보기에서 수행한다.
 

@@ -7,6 +7,7 @@
 - 소스의 기준은 alpine의 `/home/anyflow/workspace/my-cluster/apps/anyflow-blog`다.
 - 수정·빌드·검증은 원격 소스에서 수행한다.
 - 2026-10-13 문단 복원은 사용자 요청에 따라 Mac의 `/Users/anyflow/workspace/anyflow-blog`에서 수정·빌드·검증한다. 서버 접속 복구 후 원격 작업트리와 대조해 반영한다. 문단 복원 코드·콘텐츠는 사용자 승인으로 GitHub에 commit·push하고 운영 배포는 서버 접속 복구까지 대기한다.
+- 같은 로컬 소스에서 사용자 요청의 검색 기능 정리를 구현·검증한다. 문단 복원은 코드 `c792373`·콘텐츠 `7fc3314`를 GitHub에 게시했다. 검색 변경의 commit·push는 사용자 승인 범위다. 운영 배포는 대기한다.
 - anyflow-blog는 my-cluster 안의 별도 Git 저장소다. 코드의 Git 이력을 이 저장소에서 관리한다.
 - 콘텐츠는 비공개 `git@github.com:anyflow/blog.git`의 루트를 `.cache/blog/`에 동기화한다.
 - iCloud의 독립 blog vault가 작성 원본이며 개인 obsidian-vault의 BLOG는 복구용 보관본이다.
@@ -25,6 +26,7 @@
 
 - `.eleventy.js`: 공개 글 데이터를 Eleventy에 연결하며 Nunjucks 템플릿만 생성 입력으로 사용한다.
 - `lib/content.js`: 공개 대상 선별, Markdown·링크·첨부 변환, 목차·날짜·목록 데이터 생성
+- `lib/search-index.js`, `src/js/search.js`: 공개 글 394개의 Pagefind 색인과 공통 검색 팝업·정확한 태그 필터. 로컬 테스트 18/18과 PC·모바일·라이트·다크 검증을 완료했다. 검색 구현·검증을 완료했으며 운영 배포는 대기한다.
 - `scripts/build.js`: 별도 경로에서 빌드한 뒤 `_site` 또는 `_preview`로 전환, 이전 결과 한 개 보관
 - `src/index.njk`, `src/post.njk`, `src/_includes/`: 홈과 상세 템플릿
 - 콘텐츠 `_assets/visuals/manifest.json`: 원본 398개 페이지의 시각 자산과 Notion 원본 주소 대응. 커버 98개·이모지 이미지 172개를 vault에 보관한다.

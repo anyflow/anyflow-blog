@@ -9,17 +9,19 @@
   <meta property="og:title" content="{{ (post.title or site.title) | escape }}">
   <meta property="og:description" content="{{ (post.summary or site.description) | escape }}">
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
+  {% if post %}<meta data-pagefind-meta="tags[content]" content="{{ post.tags | join(' ') | escape }}">{% for name in post.tags %}<meta data-pagefind-filter="tag[content]" content="{{ name | escape }}">{% endfor %}{% endif %}
   {% if home.favicon %}<link rel="icon" href="{{ home.favicon | escape }}"><link rel="apple-touch-icon" href="{{ home.favicon | escape }}">{% endif %}
   <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'light'}catch{}</script>
   <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="{{ '/css/style.css' | versionedAsset }}">
   <script defer src="/js/vendor/highlight.min.js"></script><script defer src="{{ '/js/main.js' | versionedAsset }}"></script>
+  <script defer src="{{ '/js/search.js' | versionedAsset }}"></script>
 </head>
 <body>
 <header class="site-header">
   <nav class="breadcrumbs" aria-label="위치"><a class="site-logo" href="/">{{ icon(home) }} <span>{{ site.title | escape }}</span></a>{% if post %}<span class="crumb-divider">/</span><a class="post-crumb" href="{{ post.url }}">{{ icon(post) }} <span>{{ post.title | escape }}</span></a>{% endif %}</nav>
   <div class="header-actions">
-    <button class="search-button" type="button" aria-label="Search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg><span>Search</span></button>
+    <button class="search-button" type="button" aria-label="Search" aria-haspopup="dialog" aria-controls="search-dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg><span>Search</span></button>
     <button class="share-button" type="button" aria-label="Share"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 10-6M5 10l10 6"/><circle cx="4" cy="10" r="2"/><circle cx="16" cy="3" r="2"/><circle cx="16" cy="17" r="2"/></svg><span>Share</span></button>
     <button class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Turn on the dark mode"><span class="theme-knob"></span><img class="theme-symbol" src="/images/reference/sun.png" alt=""></button>
   </div><div class="reading-progress"></div>
@@ -32,7 +34,7 @@
   <h1 class="page-title">{{ (post.title or site.title) | escape }}</h1>
   {% if post %}<div class="properties">
     <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="currentColor" stroke="none"/><path d="m6 7.5 3 3 3-3" stroke="var(--bg)"/></svg>Category</div><div class="property-value">{{ tag(post.category,post.tagStyles) }}</div></div>
-    <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M7 5h8M7 9h8M7 13h8"/><circle cx="3" cy="5" r=".8"/><circle cx="3" cy="9" r=".8"/><circle cx="3" cy="13" r=".8"/></svg>Tags</div><div class="property-value">{% for name in post.tags %}{{ tag(name,post.tagStyles) }}{% endfor %}</div></div>
+    <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M7 5h8M7 9h8M7 13h8"/><circle cx="3" cy="5" r=".8"/><circle cx="3" cy="9" r=".8"/><circle cx="3" cy="13" r=".8"/></svg>Tags</div><div class="property-value">{% for name in post.tags %}{{ tag(name,post.tagStyles,true) }}{% endfor %}</div></div>
     <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="4" width="12" height="11" rx="1"/><path d="M3 7h12M6 2v4M12 2v4M6 10h6M6 12h4"/></svg>Created time</div><div class="property-value date-property">{{ post.displayDate }}</div></div>
   </div>{% endif %}
 </div>
@@ -41,5 +43,14 @@
   <nav class="toc" aria-label="목차">{% if post %}{% for item in post.toc %}<a href="#{{ item.id }}" class="toc-level-{{ item.level }}" title="{{ item.text | escape }}">{{ item.text | escape }}</a>{% endfor %}{% else %}<a href="#who-and-why">Who and Why am I here?</a><a href="#recent">Recent</a><a href="#by-category">By Category</a>{% endif %}</nav>
 </div>
 <button class="back-to-top" type="button" aria-label="맨 위로">⌃ <span>TOP</span></button>
+<dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
+  <div class="search-heading"><h2 id="search-title">블로그 검색</h2><button type="button" class="search-close" aria-label="검색 닫기">✕</button></div>
+  <label class="search-label" for="search-input">제목·태그·본문 검색</label>
+  <input id="search-input" class="search-input" type="search" placeholder="검색어를 입력하세요" autocomplete="off" aria-controls="search-results" aria-describedby="search-status" autofocus>
+  <button class="search-filter" type="button" aria-label="태그 필터 해제" hidden></button>
+  <p id="search-status" class="search-status" role="status" aria-live="polite">검색어를 입력하세요.</p>
+  <div class="search-results-scroll"><ul id="search-results" class="search-results" aria-label="검색 결과"></ul><button class="search-more" type="button" hidden>더 보기</button></div>
+  <p class="search-help">정확한 문구는 &quot;검색어&quot;처럼 큰따옴표로 묶어 검색하세요.</p>
+</dialog>
 <div class="toast" role="status" aria-live="polite"></div>
 </body></html>

@@ -17,6 +17,7 @@ const {loadContent}=require("../lib/content");
     const destination=path.join(staging,decodeURIComponent(url));
     fs.mkdirSync(path.dirname(destination),{recursive:true});fs.copyFileSync(source,destination);
   }
+  await require("../lib/search-index").buildSearchIndex(staging,content.posts);
   if(fs.existsSync(output)) {
     const previous=path.resolve(".cache/previous-build");
     if(fs.existsSync(previous)) fs.rmSync(previous,{recursive:true});
