@@ -368,3 +368,20 @@ API 이미지는 유지하고 변경된 카탈로그만 기존5초 갱신 경로
 - 통합preview397글·879자산·미해결0으로빌드하고OpenRC preview만재시작했다. BladeRunner댓글4개·최상위2행·본문백업제거, origin없는preview동시20조회0.242초를확인했다. 이값은GitHub네트워크비용을포함한운영성능측정이아니다.
 
 사용자결정없이Notion참조2개의대상이나과거외부404주소42개를추측해변경하지않는다. 운영API교체후캐시·동시조회·기존좀비해소확인, 실제신규댓글PR·승인·메일은별도대기다. 기존anyflow.net·DNS·Gateway·라우팅은유지한다.
+
+## 2026-10-14 감사 수정·Blade Runner 복원 운영 배포 완료
+
+| 항목 | 확인 결과 |
+| --- | --- |
+| 게시 revision | 코드2b45cd1, 콘텐츠020cdb0, 추가댓글358c4b5. [댓글 게시 Actions](https://github.com/anyflow/blog-comments/actions/runs/38480149427) 성공 |
+| 사이트 | ghcr.io/anyflow/anyflow-blog:release-20261014-2b45cd1, imageID sha256:b3b2b3ce61580eda936c700d9a7d583994a7d53329828bb96d019db6c214e43d |
+| 댓글 API | ghcr.io/anyflow/anyflow-blog-comments:release-20261014-2b45cd1, imageID sha256:51215601c8a90baec3619116d46a1320501ea686fb56e631872a4fe8fee8d584 |
+| 런타임 | kind 두 노드 이미지 적재, API→사이트 선언 apply·rollout 완료. 각각 Ready1/1·재시작0 |
+| 운영 데이터 | Blade Runner4댓글 전부 published·preview=false, 비소유자 수정/삭제 불가, owner_hash/fingerprint·비공개 출처 세부정보 제외. source는 공개 provider 문자열만 제공 |
+| 동시 조회 | HTTPS API20조회 모두200, 전체2.509초. 캐시·진행중조회공유 경로로 응답 |
+| 프로세스 | 이전 API Pod종료, 새 API에서 조회 후 전체좀비0·Git좀비0 확인 |
+| 본문·UI | 운영 표 multiline code8·literal BR0, AI글 가짜 파일명 링크0, Blade Runner본문백업 제거·댓글4개, 권한 안내 placeholder와 별도 안내행 제거 확인 |
+
+검증한 정적 산출물과 공식 런타임에 최신 API 소스·공개 카탈로그를 패키징했다. Secret·설정·키는 이미지와 Git에 넣지 않았고 기존 권한·라우팅을 유지했다. GHCR 업로드와 정규 Dockerfile 전체 재빌드는 하지 않았다. 이전 이미지·Deployment 이력은 유지한다.
+
+기존 anyflow.net·DNS·Gateway·HTTPRoute는 변경하지 않았다. Notion 대상불명 참조2개·과거 외부404링크42개는 사용자결정대기를 유지한다. 실제 신규댓글 PR·승인 OFF/ON·메일 수신과 보류3단계는 남긴다. 관련 변경만 확인했으며 전체 전수 검증은 반복하지 않았다.
