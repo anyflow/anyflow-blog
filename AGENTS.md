@@ -19,13 +19,13 @@
 - UUID 별도 주소·redirect 구현은 범위에서 제외한다. UUID 주소로 발행된 글은 모든 기능 구현 후 최종 전수 검증 직전에 일반 permalink로 일괄 변경한다. 내부 링크·댓글 주소 대응과 OG 메타데이터를 함께 갱신하며 원본 UUID는 내부 식별 대응에만 사용한다.
 - 대표 화면은 홈, Istio 설치 글, 프라이베르크·포츠담 여행기다.
 - 대표 UI 12쌍 비교, 코드 commit·push와 blog.anyflow.net 배포를 완료했다.
-- 이번 배포 대상은 blog.anyflow.net만이다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 콘텐츠는 anyflow/blog의 5371f9a를 깨끗한 작업 사본에 동기화했다.
+- 이번 배포 대상은 blog.anyflow.net만이다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 콘텐츠는 anyflow/blog의 2d06f6c를 깨끗한 작업 사본에 동기화했다.
 - 전체 글의 빌드 통과와 전체 콘텐츠의 시각 검수, 사용자 UI 승인을 구분한다.
 - 카드 갤러리 구현 당시 미리보기에서 공개 글 397개와 참조 첨부 926개를 생성했다. 운영 profile 이미지는 이전 첨부 구성을 유지한다. Notion 변환 글 396개와 기존 Markdown 보존 글 1개를 구분한다. 원본 블록 전체 대조, 이미지 645개 디코딩과 기존 미해결 참조 정리를 완료했다. 원본에서 목적 블록을 찾지 못한 8종 링크는 해당 글로 연결한다.
-- 현재 배포 태그는 profile-20261013-5371f9a이며 본문 글꼴의 가장자리 처리는 원본과 같은 auto다. 실제 코드·콘텐츠 revision과 런타임 증거는 OPERATIONS.md에 기록한다. profile 배포 당시 홈 서버 회귀 테스트는 24/24이며 실행 Pod의 정적 파일 2,043개와 빌드 결과를 대조했다. 최신 배포 revision과 실제 검증은 OPERATIONS.md에 기록한다.
+- 직전 배포 태그는 profile-20261013-5371f9a이며 본문 글꼴의 가장자리 처리는 원본과 같은 auto다. 실제 코드·콘텐츠 revision과 런타임 증거는 OPERATIONS.md에 기록한다. profile 배포 당시 홈 서버 회귀 테스트는 24/24이며 실행 Pod의 정적 파일 2,043개와 빌드 결과를 대조했다. 최신 배포 revision과 실제 검증은 OPERATIONS.md에 기록한다.
 - 서버 재부팅 후 기존 루트 make port_forward가 필요할 수 있다. 호스트 DNS·기본 라우트는 변경하지 않았다.
 
-## 4단계 표시·작성 개선 — 운영 배포 보류
+## 4단계 표시·작성 개선 — 운영 반영
 
 - Mermaid 축소의 원인은 전역 SVG 아이콘 스타일이었다. `src/css/style.css`에서 아이콘에만 적용하며 공개 글 9개·Mermaid 13개를 PC·모바일·라이트·다크와 테마 전환에서 검증했다.
 - `cover_x`·`cover_y`가 없거나 비어 있으면 중앙을 사용한다. 기존 숫자 좌표와 `cover_position`은 유지하며 공개 글 397개·홈의 생성 데이터가 수정 전과 동일하다. 작성 vault의 템플릿에서 좌표 필드를 제거하고 안내를 수정했다.
@@ -34,9 +34,9 @@
 - `lib/youtube.js`와 `lib/x.js`가 소셜 iframe 이미지를 추출하며 Obsidian 갤러리도 같은 함수를 사용한다. 선택기 0.3.0에서 YouTube·X 선택값은 공개 이미지 URL이다. X는 Notion iframe으로 감싼 주소도 읽으며 게시물의 첨부 사진·동영상 포스터를 사용한다. 빌드 시 `lib/x-cache.js`가 `.cache/x-thumbnails.json`에 조회 결과를 보관한다. 조회 실패 시 다음 그림으로 넘어가며 텍스트만 있는 X의 이미지 생성은 하지 않는다.
 - `base.njk`가 글별 OG 제목·설명·대표 이미지·절대 URL을 제공한다. 대표 이미지는 카드 사진·YouTube·X, 글 커버, 홈 커버 순이며 Mermaid는 커버를 사용한다. `site.url`은 현재 대상인 `https://blog.anyflow.net`이다.
 - Obsidian 선택기 원본은 `integrations/obsidian-card-image/`다. blog vault에 Blog 카드 이미지 플러그인으로 설치·활성화했다. `npm test`의 pretest가 picker.js·diagrams.js와 기존 Markdown-it 14.1.1을 설치용 main.js로 패키징한다.
-- 카드 갤러리 최초 구현 시 회귀 테스트 35/35를 확인했다. 이번 OG·YouTube 보완은 관련 테스트 4개와 폴스타4의 홈 카드·OG·Obsidian 갤러리만 확인했다. `_preview`를 갱신했으며 현재 Mac 미리보기는 `http://127.0.0.1:8765/`다. Git 게시까지 진행하고 사용자 요청에 따라 운영 배포는 보류한다.
+- 카드 갤러리 최초 구현 시 회귀 테스트 35/35를 확인했다. 이번 OG·YouTube 보완은 관련 테스트 4개와 폴스타4의 홈 카드·OG·Obsidian 갤러리만 확인했다. `_preview`를 갱신했으며 현재 Mac 미리보기는 `http://127.0.0.1:8765/`다. Git 게시 후 2026-10-14 사용자 요청으로 release-20261014-6dab388 운영 배포에 포함했다.
 
-## 5·6단계 방문 통계·댓글 — 구현·미리보기 완료, 운영 연결 보류
+## 5·6단계 방문 통계·댓글 — 운영 반영, Git 연결 안정화 대기
 
 - 기존 GA4 계정 `100207646`·속성 `333773406`·웹 스트림 `4090770035`의 측정 ID `G-YWPHXJFYET`를 확인했다. `src/js/analytics.js`는 `anyflow.net`·`www.anyflow.net`에서만 로드하며 localhost·`blog.anyflow.net`은 측정하지 않는다. 기존 gtag·GTM·UA와 중복 초기화를 막는다. 새 코드의 실제 GA 수신과 UA 시절 export 백업 유무는 미확인이다.
 - `lib/comments/`·`scripts/comments-server.js`·`src/js/comments.js`가 수신 API·Git 저장·Disqus와 유사한 UI를 제공한다. 방문자 쿠키는 1년, 관리자 쿠키는 7일이며 HTTPS에서 HttpOnly·Secure·SameSite=Lax를 적용한다. 공개 JSON에서 작성 권한 검증값·대기 댓글을 제외한다. Git 충돌 재시도와 재시작 후 PID 잠금 복구를 처리한다.
@@ -44,8 +44,8 @@
 - 과거 댓글 198개(Disqus 79·이미지 119, 공개 196·삭제 2, 답글 102)를 62개 글과 홈에 이관했다. Like 95개 대상의 댓글 24·글과 홈 27을 보존했으며 0명시 대상은 62개다. 원본 XML·OCR·텍스트와 이미지 46개를 댓글 저장소에 비공개 보관한다. 확인한 백업 44블록은 작성 vault 본문에서 제거하고 원본 자산은 유지했다. Cassandra 글의 잘린 날짜가 있는 1블록은 확인 대상으로 남긴다.
 - 데이터 저장소 `73c64351c9fe479ff05f2fd2c0fe061b566a91e6`의 [게시 Actions](https://github.com/anyflow/blog-comments/actions/runs/38418854320)가 성공했다. 실제 새 댓글의 PR 생성·승인 OFF/ON·메일 수신은 운영 연결 후 확인한다.
 - OpenRC 미리보기는 Node 댓글 API 서버와 운영 Git에서 분리한 preview Git을 사용한다. 미리보기에는 과거 댓글·Like를 넣었으며 `http://127.0.0.1:8765/`에서 확인한다. 글 고정 `id`와 공개 `comments/catalog.json`을 사용하며 API는 운영 카탈로그 URL을 5초 캐시로 갱신할 수 있다.
-- `Dockerfile`의 `comments-api` target·`deployment/comments-api.yaml`은 준비 단계다. API 이미지는 미빌드이며 태그는 `pending`이다. 운영 API Service 없이도 정적 nginx가 시작하도록 공식 entrypoint의 DNS resolver 템플릿을 사용하고 `nginx -t` 1회 통과했다. SSH 전용 키·관리자 설정은 비추적 `.cache/comments-runtime/`와 Kubernetes Secret에만 보관한다. 키·토큰 값을 문서·이미지·Git에 넣지 않는다.
-- 사용자 승인 범위는 3단계 자동 배포·운영 배포·도메인 전환을 제외한 구현·미리보기·Git 게시다. 최종 UUID 주소 정리와 전수 검증은 전체 구현 TODO 완료 후 수행한다.
+- `Dockerfile`의 `comments-api` target·`deployment/comments-api.yaml`은 준비 단계다. API 이미지를 release-20261014-6dab388로 빌드해 kind 두 노드에 적재하고 Secret·Service·Deployment를 운영에 연결했다. 정규 다단계 빌드는 npm ci에서 중단되어, 공식 Node 런타임·Git·SSH·소스와 검증한 카탈로그로 패키징했다. 운영 API Service 없이도 정적 nginx가 시작하도록 공식 entrypoint의 DNS resolver 템플릿을 사용하고 `nginx -t` 1회 통과했다. SSH 전용 키·관리자 설정은 비추적 `.cache/comments-runtime/`와 Kubernetes Secret에만 보관한다. 키·토큰 값을 문서·이미지·Git에 넣지 않는다.
+- 2026-10-14 사용자 요청으로 blog.anyflow.net 운영 배포까지 승인·진행했다. 3단계 자동 배포와 anyflow.net 도메인 전환은 보류한다. 최종 UUID 주소 정리와 전수 검증은 전체 구현 TODO 완료 후 수행한다.
 
 ## 핵심 구현
 
@@ -59,7 +59,7 @@
 - `src/_data/visuals.json`: 대표 태그 표현과 속성이 없는 콘텐츠의 참고값. 작성자 속성을 우선한다.
 - `src/_includes/icon.njk`: 작은 이모지는 캐시 이미지, 큰 이모지는 문자, 사용자 이미지 아이콘은 크기와 관계없이 파일을 사용한다.
 - `src/css/`, `src/js/`: 표면 재현과 다크모드·목차·목록 펼치기·코드 복사
-- 다크 팔레트는 사용자가 지정한 Notion 공개 렌더러의 `.notion-dark-theme` 색상 정의를 사용한다. 배경 `#191919`·본문 `#f0efed`·보조 글자 `#ada9a3`와 카드·코드·팝업을 미리보기에서 검증했다. 사용자 요청 범위는 commit·push까지이며 운영 배포는 수행하지 않는다. 운영은 profile 이미지의 기존 팔레트를 유지한다.
+- 다크 팔레트는 사용자가 지정한 Notion 공개 렌더러의 `.notion-dark-theme` 색상 정의를 사용한다. 배경 `#191919`·본문 `#f0efed`·보조 글자 `#ada9a3`와 카드·코드·팝업을 미리보기에서 검증했다. 초기 요청에서는 commit·push까지 진행했고 2026-10-14 운영 배포에 다크 팔레트를 포함했다.
 - 홈 소개 bookmark는 고정 높이 없이 옆 연락처 목록에 맞춰 stretch한다. PC·태블릿에서 양쪽 97px, 모바일 카드 228px을 확인했고 코드 `6699059`를 profile 이미지로 배포했다.
 - `src/js/share.js`: 원본과 같은 Web Share OS 공유창·대체 메뉴와 링크 복사. 원본 SNS 아이콘 4개를 로컬에 보관하며 취소·권한 오류·URL 인코딩·복사 실패를 포함해 서버 테스트 24/24와 PC·모바일·다크·키보드 검수를 완료했다. 공유 코드 `c3517f6`과 콘텐츠 `5371f9a`를 share 이미지로 운영에 반영하고 새 공개 스크립트·아이콘과 Pod 파일을 검증했다.
 - `src/js/vendor/`: Mermaid와 highlight.js 고정 버전 및 라이선스. 실행 시 외부 CDN을 사용하지 않는다.
@@ -103,8 +103,12 @@ BLOG_OUTPUT_DIR=_preview npm run build
 - Dockerfile은 콘텐츠를 빌드 단계에서 사용하고 정적 산출물만 nginx 이미지로 복사한다.
 - 기존 배포 갱신은 이 저장소에서 make load deploy를 사용한다. manifest의 고유 이미지 태그를 kind에 적재하고 삭제 없이 rollout한다. 루트 anyflow-blog-r은 삭제를 포함하므로 일반 갱신에 사용하지 않는다.
 - GitHub 제공 runner의 빌드·GHCR 등록·Git 배포 선언 갱신과 홈 서버 Argo CD의 자동 Sync는 별도 Argo CD 설치 후 재개한다. Obsidian 자동 push와 운영 도메인 전환도 후속 단계다.
-- 댓글·Like의 수신 API·UI·Git 저장과 과거 데이터 이관을 구현했다. 운영 연결·이미지 생성·배포는 보류하며 아래 5·6단계 기록을 따른다.
+- 댓글·Like의 수신 API·UI·Git 저장과 과거 데이터 이관을 구현했다. 2026-10-14 운영 연결·이미지 생성·배포를 진행했으며 실제 확인 결과와 제약은 OPERATIONS.md를 따른다.
 
 ## 문서
 
 GOAL.md, PLAN.md, ARCHITECTURE.md, CONTENT_CONTRACT.md, OPERATIONS.md를 함께 참조한다. 배포와 사용자 UI 승인은 별도 근거로 기록한다.
+
+## 2026-10-14 운영 배포
+
+현재 정적 사이트와 댓글 API의 태그는 release-20261014-6dab388이다. 정적 코드 6dab388·콘텐츠 2d06f6c를 사용했다. GitHub SSH 초기 연결 종료로 댓글·Like 저장 확인은 미완료다. API Pod Ready와 기능 완료를 구분한다. 최신 상태·이미지 ID·대표 확인 근거는 OPERATIONS.md에 기록한다. 기존 anyflow.net·DNS·Gateway·HTTPRoute·호스트 DNS·기본 라우트는 변경하지 않았다. 3단계·최종 UUID 정리·전수 검증은 보류한다.

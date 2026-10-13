@@ -1,6 +1,7 @@
 VAULT_REPO   := git@github.com:anyflow/blog.git
 VAULT_DIR    := $(CURDIR)/.cache/blog
 IMAGE        := $(shell sed -n 's/^[[:space:]]*image:[[:space:]]*//p' deployment/deployment.yaml)
+COMMENTS_IMAGE := $(shell sed -n 's/^[[:space:]]*image:[[:space:]]*//p' deployment/comments-api.yaml)
 CLUSTER_NAME := my-cluster
 NAMESPACE    := service
 
@@ -21,11 +22,15 @@ site: sync
 
 build: sync
 	docker build --label org.opencontainers.image.revision=$$(git rev-parse HEAD) --label net.anyflow.blog.content-revision=$$(git -C "$(VAULT_DIR)" rev-parse HEAD) -t $(IMAGE) .
+	docker build --target comments-api --label org.opencontainers.image.revision=$$(git rev-parse HEAD) -t $(COMMENTS_IMAGE) .
 
 load: build
-	kind load docker-image $(IMAGE) --name $(CLUSTER_NAME)
+	kind load docker-image $(IMAGE) $(COMMENTS_IMAGE) --name $(CLUSTER_NAME)
 
 deploy:
+	kubectl get secret anyflow-blog-comments -n $(NAMESPACE) >/dev/null
+	kubectl apply -f deployment/comments-api.yaml
+	kubectl rollout status deployment/anyflow-blog-comments -n $(NAMESPACE) --timeout=120s
 	kubectl apply -f deployment/service.yaml
 	kubectl apply -f deployment/deployment.yaml
 	kubectl apply -f deployment/httproute.yaml

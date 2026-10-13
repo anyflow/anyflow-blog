@@ -2,9 +2,9 @@
 
 ## 현재 단계
 
-OG·GA4·댓글·Like와 과거 데이터 이관을 구현하고 로컬 미리보기에 반영했다. 3단계 자동 배포·운영 배포·도메인 전환은 보류한다. RSS·sitemap은 추가하지 않는다.
+2026-10-14 사용자 요청으로 표시·작성 개선·OG·GA4 코드·댓글·Like와 과거 데이터 이관을 blog.anyflow.net 운영에 반영했다. 3단계 자동 배포와 anyflow.net 도메인 전환은 보류한다. RSS·sitemap은 추가하지 않는다.
 
-최신 운영 배포는 `profile-20261013-5371f9a`다. 정적 결과는 코드 `6699059`·콘텐츠 `5371f9a`이며 문단 복원·Pagefind 검색·태그 필터·누락 글 3편과 원본 Share 동작을 포함한다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다.
+최신 정적 사이트와 댓글 API 이미지는 release-20261014-6dab388이다. 코드 6dab388·콘텐츠 2d06f6c를 사용했다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다. 댓글 API는 배포했으나 GitHub SSH 초기 연결 종료로 댓글·Like 저장 확인은 미완료다. 실제 확인 범위는 문서 마지막 기록을 따른다.
 
 ## 미리보기
 
@@ -31,7 +31,7 @@ BLOG_OUTPUT_DIR=_preview npm run build
     cd apps/anyflow-blog
     make load deploy
 
-manifest의 고유 이미지 태그로 빌드·kind 적재 후 삭제 없이 rollout한다. root anyflow-blog-r은 삭제를 포함하므로 일반 배포에는 사용하지 않는다.
+Makefile은 사이트·댓글 API 이미지를 함께 빌드·kind 적재하고 API를 먼저 rollout한다. service/anyflow-blog-comments Secret의 config.json·github-comment-deploy·known_hosts가 먼저 필요하다. 운영 설정·전용 SSH 키는 비추적 .cache/comments-runtime/에 별도로 보관하며 값을 출력하거나 Git에 넣지 않는다. manifest의 고유 이미지 태그로 삭제 없이 rollout한다. root anyflow-blog-r은 삭제를 포함하므로 일반 배포에는 사용하지 않는다.
 
 ### 수동 빌드/배포 (개발 중)
     cd apps/anyflow-blog
@@ -61,7 +61,7 @@ manifest의 고유 이미지 태그로 빌드·kind 적재 후 삭제 없이 rol
 
 후속 작업:
 - 3단계 GitHub runner·GHCR·배포 선언·Argo CD 자동 Sync 구성. 별도 Argo CD 설치 후 재개
-- 운영 댓글 API 이미지·Secret·Service 연결과 실제 새 댓글 PR·승인 OFF/ON·메일 수신 확인
+- 실제 새 댓글 PR·승인 OFF/ON·메일 수신과 GitHub SSH 연결 안정성 확인
 - GA4 실제 수신, UA 통계 export 백업 유무, Cassandra 백업의 잘린 날짜 확인
 - 모든 구현 TODO 완료 후 UUID 주소 일괄 정리·최종 전수 검증 1회·별도 승인에 따른 anyflow.net 전환
 
@@ -95,7 +95,7 @@ Obsidian의 갤러리 선택은 글 속성과 편집기 표시를 갱신한다. 
 
 ## 이미지 버전과 복구
 
-현재 태그는 ghcr.io/anyflow/anyflow-blog:ui-20261012-5a9e126-r2이다. manifest의 태그를 Makefile에서 읽으며 이미지 label에 코드·콘텐츠 commit을 기록한다. GHCR 업로드 없이 kind에 적재한 이미지를 사용한다. 다음 릴리스에는 새 태그를 사용한다.
+현재 사이트·댓글 API 태그는 release-20261014-6dab388이다. manifest의 태그를 Makefile에서 읽으며 이미지 label에 코드·콘텐츠 commit을 기록한다. GHCR 업로드 없이 kind 두 노드에 적재한 이미지를 사용한다. 다음 릴리스에는 새 태그를 사용한다.
 
 이전 latest 이미지와 Deployment 이력은 유지한다. 장애 시 kubectl -n service rollout undo deployment/anyflow-blog로 이전 이력을 복구하고 manifest도 대응 버전으로 되돌린다. 서버 재부팅 후 80·443 포워딩이 없어지면 루트 make port_forward로 기존 NodePort 경로를 복구한다. CSS·JS URL에는 파일 해시를 붙여 변경된 파일을 다시 읽도록 한다.
 
@@ -308,3 +308,29 @@ X 게시물의 첨부 사진·동영상 포스터를 카드 자동 선택·Obsid
 관련 테스트와 대표 사례만 확인했다. 전체 콘텐츠·URL·이미지·화면 조합 검사와 최종 UUID 주소 정리는 수행하지 않았다. 전수 검증은 3단계를 포함한 전체 구현 TODO 완료 후 최종에서 한 번만 수행한다.
 
 댓글 저장소 Watch는 Custom → Pull requests만 선택해 저장했다. 실제 신규 PR·메일 수신 시험은 운영 연결 후 수행한다. 관리자 미리보기 로그인 값은 Mac의 `~/Library/Application Support/anyflow-blog/comments-preview-admin.txt`에 0600으로 보관한다. 운영 Secret은 별도로 연결하며 값은 Git에 넣지 않는다. 홈 서버의 GitHub SSH가 간헐적으로 시간 초과되어 이번 Git 게시에는 임시 역터널을 사용했다. 운영 배포 전 서버의 GitHub 접근 경로를 확인한다.
+
+## 2026-10-14 표시 개선·댓글 API 운영 배포
+
+사용자 요청으로 blog.anyflow.net 정적 사이트를 갱신하고 댓글 API를 신규 배포했다. 기존 anyflow.net·DNS·Gateway·HTTPRoute·기존 정적 Service·호스트 DNS·기본 라우트는 변경하지 않았다. 3단계 자동 배포와 도메인 전환은 진행하지 않았다.
+
+| 항목 | 결과 |
+| --- | --- |
+| 코드·콘텐츠 | anyflow-blog 6dab3882dbd19201773d82315d6ce12872a9b33d / blog 2d06f6cdf68bb9d84798eac961bc8ff072a819d3 |
+| 사이트 이미지 | ghcr.io/anyflow/anyflow-blog:release-20261014-6dab388 |
+| 사이트 imageID | sha256:0a1b96f6339f8ee47427dc3a6c77532899d7396551d4a766d00f60ab82cd59fd |
+| API 이미지 | ghcr.io/anyflow/anyflow-blog-comments:release-20261014-6dab388 |
+| API imageID | sha256:da4d5cd63a819b2ac5ef35ef439740f671d7bfd31dd81e65eddd00823e66918b |
+| 런타임 | service namespace의 사이트·API Deployment rollout 성공, 각 새 Pod Ready 1/1·재시작 0 |
+| 운영 자격증명 | 별도 config.json·댓글 저장소 전용 쓰기 키·공식 known_hosts를 Secret에 연결. preview 토큰·테스트 댓글은 사용하지 않음 |
+| 대표 화면 | 홈·YouTube·X 대표 글 HTTP 200, AI Agent Platform Mermaid 3개 정상 크기와 확대·닫기·본문 복원, 다크 배경 rgb(25,25,25), OG 커버 URL 확인 |
+| 통계 | blog.anyflow.net에서 gtag 미로드 확인. anyflow.net 전환 전까지 실제 GA 수신 검증은 대기 |
+| 댓글 조회 | 대표 xDS 글의 운영 데이터 13개·글 Like 2, preview false·moderation false 확인. LAN에서 blog.anyflow.net SNI·인증서 검증을 유지한 HTTPS 200도 확인 |
+| 댓글 저장 | Git fetch/clone 중 SSH banner 전 연결 종료로 간헐 503. Like 추가·취소 확인 실패, 댓글 데이터 revision 73c6435 유지, 신규 PR·승인 OFF/ON·메일 수신 미확인 |
+
+정규 다단계 Docker 빌드는 npm ci가 지연되어 중단했다. 사이트는 기존 profile nginx 런타임에 검증한 _preview 정적 결과와 새 resolver 템플릿을 패키징했다. API는 공식 Node 22 런타임·Git·OpenSSH·원격 소스·검증한 카탈로그로 패키징했다. label의 build-method는 verified-preview-artifacts다. 새 nginx 설정 검사와 API 시작 검사를 통과했고 두 이미지를 kind 두 노드에 적재했다. 정규 Dockerfile 전체 빌드나 GHCR 업로드 성공으로 간주하지 않는다. 클러스터를 재생성하면 이미지를 다시 적재해야 한다.
+
+댓글 GitHub SSH 연결은 22·443에서 성공과 약 10초 후 banner 전 reset을 모두 관측했다. 전용 키의 쓰기 권한과 Secret 읽기·작업 사본을 확인했으며 원인은 확정하지 못했다. 같은 이미지의 ambient Pod와 Docker kind 네트워크 비교에서는 모두 정상 읽기가 가능해 Istio 원인으로 단정하지 않았고 opt-out을 적용하지 않았다. 최종 운영은 github.com:22, ConnectTimeout 20, ServerAliveInterval 30·CountMax 3과 host key 검증을 사용한다. 진단용 verbosity·ControlMaster·IPQoS 변경은 최종 설정에 남기지 않았다.
+
+이 배포의 API Ready probe는 TCP 확인이다. Pod Ready가 댓글 등록·Like 저장 성공을 뜻하지 않는다. Git 연결 안정화와 실제 저장·PR·메일 확인은 TODO에 미완료로 남긴다. 전체 회귀·콘텐츠·URL·이미지 전수 검증은 실행하지 않았다. 전체 구현 TODO 완료 후 최종 한 번만 수행한다.
+
+관리자 운영 토큰은 Mac의 ~/Library/Application Support/anyflow-blog/comments-production-admin.txt에 0600으로 보관한다. 미리보기 관리자 토큰과 별개다. 운영 설정·키 원본은 .cache/comments-runtime/에 비추적 보관하며 값은 문서·이미지·Git에 넣지 않는다. 이전 profile 이미지와 Deployment 이력은 보존해 정적 사이트의 rollout undo가 가능하다.

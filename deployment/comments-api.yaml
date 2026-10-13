@@ -32,7 +32,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: api
-          image: ghcr.io/anyflow/anyflow-blog-comments:pending
+          image: ghcr.io/anyflow/anyflow-blog-comments:release-20261014-6dab388
           ports:
             - containerPort: 3000
           env:
@@ -47,7 +47,7 @@ spec:
             - name: COMMENTS_CATALOG_URL
               value: http://anyflow-blog/comments/catalog.json
             - name: GIT_SSH_COMMAND
-              value: ssh -i /etc/comments/github-comment-deploy -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/comments/known_hosts
+              value: ssh -i /etc/comments/github-comment-deploy -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/comments/known_hosts -o HostName=github.com -o HostKeyAlias=github.com -p22 -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3
           volumeMounts:
             - name: data
               mountPath: /data
