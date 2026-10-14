@@ -168,3 +168,7 @@ Service2개는 deployment/services.yaml, Deployment2개는 deployment/deployment
 ## 2026-10-15 자동 게시 구현
 
 GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 digest로 갱신하고 commit·push한다. 콘텐츠 repo는 코드 repo workflow_dispatch를 호출한다. 홈 서버는 OpenRC 수신기에서 HMAC 인증 요청을 받아 전용 checkout을 fetch·ff-only하고 make deploy를 실행한다. Argo CD는 사용하지 않는다. 코드 repo BLOG_DEPLOY_ENABLED=false이며 운영 활성화와 registry Secret·콘텐츠 dispatch token은 OPERATIONS.md 자동 게시 절차를 따른다. 이번 변경은 운영 리소스에 적용하지 않는다.
+
+## 2026-10-15 Kubernetes CronJob pull 배포
+
+최종 합의는 GitHub Actions의 이미지·YAML digest 게시와 Kubernetes CronJob의 1분 Git pull·make deploy다. OpenRC 수신기·HMAC·배포 API·host cron은 사용하지 않는다. deployment/cronjob.yaml, Dockerfile.deploy, scripts/poll-deploy.sh와 전용 RBAC·PVC로 관리한다. 자격증명은 등록했고 토큰은 만료 없음이다. 현재 구현·관련 테스트를 진행하며 운영 적용·실제 end-to-end 결과는 OPERATIONS.md를 따른다.

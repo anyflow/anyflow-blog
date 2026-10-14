@@ -10,3 +10,5 @@ _preview/
 .cache/blog/.gitignore
 .cache/blog/.mcp.json
 src/posts/
+
+.cache/blog/.github/

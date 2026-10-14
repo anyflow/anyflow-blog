@@ -412,50 +412,49 @@ Service2개를 deployment/services.yaml, Deployment2개를 deployment/deployment
 
 원본4개와 통합4개의 parsed YAML 객체가 완전히 같고 kubectl diff는0이다. make -n build/load/deploy/delete에서 기존 사이트·API 이미지 추출과 명령 경로를 확인했다. 새 이미지·미리보기 빌드·전수 검사는 필요하지 않아 생략한다. 코드0f6b0e7를 commit·push하고 make deploy로 운영 적용했다. Services·Deployments 4개는 unchanged였고 두 rollout이 성공했다. 기존 Makefile 순서에 따라 httproute도 재적용했다. 적용 전후 두 Pod의 UID·이미지·재시작 수가 동일하며 Ready1/1이다. 운영 블로그 HTTPS200·댓글API HTTPS200·Blade Runner댓글4개·preview=false를 확인했다.
 
-## GitHub Actions 자동 게시
+## GitHub Actions·Kubernetes CronJob 자동 게시
 
-GitHub 제공 runner가 이미지를 생성하고 Git에 배포 버전을 기록한다. 홈 서버는 인증된 신호를 받으면 전용 checkout을 최신 master로 갱신하고 make deploy를 실행한다. 기존 anyflow.net은 유지한다.
+콘텐츠 push는 이미지 게시를 시작하고, Kubernetes CronJob은 Git에 기록된 배포 상태를 1분마다 확인한다. 블로그 운영 도메인은 blog.anyflow.net이며 기존 anyflow.net은 유지한다.
 
-| 구성 | 위치·동작 |
+| 단계 | 동작 |
 | --- | --- |
-| 콘텐츠 trigger | anyflow/blog의 .github/workflows/publish.yml, main push → 코드 workflow_dispatch |
-| 빌드·게시 | anyflow/anyflow-blog의 .github/workflows/publish.yml, linux/amd64 이미지 → GHCR → deployment/deployments.yaml digest commit·push |
-| 콘텐츠 버전 | 요청 SHA와 main 최신 SHA가 일치할 때 빌드하며, 게시 직전 다시 확인 |
-| 코드 버전 | 빌드 시작 SHA를 label에 기록하며, 게시 전 최신 코드와 비교해 오래된 결과를 차단 |
-| API 이미지 | 코드 push 또는 수동 build_comments=true일 때 생성. 글 변경은 정적 이미지에만 반영 |
-| 배포 receiver | OpenRC anyflow-blog-deploy, anyflow 사용자, 192.168.0.4:18767 |
-| 공개 API | agentgateway /api/deploy → Service/EndpointSlice → 호스트 receiver |
-| 실제 배포 | 전용 /home/anyflow/workspace/anyflow-blog-deploy에서 origin/master fetch·ff-only → make deploy |
-| 인증·순서 | HMAC-SHA256, 5분 timestamp, run_id 중복 방지, 영속 job 상태·직렬 실행·프로세스 잠금 |
-| 결과 | POST 202 이후 인증된 GET /api/deploy/{job_id}로 rollout 완료 확인 |
+| 콘텐츠 trigger | anyflow/blog main push → anyflow/anyflow-blog publish.yml workflow_dispatch |
+| 빌드 | GitHub 제공 runner, 고정 콘텐츠·코드 SHA, linux/amd64 정적 이미지 |
+| API·배포 도구 | 코드 push에서 별도 생성. 콘텐츠 push는 정적 이미지만 생성 |
+| 게시 | GHCR 업로드 성공 후 deployments.yaml·cronjob.yaml의 해당 image digest commit·push |
+| 변경 감지 | deployment/cronjob.yaml의 anyflow-blog-deploy, 매분 Git fetch·ff-only |
+| 적용 | 마지막 성공 deployment tree와 다를 때 make deploy·rollout 대기 |
+| 상태 | anyflow-blog-deploy-state PVC의 checkout과 last-success. 성공 후만 marker 갱신 |
+| 실패·중복 | Forbid·flock으로 중복 차단. 실패는 다음 주기에 재시도 |
 
-API의 신호는 최신 배포 요청이다. 특정 commit을 지정하지 않는다. 여러 요청이 겹쳐도 홈 서버의 실행은 직렬이며, 각 실행에서 최신 Git을 가져온다. YAML 이미지 digest 변경 commit은 새 이미지 빌드를 시작하지 않는다. 빌드·게시 실패 시 운영은 유지한다. 배포 실패는 Actions 실패로 보고하며, YAML을 이전 digest로 되돌리고 재요청해 복구한다. 실패한 job의 재시도에는 workflow 재실행으로 새 run_attempt를 사용한다.
+Actions 성공은 이미지·배포 선언 게시까지다. 실제 운영 반영 성공은 CronJob 로그의 Deployment completed와 Deployment Ready로 확인한다. 빌드·업로드 실패는 Git의 배포 버전을 바꾸지 않는다. 실패한 rollout은 성공 marker를 갱신하지 않으며, 다음 실행에서 같은 목표를 재시도한다. 서버가 복구되면 다음 주기에 최신 Git을 확인한다. Git 변경 없이 발생한 수동 운영 drift는 자동 복구하지 않는다.
 
-### 자격증명과 활성화
+빌드 직전·게시 직전에 최신 콘텐츠와 코드를 확인해 오래된 산출물의 게시를 차단한다. 배포 YAML 변경만으로 이미지 빌드를 반복하지 않는다. 배포 도구 이미지는 별도 Dockerfile.deploy와 cronjob.yaml digest로 관리한다. Kubernetes 1.35에 맞는 kubectl 1.35.0은 공식 SHA256을 검증해 이미지에 넣는다. 원격 Docker 빌드 캐시 export는 사용하지 않으며 같은 runner 작업 내 빌드 캐시는 재사용한다.
 
-비밀값은 Git·이미지·로그에 넣지 않는다. 개인 gh 로그인 토큰을 Actions에 재사용하지 않는다.
+### 자격증명과 권한
 
-| 설정 | 상태·권한 |
+토큰은 만료 없음으로 발급했으며 값은 Git·이미지·로그에 넣지 않는다.
+
+| 대상 | 설정 |
 | --- | --- |
-| 코드 repo BLOG_CONTENT_READ_KEY | 등록 완료. anyflow/blog 전용 읽기 deploy key |
-| 코드 repo BLOG_DEPLOY_SECRET | 등록 완료. 호스트 receiver.env와 공유하는 HMAC 키 |
-| 콘텐츠 repo BLOG_PUBLISH_TOKEN | 등록 필요. Fine-grained PAT: anyflow/anyflow-blog 한 저장소의 Actions write |
-| Kubernetes anyflow-blog-registry | 등록 필요. GHCR read:packages 토큰으로 ghcr.io imagePullSecret 생성 |
-| 코드 repo BLOG_DEPLOY_ENABLED | false. 운영 활성화 시 true |
+| 콘텐츠 repo BLOG_PUBLISH_TOKEN | 코드 repo 한 곳의 Actions 읽기·쓰기. 등록 완료 |
+| 코드 repo BLOG_CONTENT_READ_KEY | 콘텐츠 repo 전용 읽기 deploy key. 등록 완료 |
+| service/anyflow-blog-registry | GHCR read:packages 전용 imagePullSecret. 등록 완료 |
+| service/anyflow-blog-deploy-git | 코드 repo 전용 읽기 SSH deploy key와 GitHub 공식 known_hosts. 등록 완료 |
+| CronJob ServiceAccount | service의 기존 블로그 Service·Deployment·HTTPRoute·CronJob 이름만 get·patch·update, rollout용 제한 list·watch |
+| Bootstrap | SA·Role·RoleBinding·PVC는 관리자 make deploy-automation으로 설치하며 CronJob에 해당 권한을 주지 않는다 |
 
-GHCR 이미지 최초 게시는 private이다. read:packages 권한의 classic PAT를 사용하며, public package로 공개할 경우 실제 익명 pull 확인 후 imagePullSecret 사용 여부를 결정한다. 기본 구현은 private pull이다. GitHub runner의 push에는 작업별 GITHUB_TOKEN packages:write를 사용한다.
+CronJob에는 Secret 조회·수정 권한이 없다. Git 키는 읽기 전용 volume, registry 인증은 imagePullSecret을 사용한다. 컨테이너는 UID1000·readOnlyRootFilesystem·capabilities drop ALL로 실행한다. HOME과 임시 파일은 emptyDir, checkout·성공 상태는 PVC에 보관한다. 호스트 cron·OpenRC 배포 수신기·공개 배포 API·HMAC 인증은 사용하지 않는다.
 
-호스트의 /home/anyflow/.config/anyflow-blog-deploy/receiver.env는 0600이며 HMAC 키·checkout·상태 파일 경로만 포함한다. 디렉터리는 0700이다. 준비된 설정 파일은 서비스를 시작하지 않는다.
+### 설치·확인·복구
 
-1. 콘텐츠 repo에 BLOG_PUBLISH_TOKEN을 등록한다. gh secret set BLOG_PUBLISH_TOKEN -R anyflow/blog의 표준 입력으로 전달한다.
-2. Kubernetes service namespace에 ghcr.io registry Secret anyflow-blog-registry를 준비한다. 토큰을 명령줄·셸 기록에 넣지 않고 보호된 Docker config 파일에서 Secret을 생성한다.
-3. 홈 서버에서 git clone git@github.com:anyflow/anyflow-blog.git /home/anyflow/workspace/anyflow-blog-deploy로 전용 checkout을 생성한다. master·clean 상태와 kind-my-cluster kubeconfig를 유지한다.
-4. scripts/deploy.openrc를 /etc/init.d/anyflow-blog-deploy에 0755로 설치하고 rc-update add anyflow-blog-deploy default 및 rc-service anyflow-blog-deploy start로 시작한다. receiver 소스 변경은 배포 후 별도로 서비스를 재시작한다.
-5. 전용 checkout에서 make deploy로 registry Secret·Service·EndpointSlice·HTTPRoute와 이미지 rollout을 반영한다. 기존 DNS·Gateway listener·anyflow.net은 변경하지 않는다.
-6. 코드 repo의 BLOG_DEPLOY_ENABLED=true로 설정한다. 수동 workflow의 deploy=true는 이 변수와 무관하게 배포를 요청한다.
+초기 설치는 registry·Git Secret을 먼저 준비하고 GHCR에 존재하는 도구 digest를 cronjob.yaml에 기록한 뒤 make deploy-automation을 실행한다. 기본 make deploy는 앱과 CronJob을 적용하며 RBAC·PVC를 변경하지 않는다. 호스트에서는 kind-my-cluster context, Pod에서는 in-cluster ServiceAccount를 사용한다.
 
-수동 이미지 게시는 gh workflow run publish.yml -R anyflow/anyflow-blog -f build_comments=true -f deploy=false로 시작한다. Git 게시와 이미지 생성·운영 활성화를 구분한다. 홈 서버가 중단되면 배포 신호는 세 차례 재시도 후 실패하며, 복구 후 workflow를 재실행한다. receiver 배포 로그는 state.json.log, 서비스 로그는 stdout.log·stderr.log다.
+- 수동 게시: gh workflow run publish.yml -R anyflow/anyflow-blog. API·도구 재게시가 필요하면 build_comments=true·build_deployer=true를 지정한다.
+- 즉시 poll: kubectl -n service create job --from=cronjob/anyflow-blog-deploy anyflow-blog-deploy-manual-UNIQUE.
+- 결과: kubectl -n service logs job/JOB_NAME 및 Job 상태를 확인한다. 상시 실행 Pod는 두지 않는다.
+- 롤백: 실행 중인 게시 workflow를 중단하고 YAML의 image digest를 이전 버전으로 되돌려 push한다. 다음 poll이 이전 tree를 적용한다.
+- 실패: Job 로그를 확인해 인증·Git·이미지 pull·apply·rollout 원인을 해결한다. 성공 marker는 유지되므로 다음 주기에 재시도한다.
+- 권한·PVC 변경: 관리자 make deploy-automation을 다시 실행한다. 이 변경은 CronJob이 자동 반영하지 않는다.
 
-이미지 재생성 없는 배포 재시도는 gh workflow run deploy.yml -R anyflow/anyflow-blog를 사용한다. 롤백은 실행 중인 게시 workflow를 중단한 뒤 YAML의 digest 변경을 되돌려 push하고 deploy.yml을 실행한다. deploy.yml은 수동 운영 배포 요청이므로 BLOG_DEPLOY_ENABLED=false에서도 실행된다.
-
-2026-10-15 구현 검증: 관련 테스트 9개, 세 workflow의 actionlint와 manifest 파싱·make dry-run을 통과했다. [GitHub runner 실행](https://github.com/anyflow/anyflow-blog/actions/runs/38608560795)에서 코드 a5a1f59·콘텐츠 7dd7a88의 정적·API 이미지 GHCR 업로드와 배포 선언 d57616e 자동 commit·push를 확인했다. 첫 실행은 빌드 중 콘텐츠 SHA 변경을 감지해 오래된 YAML 게시를 차단했다. 전용 checkout·0600 receiver.env와 코드 repo 읽기 deploy key·HMAC secret을 준비했다. 콘텐츠 dispatch token·GHCR pull Secret은 미등록이며 OpenRC 설치·라우팅 적용·운영 rollout은 수행하지 않았다. BLOG_DEPLOY_ENABLED=false를 유지한다. 기존 Mac 미리보기 HTTP 200을 확인했고 화면 변경이 없어 재빌드·전체 회귀·전수 검증은 하지 않았다.
+검증은 변경 없음·변경 감지·Git/배포 실패 후 재시도·동시 실행 방지·이전 tree 복구의 관련 테스트와 실제 Actions→Git→CronJob→rollout 대표 경로를 사용한다. 전체 콘텐츠·회귀·전수 검증은 반복하지 않는다.

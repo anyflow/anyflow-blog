@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: anyflow-blog-deploy
+  namespace: service
+rules:
+  - apiGroups: [""]
+    resources: [services]
+    resourceNames: [anyflow-blog, anyflow-blog-comments]
+    verbs: [get, patch, update]
+  - apiGroups: [apps]
+    resources: [deployments]
+    resourceNames: [anyflow-blog, anyflow-blog-comments]
+    verbs: [get, patch, update, list, watch]
+  - apiGroups: [gateway.networking.k8s.io]
+    resources: [httproutes]
+    resourceNames: [anyflow-blog]
+    verbs: [get, patch, update]
+  - apiGroups: [batch]
+    resources: [cronjobs]
+    resourceNames: [anyflow-blog-deploy]
+    verbs: [get, patch, update]

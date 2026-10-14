@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: anyflow-blog-deploy
+  namespace: service
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          serviceAccountName: anyflow-blog-deploy
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: anyflow-blog-registry
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+          containers:
+            - name: deploy
+              image: ghcr.io/anyflow/anyflow-blog-deploy:1
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: GIT_SSH_COMMAND
+                  value: ssh -i /etc/deploy-git/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/deploy-git/known_hosts -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - name: state
+                  mountPath: /data
+                - name: git
+                  mountPath: /etc/deploy-git
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: state
+              persistentVolumeClaim:
+                claimName: anyflow-blog-deploy-state
+            - name: git
+              secret:
+                secretName: anyflow-blog-deploy-git
+                defaultMode: 0440
+            - name: tmp
+              emptyDir: {}

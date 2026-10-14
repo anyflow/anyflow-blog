@@ -3,7 +3,7 @@ on:
   push:
     branches: [master]
     paths-ignore:
-      - deployment/deployments.yaml
+      - deployment/*.yaml
       - '**.md'
   workflow_dispatch:
     inputs:
@@ -14,8 +14,8 @@ on:
         description: Also publish comments API
         type: boolean
         default: true
-      deploy:
-        description: Deploy after publishing
+      build_deployer:
+        description: Also publish deployment tools
         type: boolean
         default: false
 permissions:
@@ -60,7 +60,7 @@ jobs:
           node-version: '22'
       - name: Check deployment logic
         if: steps.inputs.outputs.current == 'true'
-        run: node --test tests/deployment-images.test.js tests/deploy-server.test.js tests/deploy-helper.test.js
+        run: node --test tests/deployment-images.test.js tests/poll-deploy.test.js
       - uses: docker/setup-buildx-action@v3
         if: steps.inputs.outputs.current == 'true'
       - uses: docker/login-action@v3
@@ -82,8 +82,6 @@ jobs:
             org.opencontainers.image.source=https://github.com/anyflow/anyflow-blog
             org.opencontainers.image.revision=${{ steps.inputs.outputs.code }}
             net.anyflow.blog.content-revision=${{ steps.inputs.outputs.content }}
-          cache-from: type=gha,scope=blog
-          cache-to: type=gha,mode=max,scope=blog
       - name: Build comments API
         id: comments
         if: steps.inputs.outputs.current == 'true' && (github.event_name == 'push' || inputs.build_comments)
@@ -97,8 +95,19 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/anyflow/anyflow-blog
             org.opencontainers.image.revision=${{ steps.inputs.outputs.code }}
-          cache-from: type=gha,scope=blog
-          cache-to: type=gha,mode=max,scope=blog
+      - name: Build deployment tools
+        id: deployer
+        if: steps.inputs.outputs.current == 'true' && (github.event_name == 'push' || inputs.build_deployer)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.deploy
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/anyflow/anyflow-blog-deploy:run-${{ github.run_id }}-${{ github.run_attempt }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/anyflow/anyflow-blog
+            org.opencontainers.image.revision=${{ steps.inputs.outputs.code }}
       - name: Publish deployment declaration
         id: declaration
         if: steps.inputs.outputs.current == 'true'
@@ -107,6 +116,7 @@ jobs:
           CONTENT_SHA: ${{ steps.inputs.outputs.content }}
           SITE_DIGEST: ${{ steps.site.outputs.digest }}
           COMMENTS_DIGEST: ${{ steps.comments.outputs.digest }}
+          DEPLOYER_DIGEST: ${{ steps.deployer.outputs.digest }}
         run: |
           set -eu
           git -C .cache/blog fetch origin main
@@ -115,7 +125,7 @@ jobs:
             exit 0
           fi
           git fetch origin master
-          if ! git diff --quiet "$CODE_SHA" origin/master -- . ':!deployment/deployments.yaml'; then
+          if ! git diff --quiet "$CODE_SHA" origin/master -- . ':!deployment/deployments.yaml' ':!deployment/cronjob.yaml'; then
             echo "Newer code exists; skipping stale declaration."
             exit 0
           fi
@@ -123,16 +133,10 @@ jobs:
           node scripts/update-deployment-images.js
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          if ! git diff --quiet -- deployment/deployments.yaml; then
-            git add deployment/deployments.yaml
+          if ! git diff --quiet -- deployment/deployments.yaml deployment/cronjob.yaml; then
+            git add deployment/deployments.yaml deployment/cronjob.yaml
             git commit -m "deploy: publish code $CODE_SHA content $CONTENT_SHA"
             git push origin HEAD:master
           fi
           echo "published=true" >> "$GITHUB_OUTPUT"
           echo "Deployment revision: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
-      - name: Deploy latest declaration
-        if: steps.declaration.outputs.published == 'true' && (inputs.deploy || vars.BLOG_DEPLOY_ENABLED == 'true')
-        env:
-          DEPLOY_SECRET: ${{ secrets.BLOG_DEPLOY_SECRET }}
-          DEPLOY_URL: https://blog.anyflow.net/api/deploy
-        run: node scripts/request-deploy.js
