@@ -414,4 +414,4 @@ GHCR 업로드·정규 Dockerfile 전체 빌드·전체 전수 재검증은 수�
 
 Service2개를 deployment/services.yaml, Deployment2개를 deployment/deployments.yaml에 종류별로 모았다. httproute.yaml과 nginx.conf는 유지한다. Makefile은 Services→Deployments→HTTPRoute 적용 후 두 rollout을 확인하고, 이미지 값은 Deployment의 metadata.name별로 읽는다. delete/recreate는 기존처럼 정적 블로그 Service·Deployment와 HTTPRoute만 제거하므로 댓글 API까지 삭제하지 않는다. 이번 작업에서 delete/recreate를 실행하지 않는다.
 
-원본4개와 통합4개의 parsed YAML 객체가 완전히 같고 kubectl diff는0이다. make -n build/load/deploy/delete에서 기존 사이트·API 이미지 추출과 명령 경로를 확인했다. 새 이미지·미리보기 빌드·전수 검사는 필요하지 않아 생략한다. commit·push 후 make deploy로 운영에 적용하고 Pod UID·이미지·재시작 수가 유지되는지 확인한다.
+원본4개와 통합4개의 parsed YAML 객체가 완전히 같고 kubectl diff는0이다. make -n build/load/deploy/delete에서 기존 사이트·API 이미지 추출과 명령 경로를 확인했다. 새 이미지·미리보기 빌드·전수 검사는 필요하지 않아 생략한다. 코드0f6b0e7를 commit·push하고 make deploy로 운영 적용했다. Services·Deployments 4개는 unchanged였고 두 rollout이 성공했다. 기존 Makefile 순서에 따라 httproute도 재적용했다. 적용 전후 두 Pod의 UID·이미지·재시작 수가 동일하며 Ready1/1이다. 운영 블로그 HTTPS200·댓글API HTTPS200·Blade Runner댓글4개·preview=false를 확인했다.

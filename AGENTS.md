@@ -163,4 +163,4 @@ C++/CLI 표 코드8개셀 개행을 재변환하고 bare Markdown파일명 자�
 
 ## 2026-10-14 배포 manifest 종류별 통합
 
-Service2개는 deployment/services.yaml, Deployment2개는 deployment/deployments.yaml에서 관리한다. 기존 service.yaml·deployment.yaml·comments-api.yaml을 통합하고 Makefile의 이미지 추출·배포·삭제 파일 참조를 갱신했다. 이미지 추출은 metadata.name으로 두 Deployment를 구분한다. 기존 delete/recreate의 정적 블로그만 삭제하는 동작과 댓글 API 보존을 유지한다. 새 정의4개와 이전 정의의 객체 동일성·운영 kubectl diff0·make dry-run을 확인했다. 리소스 설정·이미지·Secret·라우팅은 변경하지 않으며 commit/push 후 make deploy로 적용한다.
+Service2개는 deployment/services.yaml, Deployment2개는 deployment/deployments.yaml에서 관리한다. 기존 service.yaml·deployment.yaml·comments-api.yaml을 통합하고 Makefile의 이미지 추출·배포·삭제 파일 참조를 갱신했다. 이미지 추출은 metadata.name으로 두 Deployment를 구분한다. 기존 delete/recreate의 정적 블로그만 삭제하는 동작과 댓글 API 보존을 유지한다. 새 정의4개와 이전 정의의 객체 동일성·운영 kubectl diff0·make dry-run을 확인했다. 리소스 설정·이미지·Secret과 라우팅 파일은 유지했다. 코드0f6b0e7를 commit·push하고 make deploy로 운영 적용했다. 두 Service·Deployment는 unchanged이고 Pod UID·이미지·재시작 수가 유지됐으며 각 Ready1/1을 확인했다. 블로그·댓글 API의 HTTPS200과 운영 댓글4개 조회를 확인했다.
