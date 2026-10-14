@@ -303,7 +303,7 @@ X 게시물의 첨부 사진·동영상 포스터를 카드 자동 선택·Obsid
 
 미리보기 Node 서버에는 운영 Git과 분리한 preview Git으로 과거 댓글·Like를 넣었다. xDS 글에서 댓글 13개·글 Like 2와 로컬 검증 댓글의 등록·답글·Like 추가를 확인했다. 검증 댓글 2개는 preview Git에만 보관한다. 방문자 쿠키는 1년, 관리자 쿠키는 7일이다. `_preview/comments/catalog.json`에 공개 글·홈의 고정 ID를 넣고 운영 API는 `COMMENTS_CATALOG_URL=http://anyflow-blog/comments/catalog.json`을 5초 캐시로 갱신한다. 이미지에 포함한 카탈로그를 초기값으로 사용한다.
 
-`Dockerfile`의 comments-api target과 `deployment/comments-api.yaml`은 작성했으며 API 이미지는 미빌드·태그 pending이다. 데이터 작업 사본은 emptyDir에 복제하고 SSH 키·config JSON·known_hosts는 Secret에서 읽는다. Secret root 소유·0440·fsGroup 1000 조합을 사용한다. nginx는 공식 entrypoint가 `/etc/resolv.conf`의 DNS를 템플릿에 넣고 API hostname을 요청 시 해석한다. API Service 없이도 nginx가 시작되도록 `nginx -t` 1회 통과했다. 운영 apply·rollout·GHCR 등록·도메인 전환은 수행하지 않았다.
+`Dockerfile`의 comments-api target과 `deployment/deployments.yaml`·`deployment/services.yaml`은 작성했으며 API 이미지는 미빌드·태그 pending이다. 데이터 작업 사본은 emptyDir에 복제하고 SSH 키·config JSON·known_hosts는 Secret에서 읽는다. Secret root 소유·0440·fsGroup 1000 조합을 사용한다. nginx는 공식 entrypoint가 `/etc/resolv.conf`의 DNS를 템플릿에 넣고 API hostname을 요청 시 해석한다. API Service 없이도 nginx가 시작되도록 `nginx -t` 1회 통과했다. 운영 apply·rollout·GHCR 등록·도메인 전환은 수행하지 않았다.
 
 관련 테스트와 대표 사례만 확인했다. 전체 콘텐츠·URL·이미지·화면 조합 검사와 최종 UUID 주소 정리는 수행하지 않았다. 전수 검증은 3단계를 포함한 전체 구현 TODO 완료 후 최종에서 한 번만 수행한다.
 
@@ -409,3 +409,9 @@ API 이미지는 유지하고 변경된 카탈로그만 기존5초 갱신 경로
 운영 HTTPS에서 변경24개 페이지/첨부가200이고 외부32개 복구 주소가모두href에반영되며 이전대상href는없음을 확인했다. Agile OCP연결·DNS불명참조제거도 확인했다. 원문보존10개·원래표시문구·첨부본문은 유지한다. API이미지 release-20261014-c45695c,댓글데이터·권한·기존anyflow.net·DNS·Gateway·HTTPRoute는변경하지않았다.
 
 GHCR 업로드·정규 Dockerfile 전체 빌드·전체 전수 재검증은 수행하지 않았다. 링크가 바뀐 범위만 확인했으며 기존 이미지·Deployment 이력은 보존한다. 새 외부주소의 본문 동일성·버전·anchor 확인 근거는Mac outputs/blog 전수 검증/링크 복구 결과.md에 기록한다.
+
+## 2026-10-14 manifest 파일 구조 정리
+
+Service2개를 deployment/services.yaml, Deployment2개를 deployment/deployments.yaml에 종류별로 모았다. httproute.yaml과 nginx.conf는 유지한다. Makefile은 Services→Deployments→HTTPRoute 적용 후 두 rollout을 확인하고, 이미지 값은 Deployment의 metadata.name별로 읽는다. delete/recreate는 기존처럼 정적 블로그 Service·Deployment와 HTTPRoute만 제거하므로 댓글 API까지 삭제하지 않는다. 이번 작업에서 delete/recreate를 실행하지 않는다.
+
+원본4개와 통합4개의 parsed YAML 객체가 완전히 같고 kubectl diff는0이다. make -n build/load/deploy/delete에서 기존 사이트·API 이미지 추출과 명령 경로를 확인했다. 새 이미지·미리보기 빌드·전수 검사는 필요하지 않아 생략한다. commit·push 후 make deploy로 운영에 적용하고 Pod UID·이미지·재시작 수가 유지되는지 확인한다.

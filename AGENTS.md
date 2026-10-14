@@ -44,7 +44,7 @@
 - 과거 댓글 198개(Disqus 79·이미지 119, 공개 196·삭제 2, 답글 102)를 62개 글과 홈에 이관했다. Like 95개 대상의 댓글 24·글과 홈 27을 보존했으며 0명시 대상은 62개다. 원본 XML·OCR·텍스트와 이미지 46개를 댓글 저장소에 비공개 보관한다. 확인한 백업 44블록은 작성 vault 본문에서 제거하고 원본 자산은 유지했다. Cassandra 글의 잘린 날짜가 있는 1블록은 확인 대상으로 남긴다.
 - 데이터 저장소 `73c64351c9fe479ff05f2fd2c0fe061b566a91e6`의 [게시 Actions](https://github.com/anyflow/blog-comments/actions/runs/38418854320)가 성공했다. 실제 새 댓글의 PR 생성·승인 OFF/ON·메일 수신은 운영 연결 후 확인한다.
 - OpenRC 미리보기는 Node 댓글 API 서버와 운영 Git에서 분리한 preview Git을 사용한다. 미리보기에는 과거 댓글·Like를 넣었으며 `http://127.0.0.1:8765/`에서 확인한다. 글 고정 `id`와 공개 `comments/catalog.json`을 사용하며 API는 운영 카탈로그 URL을 5초 캐시로 갱신할 수 있다.
-- `Dockerfile`의 `comments-api` target·`deployment/comments-api.yaml`은 준비 단계다. API 이미지를 release-20261014-6dab388로 빌드해 kind 두 노드에 적재하고 Secret·Service·Deployment를 운영에 연결했다. 정규 다단계 빌드는 npm ci에서 중단되어, 공식 Node 런타임·Git·SSH·소스와 검증한 카탈로그로 패키징했다. 운영 API Service 없이도 정적 nginx가 시작하도록 공식 entrypoint의 DNS resolver 템플릿을 사용하고 `nginx -t` 1회 통과했다. SSH 전용 키·관리자 설정은 비추적 `.cache/comments-runtime/`와 Kubernetes Secret에만 보관한다. 키·토큰 값을 문서·이미지·Git에 넣지 않는다.
+- `Dockerfile`의 `comments-api` target·`deployment/deployments.yaml`·`deployment/services.yaml`은 준비 단계다. API 이미지를 release-20261014-6dab388로 빌드해 kind 두 노드에 적재하고 Secret·Service·Deployment를 운영에 연결했다. 정규 다단계 빌드는 npm ci에서 중단되어, 공식 Node 런타임·Git·SSH·소스와 검증한 카탈로그로 패키징했다. 운영 API Service 없이도 정적 nginx가 시작하도록 공식 entrypoint의 DNS resolver 템플릿을 사용하고 `nginx -t` 1회 통과했다. SSH 전용 키·관리자 설정은 비추적 `.cache/comments-runtime/`와 Kubernetes Secret에만 보관한다. 키·토큰 값을 문서·이미지·Git에 넣지 않는다.
 - 2026-10-14 사용자 요청으로 blog.anyflow.net 운영 배포까지 승인·진행했다. 3단계 자동 배포와 anyflow.net 도메인 전환은 보류한다. 최종 UUID 주소 정리와 전수 검증은 전체 구현 TODO 완료 후 수행한다.
 
 ## 핵심 구현
@@ -160,3 +160,7 @@ C++/CLI 표 코드8개셀 개행을 재변환하고 bare Markdown파일명 자�
 ## 2026-10-14 링크 복구 운영 반영 완료
 
 사이트 release-20261014-3b63703·콘텐츠1e2ebed를 운영에 반영했다. Pod anyflow-blog-76444df564-ghnww는 Ready1/1·재시작0, imageID sha256:6c8cc1032e650c9db7924e9fe8acbd8896646a03db859d7efb367ce99d943e37다. HTTPS로 변경24개페이지/첨부200·외부32대체URL반영·이전href제거·Notion2수정을 확인했다. 확인불가10개는승인한원문보존정책유지,API이미지 release-20261014-c45695c·기존anyflow.net·라우팅은변경하지않았다. 전수재검증은없다.
+
+## 2026-10-14 배포 manifest 종류별 통합
+
+Service2개는 deployment/services.yaml, Deployment2개는 deployment/deployments.yaml에서 관리한다. 기존 service.yaml·deployment.yaml·comments-api.yaml을 통합하고 Makefile의 이미지 추출·배포·삭제 파일 참조를 갱신했다. 이미지 추출은 metadata.name으로 두 Deployment를 구분한다. 기존 delete/recreate의 정적 블로그만 삭제하는 동작과 댓글 API 보존을 유지한다. 새 정의4개와 이전 정의의 객체 동일성·운영 kubectl diff0·make dry-run을 확인했다. 리소스 설정·이미지·Secret·라우팅은 변경하지 않으며 commit/push 후 make deploy로 적용한다.

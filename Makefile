@@ -1,7 +1,7 @@
 VAULT_REPO   := git@github.com:anyflow/blog.git
 VAULT_DIR    := $(CURDIR)/.cache/blog
-IMAGE        := $(shell sed -n 's/^[[:space:]]*image:[[:space:]]*//p' deployment/deployment.yaml)
-COMMENTS_IMAGE := $(shell sed -n 's/^[[:space:]]*image:[[:space:]]*//p' deployment/comments-api.yaml)
+IMAGE        := $(shell awk '/^  name:/ {name=$$2} $$1=="image:" && name=="anyflow-blog" {print $$2}' deployment/deployments.yaml)
+COMMENTS_IMAGE := $(shell awk '/^  name:/ {name=$$2} $$1=="image:" && name=="anyflow-blog-comments" {print $$2}' deployment/deployments.yaml)
 CLUSTER_NAME := my-cluster
 NAMESPACE    := service
 
@@ -29,18 +29,17 @@ load: build
 
 deploy:
 	kubectl get secret anyflow-blog-comments -n $(NAMESPACE) >/dev/null
-	kubectl apply -f deployment/comments-api.yaml
-	kubectl rollout status deployment/anyflow-blog-comments -n $(NAMESPACE) --timeout=120s
-	kubectl apply -f deployment/service.yaml
-	kubectl apply -f deployment/deployment.yaml
+	kubectl apply -f deployment/services.yaml
+	kubectl apply -f deployment/deployments.yaml
 	kubectl apply -f deployment/httproute.yaml
+	kubectl rollout status deployment/anyflow-blog-comments -n $(NAMESPACE) --timeout=120s
 	kubectl rollout status deployment/anyflow-blog -n $(NAMESPACE) --timeout=300s
 
 create: load deploy
 
 delete:
 	kubectl delete -f deployment/httproute.yaml || true
-	kubectl delete -f deployment/deployment.yaml || true
-	kubectl delete -f deployment/service.yaml || true
+	kubectl delete deployment/anyflow-blog -n $(NAMESPACE) || true
+	kubectl delete service/anyflow-blog -n $(NAMESPACE) || true
 
 recreate: delete create
