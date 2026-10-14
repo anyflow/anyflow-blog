@@ -10,6 +10,8 @@ spec:
       namespace: cluster
   hostnames:
     - blog.anyflow.net
+    - www.anyflow.net
+    - anyflow.net
   rules:
     - matches:
         - path:

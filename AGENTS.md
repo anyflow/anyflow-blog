@@ -172,3 +172,7 @@ GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 di
 ## 2026-10-15 Kubernetes CronJob pull 배포
 
 최종 합의는 GitHub Actions의 이미지·YAML digest 게시와 Kubernetes CronJob의 1분 Git pull·make deploy다. OpenRC 수신기·HMAC·배포 API·host cron은 사용하지 않는다. deployment/cronjob.yaml, Dockerfile.deploy, scripts/poll-deploy.sh와 전용 RBAC·PVC로 관리한다. 자격증명은 등록했고 토큰은 만료 없음이다. 코드308875b·콘텐츠7058cd3을 게시하고 CronJob을 활성화했다. 실제 push→이미지·YAML27ff214→Job29866691의 rollout 성공을 확인했다. 테스트9개·RBAC 제한·변경 없음 생략·운영/preview200을 확인했다. 최신 결과와 검증 범위는 OPERATIONS.md를 따른다.
+
+## 2026-10-15 추가 도메인 HTTP 라우팅
+
+사용자 요청으로 HTTPRoute anyflow-blog에 www.anyflow.net·anyflow.net을 추가하고 상위 Gateway public-gateway에 두 HTTP 리스너를 추가한다. DNS·기존 호스팅·canonical은 유지한다. HTTPS 인증서·리스너는 두 도메인의 DNS 전환과 인증서 발급 후 별도로 구성한다. 기존 blog.anyflow.net의 HTTPS는 유지한다.
