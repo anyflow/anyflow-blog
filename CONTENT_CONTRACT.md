@@ -26,14 +26,12 @@
 | `icon_image` | Pixel Banner에서 선택한 사용자 이미지 아이콘. 지정하면 이모지보다 우선 |
 | `favicon` | 홈 blog.md의 브라우저 탭·Apple Touch 아이콘 경로. 페이지 이모지와 별도로 지정 |
 | `cover` | 상세 커버의 상대경로 또는 Obsidian 이미지 링크. 빈 커버는 제거 |
-| `cover_x`, `cover_y` | 선택 속성. 미입력·빈 값은 기본 중앙 위치를 사용하며 Pixel Banner 위치 조절 UI로 저장한 0–100 값은 유지 |
-| `cover_position` | 이전 CSS 위치 형식. 숫자 좌표가 없을 때 읽는 호환 속성 |
 | `thumbnail` | 카드 갤러리 선택값. 이미지의 상대경로·Obsidian 이미지 링크·YouTube·X 이미지 URL 또는 현재 글의 Mermaid 블록 참조 `[[#^ID]]` |
 | `hero_image` | 이전 export의 참고값. 카드 선택과 자동 기본값에는 사용하지 않음 |
 
 목록은 `created` 내림차순이며 날짜는 `YYYY/MM/DD`로 표시한다. 커버와 카드 이미지는 독립적이다. `thumbnail` 선택이 있으면 해당 사진·Mermaid·YouTube·X 이미지을 사용하고, 선택이 없거나 비어 있으면 본문 순서상 첫 사진·Mermaid·YouTube·X iframe의 이미지을 사용한다. 모두 없을 때만 텍스트 미리보기를 표시한다. 카드의 Mermaid는 전체 도형을 보이게 맞추고 숨겨진 카드는 Load more로 공개된 뒤 렌더링한다. 명시적으로 선택한 파일·Mermaid 블록이 없으면 빌드를 실패시켜 이전 결과를 유지한다.
 
-시각 자산은 콘텐츠 저장소의 `_assets/visuals/covers/`, `_assets/visuals/icons/`에 보관한다. `_assets/visuals/manifest.json`은 이모지 문자와 로컬 이미지의 대응, 원본 페이지별 시각 정보와 주소 대응을 기록하며 공개하지 않는다. 글의 `cover`, `cover_x`, `cover_y`, `icon`이 작성 원본이다. Pixel Banner 3.6.18의 커버 갤러리와 이모지 선택기로 편집한다. 저장 형식은 일반 경로와 `[[이미지]]`, `![[이미지]]`를 지원한다. 홈은 루트 `blog.md`의 같은 속성을 사용한다.
+시각 자산은 콘텐츠 저장소의 `_assets/visuals/covers/`, `_assets/visuals/icons/`에 보관한다. `_assets/visuals/manifest.json`은 이모지 문자와 로컬 이미지의 대응, 원본 페이지별 시각 정보와 주소 대응을 기록하며 공개하지 않는다. 글의 `cover`·`icon`이 작성 원본이며 커버 위치는 항상 중앙이다. Pixel Banner 3.6.18의 커버 갤러리와 이모지 선택기로 편집한다. 저장 형식은 일반 경로와 `[[이미지]]`, `![[이미지]]`를 지원한다. 홈은 루트 `blog.md`의 같은 속성을 사용한다.
 
 작은 이모지는 대응 이미지가 있으면 로컬 이미지를 사용하며, 큰 페이지 이모지는 원본 UI처럼 문자로 표시한다. 사용자 이미지 아이콘은 큰 페이지 아이콘에도 파일을 사용한다. 대응 이미지가 없는 이모지는 문자로 표시하며, `icon`을 변경하면 해당 문자에 맞는 이미지를 찾는다. 명시한 커버·아이콘 파일이 없으면 빌드를 실패시키고 이전 결과를 유지한다.
 
@@ -61,9 +59,9 @@
 
 ## Obsidian 선택기
 
-blog vault에 Pixel Banner를 설치하고 커버 필드를 `cover`, 위치 필드를 `cover_x`·`cover_y`, 이모지 필드를 `icon`, 이미지 아이콘 필드를 `icon_image`로 연결했다. 커버 선택기는 `_assets/visuals/covers/`, 이미지 아이콘 선택기는 `_assets/visuals/icons/`를 기본 필터로 사용한다. 기존 문서 395개의 CSS 좌표를 같은 숫자 좌표로 변환했으며 본문은 유지했다. 플러그인의 다른 편집기 꾸밈 속성은 공개 블로그의 고정 UI와 별개다.
+blog vault에 Pixel Banner를 설치하고 커버 필드는 `cover`, 이모지 필드는 `icon`, 이미지 아이콘 필드는 `icon_image`로 연결한다. 좌표 속성은 작성 원본에 보관하지 않으며 Pixel Banner의 전역 x/y 기본값은 50이다. 커버 선택기는 `_assets/visuals/covers/`, 이미지 아이콘 선택기는 `_assets/visuals/icons/`를 기본 필터로 사용한다. 기존 글·홈의 좌표 속성을 제거하고 본문은 유지한다. 플러그인의 다른 편집기 꾸밈 속성은 공개 블로그의 고정 UI와 별개다.
 
-새 글은 커버만 선택하며 좌표를 입력할 필요가 없다. 위치가 없으면 Obsidian과 웹에서 `50% 50%`로 자동 적용한다. 커버는 `Pixel Banner: 💾 Select Banner from Vault`, 이모지는 `Pixel Banner: 📰 Set Banner Icon Text / Emoji` 명령을 사용한다. 위치를 직접 바꿀 때만 `Pixel Banner: 🎯 Adjust Position, Size, & Style` 명령을 사용하며 기존 글의 좌표·이전 `cover_position`은 유지한다. 이모지 선택기는 기존 문자열에 붙이는 방식이므로 교체할 때 입력칸을 비운 뒤 선택하고 Insert / Update를 누른다.
+새 글은 커버만 선택하며 좌표를 입력할 필요가 없다. 홈·글 모두 Obsidian과 웹에서 `50% 50%`로 자동 적용한다. 웹은 이전 좌표가 남아 있어도 무시한다. 커버는 `Pixel Banner: 💾 Select Banner from Vault`, 이모지는 `Pixel Banner: 📰 Set Banner Icon Text / Emoji` 명령을 사용한다. 커버 선택 후 위치 조절 창은 자동으로 열지 않으며 위치 조절 명령은 사용하지 않는다. `cover_x`·`cover_y`·`cover_position`은 작성 속성에서 제거한다. 이모지 선택기는 기존 문자열에 붙이는 방식이므로 교체할 때 입력칸을 비운 뒤 선택하고 Insert / Update를 누른다.
 
 ## 본문 형식과 전체 변환 검증
 

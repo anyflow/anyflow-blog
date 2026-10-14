@@ -28,7 +28,7 @@
 ## 4단계 표시·작성 개선 — 운영 반영
 
 - Mermaid 축소의 원인은 전역 SVG 아이콘 스타일이었다. `src/css/style.css`에서 아이콘에만 적용하며 공개 글 9개·Mermaid 13개를 PC·모바일·라이트·다크와 테마 전환에서 검증했다.
-- `cover_x`·`cover_y`가 없거나 비어 있으면 중앙을 사용한다. 기존 숫자 좌표와 `cover_position`은 유지하며 공개 글 397개·홈의 생성 데이터가 수정 전과 동일하다. 작성 vault의 템플릿에서 좌표 필드를 제거하고 안내를 수정했다.
+- 홈·글의 커버 위치는 항상 중앙(50% 50%)이다. 작성 vault의 cover_x·cover_y·cover_position을 제거하며 웹은 이전 좌표도 무시한다. 커버 선택 후 위치 조절 창은 자동으로 열지 않는다.
 - `src/js/image-viewer.js`가 본문 사진과 Mermaid의 확대 팝업을 제공한다. 원본 이미지·SVG를 사용하며 그림·배경·닫기 버튼 클릭과 Esc로 닫고 원래 그림으로 포커스를 복원한다. Mermaid SVG는 팝업을 닫으면 같은 노드를 본문에 되돌려 ID·테마·배치를 유지한다. 링크가 있는 이미지와 참조·알림 상자 아이콘은 제외한다.
 - 카드 선택은 `thumbnail`을 사용하며 사진 링크 또는 현재 글의 Mermaid 블록 참조를 저장한다. 없으면 본문의 첫 사진·Mermaid·YouTube·X 이미지, 모두 없으면 텍스트다. 이전 export의 `hero_image`는 선택값에서 제외한다. 숨겨진 카드의 Mermaid는 Load more 뒤에 렌더링한다.
 - `lib/youtube.js`와 `lib/x.js`가 소셜 iframe 이미지를 추출하며 Obsidian 갤러리도 같은 함수를 사용한다. 선택기 0.3.0에서 YouTube·X 선택값은 공개 이미지 URL이다. X는 Notion iframe으로 감싼 주소도 읽으며 게시물의 첨부 사진·동영상 포스터를 사용한다. 빌드 시 `lib/x-cache.js`가 `.cache/x-thumbnails.json`에 조회 결과를 보관한다. 조회 실패 시 다음 그림으로 넘어가며 텍스트만 있는 X의 이미지 생성은 하지 않는다.

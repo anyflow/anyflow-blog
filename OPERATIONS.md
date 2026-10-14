@@ -476,3 +476,7 @@ CronJob에는 Secret 조회·수정 권한이 없다. Git 키는 읽기 전용 v
 | 관련 테스트 | 9개, 실패 후 재시도·이전 tree 복구·동시 실행·잘못된 Git 대상 차단 포함. workflow lint·manifest 파싱·호스트/Pod make dry-run 통과 |
 
 시각 콘텐츠를 바꾸지 않고 콘텐츠 workflow 파일의 push로 공통 게시 경로를 검증했다. 운영에서 잘못된 image를 배포하는 실패 실험이나 실제 롤백은 수행하지 않았으며 해당 분기는 격리된 테스트로 확인했다. 로그는 .cache/cron-validation/anyflow-blog-deploy-29866691.log에 보존했다. 기존 anyflow.net·DNS·Gateway listener는 변경하지 않았고 전체 회귀·전수 검증은 반복하지 않았다. Obsidian의 수동 commit 후 자동 push는 별도 TODO로 유지하며 현재 자동 게시 시작점은 GitHub push다.
+
+## 2026-10-15 커버 중앙 자동 배치
+
+웹은 홈·글 모두 커버를 50% 50%로 배치하고 이전 좌표를 무시한다. 작성 vault의 398개 문서에서 좌표 속성만 제거하며 본문을 유지하고 기존 Istio 커버 수정은 별도 미커밋으로 보존한다. Pixel Banner 전역 x/y50과 선택 후 위치 조절 창 OFF를 사용한다. 관련4개 테스트·대표 홈/라이프치히 미리보기 coverLoaded 및 objectPosition50%50%를 확인했다. 미리보기 빌드397글·879자산·미해결0이며 전수 검증은 반복하지 않았다. 코드 commit은 CI를 건너뛰고 이어지는 콘텐츠 push로 정적 이미지 한 번만 생성한다.
