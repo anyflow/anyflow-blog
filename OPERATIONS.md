@@ -480,3 +480,5 @@ CronJob에는 Secret 조회·수정 권한이 없다. Git 키는 읽기 전용 v
 ## 2026-10-15 커버 중앙 자동 배치
 
 웹은 홈·글 모두 커버를 50% 50%로 배치하고 이전 좌표를 무시한다. 작성 vault의 398개 문서에서 좌표 속성만 제거하며 본문을 유지하고 기존 Istio 커버 수정은 별도 미커밋으로 보존한다. Pixel Banner 전역 x/y50과 선택 후 위치 조절 창 OFF를 사용한다. 관련4개 테스트·대표 홈/라이프치히 미리보기 coverLoaded 및 objectPosition50%50%를 확인했다. 미리보기 빌드397글·879자산·미해결0이며 전수 검증은 반복하지 않았다. 코드 commit은 CI를 건너뛰고 이어지는 콘텐츠 push로 정적 이미지 한 번만 생성한다.
+
+코드8bccd0f·콘텐츠40dc8ed를 게시했다. Actions38623207610 성공과 자동 배포 선언920207c의 정적 digest 일치·updated/available1·generation 일치를 확인했다. 운영 홈 커버 loaded 및 objectPosition50%50%를 확인했다. 콘텐츠 commit은 원래 Git 버전에서 좌표만 제거해 구성했으며 작업 중 바뀐 국토 종주 초안 상태·기존 Istio 커버 선택·Notion import 검증 자료는 미커밋으로 보존했다. 기존 anyflow.net은 유지한다.
