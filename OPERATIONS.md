@@ -4,7 +4,7 @@
 
 2026-10-14 사용자 요청으로 표시·작성 개선·OG·GA4 코드·댓글·Like와 과거 데이터 이관을 blog.anyflow.net 운영에 반영했다. 3단계 자동 배포 코드는 구현하고 자격증명·운영 활성화는 아래 자동 게시 절차를 따른다. anyflow.net 도메인 전환은 보류한다. RSS·sitemap은 추가하지 않는다.
 
-최신 정적 사이트와 댓글 API 이미지는 release-20261014-6dab388이다. 코드 6dab388·콘텐츠 2d06f6c를 사용했다. 기존 anyflow.net의 호스팅·DNS·라우팅은 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이다. 댓글 API는 배포했으나 GitHub SSH 초기 연결 종료로 댓글·Like 저장 확인은 미완료다. 실제 확인 범위는 문서 마지막 기록을 따른다.
+운영에 마지막 반영한 정적 이미지는 release-20261014-3b63703, 댓글 API는 release-20261014-c45695c다. Git의 신규 GHCR digest는 운영에 적용하지 않았다. 기존 anyflow.net의 호스팅·DNS·라우팅을 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이며 최신 실제 확인 범위는 아래 기록을 따른다.
 
 ## 미리보기
 
@@ -455,3 +455,7 @@ GHCR 이미지 최초 게시는 private이다. read:packages 권한의 classic P
 6. 코드 repo의 BLOG_DEPLOY_ENABLED=true로 설정한다. 수동 workflow의 deploy=true는 이 변수와 무관하게 배포를 요청한다.
 
 수동 이미지 게시는 gh workflow run publish.yml -R anyflow/anyflow-blog -f build_comments=true -f deploy=false로 시작한다. Git 게시와 이미지 생성·운영 활성화를 구분한다. 홈 서버가 중단되면 배포 신호는 세 차례 재시도 후 실패하며, 복구 후 workflow를 재실행한다. receiver 배포 로그는 state.json.log, 서비스 로그는 stdout.log·stderr.log다.
+
+이미지 재생성 없는 배포 재시도는 gh workflow run deploy.yml -R anyflow/anyflow-blog를 사용한다. 롤백은 실행 중인 게시 workflow를 중단한 뒤 YAML의 digest 변경을 되돌려 push하고 deploy.yml을 실행한다. deploy.yml은 수동 운영 배포 요청이므로 BLOG_DEPLOY_ENABLED=false에서도 실행된다.
+
+2026-10-15 구현 검증: 관련 테스트 9개, 세 workflow의 actionlint와 manifest 파싱·make dry-run을 통과했다. [GitHub runner 실행](https://github.com/anyflow/anyflow-blog/actions/runs/38608560795)에서 코드 a5a1f59·콘텐츠 7dd7a88의 정적·API 이미지 GHCR 업로드와 배포 선언 d57616e 자동 commit·push를 확인했다. 첫 실행은 빌드 중 콘텐츠 SHA 변경을 감지해 오래된 YAML 게시를 차단했다. 전용 checkout·0600 receiver.env와 코드 repo 읽기 deploy key·HMAC secret을 준비했다. 콘텐츠 dispatch token·GHCR pull Secret은 미등록이며 OpenRC 설치·라우팅 적용·운영 rollout은 수행하지 않았다. BLOG_DEPLOY_ENABLED=false를 유지한다. 기존 Mac 미리보기 HTTP 200을 확인했고 화면 변경이 없어 재빌드·전체 회귀·전수 검증은 하지 않았다.
