@@ -175,4 +175,4 @@ GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 di
 
 ## 2026-10-15 추가 도메인 HTTP 라우팅
 
-사용자 요청으로 HTTPRoute anyflow-blog에 www.anyflow.net·anyflow.net을 추가하고 상위 Gateway public-gateway에 두 HTTP 리스너를 추가한다. DNS·기존 호스팅·canonical은 유지한다. HTTPS 인증서·리스너는 두 도메인의 DNS 전환과 인증서 발급 후 별도로 구성한다. 기존 blog.anyflow.net의 HTTPS는 유지한다.
+사용자 요청으로 HTTPRoute anyflow-blog에 www.anyflow.net·anyflow.net을 추가하고 상위 Gateway public-gateway에 HTTP·HTTPS 리스너를 연결한다. 사용자가 DNS를 홈 서버로 변경했다. 인증서는 상위 certificate/anyflow-net.yaml·www-anyflow-net.yaml에서 기존 cert-manager HTTP-01 방식으로 관리하며 상위 Makefile의 블로그 생성·삭제에 포함한다. canonical은 blog.anyflow.net을 유지한다. 기존 blog.anyflow.net의 HTTPS는 유지한다.
