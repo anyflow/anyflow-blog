@@ -71,7 +71,7 @@
 
 ## 검증 기준
 
-전수 검증은 개인 vault의 `NOW/NEW BLOG/blog 이전 TODO.md`와 관련 spec의 구현 TODO를 모두 완료한 뒤 최종 단계에서 한 번만 수행한다. 보류 중인 GitHub Actions·Argo CD 자동 게시도 완료 조건에 포함한다. 공통 변환기 변경과 중간 배포에도 같은 기준을 적용한다.
+전수 검증은 2026-10-14 사용자 요청으로 1회 수행했으며 반복하지 않는다. 이후 자동 배포·UUID·결함 수정은 변경한 부분의 관련 테스트와 대표 사례만 확인한다. 개인 vault의 NOW/NEW BLOG/blog 이전 TODO.md와 함께 관리한다.
 
 - 기능별로 변경한 로직의 관련 테스트와 대표 사례만 확인한다. 새 복잡한 로직의 작은 테스트와 글 저장 시 데이터 손상 방지 확인을 유지한다.
 - PC·모바일·라이트·다크는 해당 변경에 직접 영향을 받는 화면만 확인한다. 수정하지 않은 기능과 이미 통과한 화면을 반복 검사하지 않는다.
@@ -102,7 +102,7 @@ BLOG_OUTPUT_DIR=_preview npm run build
 - agentgateway는 HTTPS·라우팅을, nginx는 정적 파일 제공을 담당한다.
 - Dockerfile은 콘텐츠를 빌드 단계에서 사용하고 정적 산출물만 nginx 이미지로 복사한다.
 - 배포 갱신은 전용 checkout에서 make deploy를 사용한다. GHCR digest로 이미지를 받아 삭제 없이 rollout한다. 루트 anyflow-blog-r은 삭제를 포함하므로 일반 갱신에 사용하지 않는다.
-- GitHub 제공 runner의 빌드·GHCR 등록·Git 배포 선언 갱신과 홈 서버 OpenRC 수신기·Makefile 배포를 사용한다. 자격증명·운영 활성화 상태는 OPERATIONS.md를 따른다. Obsidian 자동 push와 운영 도메인 전환도 후속 단계다.
+- GitHub 제공 runner의 빌드·GHCR 등록·Git 배포 선언 갱신과 Kubernetes CronJob의 1분 pull·Makefile 배포를 사용한다. 자격증명·운영 활성화 상태는 OPERATIONS.md를 따른다. Obsidian 자동 push와 운영 도메인 전환도 후속 단계다.
 - 댓글·Like의 수신 API·UI·Git 저장과 과거 데이터 이관을 구현했다. 2026-10-14 운영 연결·이미지 생성·배포를 진행했으며 실제 확인 결과와 제약은 OPERATIONS.md를 따른다.
 
 ## 문서
@@ -165,10 +165,10 @@ C++/CLI 표 코드8개셀 개행을 재변환하고 bare Markdown파일명 자�
 
 Service2개는 deployment/services.yaml, Deployment2개는 deployment/deployments.yaml에서 관리한다. 기존 service.yaml·deployment.yaml·comments-api.yaml을 통합하고 Makefile의 이미지 추출·배포·삭제 파일 참조를 갱신했다. 이미지 추출은 metadata.name으로 두 Deployment를 구분한다. 기존 delete/recreate의 정적 블로그만 삭제하는 동작과 댓글 API 보존을 유지한다. 새 정의4개와 이전 정의의 객체 동일성·운영 kubectl diff0·make dry-run을 확인했다. 리소스 설정·이미지·Secret과 라우팅 파일은 유지했다. 코드0f6b0e7를 commit·push하고 make deploy로 운영 적용했다. 두 Service·Deployment는 unchanged이고 Pod UID·이미지·재시작 수가 유지됐으며 각 Ready1/1을 확인했다. 블로그·댓글 API의 HTTPS200과 운영 댓글4개 조회를 확인했다.
 
-## 2026-10-15 자동 게시 구현
+## 2026-10-15 초기 HTTP 자동 게시 구현 — CronJob 방식으로 대체
 
 GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 digest로 갱신하고 commit·push한다. 콘텐츠 repo는 코드 repo workflow_dispatch를 호출한다. 홈 서버는 OpenRC 수신기에서 HMAC 인증 요청을 받아 전용 checkout을 fetch·ff-only하고 make deploy를 실행한다. Argo CD는 사용하지 않는다. 코드 repo BLOG_DEPLOY_ENABLED=false이며 운영 활성화와 registry Secret·콘텐츠 dispatch token은 OPERATIONS.md 자동 게시 절차를 따른다. 이번 변경은 운영 리소스에 적용하지 않는다.
 
 ## 2026-10-15 Kubernetes CronJob pull 배포
 
-최종 합의는 GitHub Actions의 이미지·YAML digest 게시와 Kubernetes CronJob의 1분 Git pull·make deploy다. OpenRC 수신기·HMAC·배포 API·host cron은 사용하지 않는다. deployment/cronjob.yaml, Dockerfile.deploy, scripts/poll-deploy.sh와 전용 RBAC·PVC로 관리한다. 자격증명은 등록했고 토큰은 만료 없음이다. 현재 구현·관련 테스트를 진행하며 운영 적용·실제 end-to-end 결과는 OPERATIONS.md를 따른다.
+최종 합의는 GitHub Actions의 이미지·YAML digest 게시와 Kubernetes CronJob의 1분 Git pull·make deploy다. OpenRC 수신기·HMAC·배포 API·host cron은 사용하지 않는다. deployment/cronjob.yaml, Dockerfile.deploy, scripts/poll-deploy.sh와 전용 RBAC·PVC로 관리한다. 자격증명은 등록했고 토큰은 만료 없음이다. 코드308875b·콘텐츠7058cd3을 게시하고 CronJob을 활성화했다. 실제 push→이미지·YAML27ff214→Job29866691의 rollout 성공을 확인했다. 테스트9개·RBAC 제한·변경 없음 생략·운영/preview200을 확인했다. 최신 결과와 검증 범위는 OPERATIONS.md를 따른다.

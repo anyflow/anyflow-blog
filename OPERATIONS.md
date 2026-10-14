@@ -4,7 +4,7 @@
 
 2026-10-14 사용자 요청으로 표시·작성 개선·OG·GA4 코드·댓글·Like와 과거 데이터 이관을 blog.anyflow.net 운영에 반영했다. 3단계 자동 배포 코드는 구현하고 자격증명·운영 활성화는 아래 자동 게시 절차를 따른다. anyflow.net 도메인 전환은 보류한다. RSS·sitemap은 추가하지 않는다.
 
-운영에 마지막 반영한 정적 이미지는 release-20261014-3b63703, 댓글 API는 release-20261014-c45695c다. Git의 신규 GHCR digest는 운영에 적용하지 않았다. 기존 anyflow.net의 호스팅·DNS·라우팅을 유지한다. 코드 저장소는 비공개 git@github.com:anyflow/anyflow-blog.git이며 최신 실제 확인 범위는 아래 기록을 따른다.
+운영은 GitHub Actions가 게시한 deployment/deployments.yaml의 GHCR digest를 사용한다. Kubernetes CronJob의 1분 pull·make deploy·성공 상태 기록을 활성화했고 실제 콘텐츠 push부터 rollout까지 확인했다. 기존 anyflow.net의 호스팅·DNS·Gateway listener는 유지한다. 최신 revision·검증 범위는 아래 운영 검증 기록을 따른다.
 
 ## 미리보기
 
@@ -43,7 +43,7 @@ root anyflow-blog-r은 삭제를 포함하므로 일반 갱신에 사용하지 �
 
 ## 검증 기준
 
-전수 검증은 개인 vault의 `NOW/NEW BLOG/blog 이전 TODO.md`와 관련 spec의 구현 TODO를 모두 완료한 뒤 최종 단계에서 한 번만 수행한다. 보류 중인 GitHub Actions·Argo CD 자동 게시도 완료 조건에 포함한다. 공통 변환기 변경과 중간 배포에도 같은 기준을 적용한다.
+전수 검증은 2026-10-14 사용자 요청으로 1회 수행했으며 반복하지 않는다. 이후 자동 배포·UUID·결함 수정은 변경한 부분의 관련 테스트와 대표 사례만 확인한다. 개인 vault의 NOW/NEW BLOG/blog 이전 TODO.md와 함께 관리한다.
 
 - 기능별로 변경한 로직의 관련 테스트와 대표 사례만 확인한다. 새 복잡한 로직의 작은 테스트와 글 저장 시 데이터 손상 방지 확인을 유지한다.
 - PC·모바일·라이트·다크는 해당 변경에 직접 영향을 받는 화면만 확인한다. 수정하지 않은 기능과 이미 통과한 화면을 반복 검사하지 않는다.
@@ -458,3 +458,21 @@ CronJob에는 Secret 조회·수정 권한이 없다. Git 키는 읽기 전용 v
 - 권한·PVC 변경: 관리자 make deploy-automation을 다시 실행한다. 이 변경은 CronJob이 자동 반영하지 않는다.
 
 검증은 변경 없음·변경 감지·Git/배포 실패 후 재시도·동시 실행 방지·이전 tree 복구의 관련 테스트와 실제 Actions→Git→CronJob→rollout 대표 경로를 사용한다. 전체 콘텐츠·회귀·전수 검증은 반복하지 않는다.
+
+## 2026-10-15 pull 배포 운영 검증 완료
+
+코드 308875b·콘텐츠 workflow 7058cd3을 게시하고 Kubernetes CronJob을 활성화했다. 콘텐츠 [push workflow](https://github.com/anyflow/blog/actions/runs/38612727499)가 [이미지 게시 workflow](https://github.com/anyflow/anyflow-blog/actions/runs/38612743961)를 호출했고 배포 선언 27ff214의 정적 image digest만 갱신했다. 댓글 API·배포 도구 이미지는 유지했다.
+
+| 확인 | 결과 |
+| --- | --- |
+| 첫 이미지 게시 | [38612314145](https://github.com/anyflow/anyflow-blog/actions/runs/38612314145), 정적·API·도구 GHCR 업로드와 YAML 자동 commit 0c420a4 성공 |
+| 캐시 개선 실측 | 정적 단계 42초, 도구 포함 전체 1분41초. 기존 정적 단계 2분18초의 캐시 export 대기를 제거 |
+| 콘텐츠 push 경로 | push 이벤트 18:09:16 UTC → YAML 갱신 18:10:48 → CronJob 시작 18:11:00 → 완료 18:11:43, 총 2분27초 |
+| 운영 Job | anyflow-blog-deploy-29866691 Complete, 두 rollout 성공, deployment tree 44c9c48ff309fee93d613a15a708f4a4b035e33a 저장 |
+| 변경 없음 | 후속 Job에서 Deployment unchanged, 재배포 생략·PVC 상태 유지 |
+| 운영 이미지 | 두 Deployment의 spec image가 게시 YAML digest와 일치, updated=available=1·observedGeneration 일치 |
+| RBAC | 지정 Deployment·CronJob patch/watch 허용, 댓글 Secret get·다른 Deployment patch·Role patch·Deployment create 거부 |
+| HTTPS | 홈 200, 공개 홈 댓글 조회 200·30개 레코드, 기존 미리보기 200 |
+| 관련 테스트 | 9개, 실패 후 재시도·이전 tree 복구·동시 실행·잘못된 Git 대상 차단 포함. workflow lint·manifest 파싱·호스트/Pod make dry-run 통과 |
+
+시각 콘텐츠를 바꾸지 않고 콘텐츠 workflow 파일의 push로 공통 게시 경로를 검증했다. 운영에서 잘못된 image를 배포하는 실패 실험이나 실제 롤백은 수행하지 않았으며 해당 분기는 격리된 테스트로 확인했다. 로그는 .cache/cron-validation/anyflow-blog-deploy-29866691.log에 보존했다. 기존 anyflow.net·DNS·Gateway listener는 변경하지 않았고 전체 회귀·전수 검증은 반복하지 않았다. Obsidian의 수동 commit 후 자동 push는 별도 TODO로 유지하며 현재 자동 게시 시작점은 GitHub push다.
