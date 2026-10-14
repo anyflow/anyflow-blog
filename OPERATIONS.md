@@ -401,3 +401,11 @@ API 이미지는 유지하고 변경된 카탈로그만 기존5초 갱신 경로
 외부수정22파일(21MD·1HTML첨부),Notion수정2MD의대상링크를바꿨다. 표시문구·코드·본문·이미지는유지했고HTML첨부의Tweet링크1개는href만변경했다. 미리보기397글·879자산·미해결0으로빌드했다. 수정24페이지/첨부는HTTP200,대체32URL은모두렌더링됐고이전대상href는남지않았다. 네트워크연구결과와보존사유는Mac outputs/blog 전수 검증/link-repair-results.json 및 링크 복구 결과.md를따른다. 일부외부사이트는후속요청403일수있어항상접근을보장하지않는다.
 
 코드·문서commit/push와미리보기까지만수행한다. 운영이미지·Deployment·라우팅·댓글데이터는변경하지않고 release-20261014-c45695c를유지한다. 전체전수검증은반복하지않았다.
+
+## 2026-10-14 링크 복구 운영 배포 완료
+
+코드3b63703·콘텐츠1e2ebed의 검증된 _preview 정적 결과와 nginx 설정을 ghcr.io/anyflow/anyflow-blog:release-20261014-3b63703으로 패키징하고 kind 두 노드에 적재했다. imageID는 sha256:6c8cc1032e650c9db7924e9fe8acbd8896646a03db859d7efb367ce99d943e37다. Deployment 선언 apply·rollout 완료, 새 Pod anyflow-blog-76444df564-ghnww Ready1/1·재시작0을 확인했다.
+
+운영 HTTPS에서 변경24개 페이지/첨부가200이고 외부32개 복구 주소가모두href에반영되며 이전대상href는없음을 확인했다. Agile OCP연결·DNS불명참조제거도 확인했다. 원문보존10개·원래표시문구·첨부본문은 유지한다. API이미지 release-20261014-c45695c,댓글데이터·권한·기존anyflow.net·DNS·Gateway·HTTPRoute는변경하지않았다.
+
+GHCR 업로드·정규 Dockerfile 전체 빌드·전체 전수 재검증은 수행하지 않았다. 링크가 바뀐 범위만 확인했으며 기존 이미지·Deployment 이력은 보존한다. 새 외부주소의 본문 동일성·버전·anchor 확인 근거는Mac outputs/blog 전수 검증/링크 복구 결과.md에 기록한다.
