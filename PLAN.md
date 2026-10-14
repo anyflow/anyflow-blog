@@ -21,11 +21,11 @@ anyflow.net의 UI를 최대한 재현하고 Obsidian과 홈 서버로 이전한�
 - Pagefind 본문 검색·정확한 태그 필터·원본 Share 동작과 작성 템플릿을 운영에 반영했다.
 - 최신 운영 이미지는 `release-20261014-6dab388`다. 당시 코드·콘텐츠와 검증 근거는 `OPERATIONS.md`에 기록한다.
 
-### 3. GitHub Actions·Argo CD 자동 게시 — 보류
+### 3. GitHub Actions·Makefile 자동 게시 — 자격증명·운영 활성화 대기
 
 - 사용자의 수동 commit 뒤 자동 push를 구성한다. iCloud 파일 동기화는 별도로 유지한다.
-- GitHub 제공 runner에서 빌드·이미지 생성·GHCR 등록·배포 선언 갱신 후 홈 서버 Argo CD가 자동 Sync한다.
-- 별도 Argo CD 설치 작업이 끝난 뒤 진행한다. 현재 작업에서 설치·운영 변경은 하지 않는다.
+- GitHub 제공 runner에서 빌드·GHCR 등록·배포 YAML digest 갱신 후 HMAC 인증 API를 호출한다. 홈 서버 OpenRC 수신기는 전용 checkout을 fetch·ff-only하고 make deploy로 rollout한다.
+- Actions·배포 수신기 코드를 구현한다. 콘텐츠 dispatch token·GHCR read token·수신기 설치·운영 활성화와 실제 자동 배포 검증은 OPERATIONS.md를 따른다.
 
 ### 4. 표시·작성 개선 — 운영 반영
 

@@ -1,11 +1,9 @@
 VAULT_REPO   := git@github.com:anyflow/blog.git
 VAULT_DIR    := $(CURDIR)/.cache/blog
-IMAGE        := $(shell awk '/^  name:/ {name=$$2} $$1=="image:" && name=="anyflow-blog" {print $$2}' deployment/deployments.yaml)
-COMMENTS_IMAGE := $(shell awk '/^  name:/ {name=$$2} $$1=="image:" && name=="anyflow-blog-comments" {print $$2}' deployment/deployments.yaml)
-CLUSTER_NAME := my-cluster
 NAMESPACE    := service
+KUBE_CONTEXT := kind-my-cluster
 
-.PHONY: sync site build load deploy create delete recreate
+.PHONY: sync site deploy create delete recreate
 
 sync:
 	@if [ -d "$(VAULT_DIR)/.git" ]; then \
@@ -20,26 +18,21 @@ sync:
 site: sync
 	BLOG_CONTENT_DIR="$(VAULT_DIR)" npm run build
 
-build: sync
-	docker build --label org.opencontainers.image.revision=$$(git rev-parse HEAD) --label net.anyflow.blog.content-revision=$$(git -C "$(VAULT_DIR)" rev-parse HEAD) -t $(IMAGE) .
-	docker build --target comments-api --label org.opencontainers.image.revision=$$(git rev-parse HEAD) -t $(COMMENTS_IMAGE) .
-
-load: build
-	kind load docker-image $(IMAGE) $(COMMENTS_IMAGE) --name $(CLUSTER_NAME)
-
 deploy:
-	kubectl get secret anyflow-blog-comments -n $(NAMESPACE) >/dev/null
-	kubectl apply -f deployment/services.yaml
-	kubectl apply -f deployment/deployments.yaml
-	kubectl apply -f deployment/httproute.yaml
-	kubectl rollout status deployment/anyflow-blog-comments -n $(NAMESPACE) --timeout=120s
-	kubectl rollout status deployment/anyflow-blog -n $(NAMESPACE) --timeout=300s
+	kubectl --context=$(KUBE_CONTEXT) get secret anyflow-blog-registry -n $(NAMESPACE) >/dev/null
+	kubectl --context=$(KUBE_CONTEXT) get secret anyflow-blog-comments -n $(NAMESPACE) >/dev/null
+	kubectl --context=$(KUBE_CONTEXT) apply -f deployment/services.yaml
+	kubectl --context=$(KUBE_CONTEXT) apply -f deployment/endpointslices.yaml
+	kubectl --context=$(KUBE_CONTEXT) apply -f deployment/deployments.yaml
+	kubectl --context=$(KUBE_CONTEXT) apply -f deployment/httproute.yaml
+	kubectl --context=$(KUBE_CONTEXT) rollout status deployment/anyflow-blog-comments -n $(NAMESPACE) --timeout=120s
+	kubectl --context=$(KUBE_CONTEXT) rollout status deployment/anyflow-blog -n $(NAMESPACE) --timeout=300s
 
-create: load deploy
+create: deploy
 
 delete:
-	kubectl delete -f deployment/httproute.yaml || true
-	kubectl delete deployment/anyflow-blog -n $(NAMESPACE) || true
-	kubectl delete service/anyflow-blog -n $(NAMESPACE) || true
+	kubectl --context=$(KUBE_CONTEXT) delete -f deployment/httproute.yaml || true
+	kubectl --context=$(KUBE_CONTEXT) delete deployment/anyflow-blog -n $(NAMESPACE) || true
+	kubectl --context=$(KUBE_CONTEXT) delete service/anyflow-blog -n $(NAMESPACE) || true
 
 recreate: delete create

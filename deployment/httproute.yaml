@@ -14,6 +14,13 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /api/deploy
+      backendRefs:
+        - name: anyflow-blog-deploy
+          port: 18767
+    - matches:
+        - path:
+            type: PathPrefix
             value: /
       backendRefs:
         - name: anyflow-blog

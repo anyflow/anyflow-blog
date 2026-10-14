@@ -1,0 +1,20 @@
+#!/sbin/openrc-run
+name="anyflow blog deployment receiver"
+description="Authenticated latest Git deployment trigger"
+supervisor="supervise-daemon"
+command="/usr/local/bin/node"
+command_args="/home/anyflow/workspace/anyflow-blog-deploy/scripts/deploy-server.js"
+command_user="anyflow:anyflow"
+directory="/home/anyflow/workspace/anyflow-blog-deploy"
+pidfile="/run/${RC_SVCNAME}.pid"
+respawn_delay=5
+respawn_max=0
+output_log="/home/anyflow/.config/anyflow-blog-deploy/stdout.log"
+error_log="/home/anyflow/.config/anyflow-blog-deploy/stderr.log"
+start_pre() {
+  checkpath --directory --owner anyflow:anyflow --mode 0700 /home/anyflow/.config/anyflow-blog-deploy
+  set -a
+  . /home/anyflow/.config/anyflow-blog-deploy/receiver.env
+  set +a
+}
+depend() { need net; }

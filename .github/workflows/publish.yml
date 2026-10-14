@@ -1,0 +1,138 @@
+name: Publish blog
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - deployment/deployments.yaml
+      - '**.md'
+  workflow_dispatch:
+    inputs:
+      content_sha:
+        description: Content commit (empty uses latest main)
+        type: string
+      build_comments:
+        description: Also publish comments API
+        type: boolean
+        default: true
+      deploy:
+        description: Deploy after publishing
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  packages: write
+concurrency:
+  group: publish-blog
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: anyflow/blog
+          ref: main
+          path: .cache/blog
+          ssh-key: ${{ secrets.BLOG_CONTENT_READ_KEY }}
+          persist-credentials: true
+      - name: Pin inputs
+        id: inputs
+        env:
+          REQUESTED_CONTENT: ${{ inputs.content_sha }}
+        run: |
+          set -eu
+          latest=$(git -C .cache/blog rev-parse HEAD)
+          if [ -n "$REQUESTED_CONTENT" ] && [ "$REQUESTED_CONTENT" != "$latest" ]; then
+            echo "Content request is superseded; publish the latest push instead."
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "current=true" >> "$GITHUB_OUTPUT"
+          echo "content=$latest" >> "$GITHUB_OUTPUT"
+          echo "code=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        if: steps.inputs.outputs.current == 'true'
+        with:
+          node-version: '22'
+      - name: Check deployment logic
+        if: steps.inputs.outputs.current == 'true'
+        run: node --test tests/deployment-images.test.js tests/deploy-server.test.js tests/deploy-helper.test.js
+      - uses: docker/setup-buildx-action@v3
+        if: steps.inputs.outputs.current == 'true'
+      - uses: docker/login-action@v3
+        if: steps.inputs.outputs.current == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build static site
+        id: site
+        if: steps.inputs.outputs.current == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/anyflow/anyflow-blog:run-${{ github.run_id }}-${{ github.run_attempt }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/anyflow/anyflow-blog
+            org.opencontainers.image.revision=${{ steps.inputs.outputs.code }}
+            net.anyflow.blog.content-revision=${{ steps.inputs.outputs.content }}
+          cache-from: type=gha,scope=blog
+          cache-to: type=gha,mode=max,scope=blog
+      - name: Build comments API
+        id: comments
+        if: steps.inputs.outputs.current == 'true' && (github.event_name == 'push' || inputs.build_comments)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: comments-api
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/anyflow/anyflow-blog-comments:run-${{ github.run_id }}-${{ github.run_attempt }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/anyflow/anyflow-blog
+            org.opencontainers.image.revision=${{ steps.inputs.outputs.code }}
+          cache-from: type=gha,scope=blog
+          cache-to: type=gha,mode=max,scope=blog
+      - name: Publish deployment declaration
+        id: declaration
+        if: steps.inputs.outputs.current == 'true'
+        env:
+          CODE_SHA: ${{ steps.inputs.outputs.code }}
+          CONTENT_SHA: ${{ steps.inputs.outputs.content }}
+          SITE_DIGEST: ${{ steps.site.outputs.digest }}
+          COMMENTS_DIGEST: ${{ steps.comments.outputs.digest }}
+        run: |
+          set -eu
+          git -C .cache/blog fetch origin main
+          if [ "$(git -C .cache/blog rev-parse origin/main)" != "$CONTENT_SHA" ]; then
+            echo "Newer content exists; skipping stale declaration."
+            exit 0
+          fi
+          git fetch origin master
+          if ! git diff --quiet "$CODE_SHA" origin/master -- . ':!deployment/deployments.yaml'; then
+            echo "Newer code exists; skipping stale declaration."
+            exit 0
+          fi
+          git checkout -B master origin/master
+          node scripts/update-deployment-images.js
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if ! git diff --quiet -- deployment/deployments.yaml; then
+            git add deployment/deployments.yaml
+            git commit -m "deploy: publish code $CODE_SHA content $CONTENT_SHA"
+            git push origin HEAD:master
+          fi
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "Deployment revision: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Deploy latest declaration
+        if: steps.declaration.outputs.published == 'true' && (inputs.deploy || vars.BLOG_DEPLOY_ENABLED == 'true')
+        env:
+          DEPLOY_SECRET: ${{ secrets.BLOG_DEPLOY_SECRET }}
+          DEPLOY_URL: https://blog.anyflow.net/api/deploy
+        run: node scripts/request-deploy.js

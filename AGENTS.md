@@ -101,8 +101,8 @@ BLOG_OUTPUT_DIR=_preview npm run build
 - 공개 경로는 Gateway API HTTPRoute와 cert-manager 인증서로 blog.anyflow.net에 연결된다.
 - agentgateway는 HTTPS·라우팅을, nginx는 정적 파일 제공을 담당한다.
 - Dockerfile은 콘텐츠를 빌드 단계에서 사용하고 정적 산출물만 nginx 이미지로 복사한다.
-- 기존 배포 갱신은 이 저장소에서 make load deploy를 사용한다. manifest의 고유 이미지 태그를 kind에 적재하고 삭제 없이 rollout한다. 루트 anyflow-blog-r은 삭제를 포함하므로 일반 갱신에 사용하지 않는다.
-- GitHub 제공 runner의 빌드·GHCR 등록·Git 배포 선언 갱신과 홈 서버 Argo CD의 자동 Sync는 별도 Argo CD 설치 후 재개한다. Obsidian 자동 push와 운영 도메인 전환도 후속 단계다.
+- 배포 갱신은 전용 checkout에서 make deploy를 사용한다. GHCR digest로 이미지를 받아 삭제 없이 rollout한다. 루트 anyflow-blog-r은 삭제를 포함하므로 일반 갱신에 사용하지 않는다.
+- GitHub 제공 runner의 빌드·GHCR 등록·Git 배포 선언 갱신과 홈 서버 OpenRC 수신기·Makefile 배포를 사용한다. 자격증명·운영 활성화 상태는 OPERATIONS.md를 따른다. Obsidian 자동 push와 운영 도메인 전환도 후속 단계다.
 - 댓글·Like의 수신 API·UI·Git 저장과 과거 데이터 이관을 구현했다. 2026-10-14 운영 연결·이미지 생성·배포를 진행했으며 실제 확인 결과와 제약은 OPERATIONS.md를 따른다.
 
 ## 문서
@@ -164,3 +164,7 @@ C++/CLI 표 코드8개셀 개행을 재변환하고 bare Markdown파일명 자�
 ## 2026-10-14 배포 manifest 종류별 통합
 
 Service2개는 deployment/services.yaml, Deployment2개는 deployment/deployments.yaml에서 관리한다. 기존 service.yaml·deployment.yaml·comments-api.yaml을 통합하고 Makefile의 이미지 추출·배포·삭제 파일 참조를 갱신했다. 이미지 추출은 metadata.name으로 두 Deployment를 구분한다. 기존 delete/recreate의 정적 블로그만 삭제하는 동작과 댓글 API 보존을 유지한다. 새 정의4개와 이전 정의의 객체 동일성·운영 kubectl diff0·make dry-run을 확인했다. 리소스 설정·이미지·Secret과 라우팅 파일은 유지했다. 코드0f6b0e7를 commit·push하고 make deploy로 운영 적용했다. 두 Service·Deployment는 unchanged이고 Pod UID·이미지·재시작 수가 유지됐으며 각 Ready1/1을 확인했다. 블로그·댓글 API의 HTTPS200과 운영 댓글4개 조회를 확인했다.
+
+## 2026-10-15 자동 게시 구현
+
+GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 digest로 갱신하고 commit·push한다. 콘텐츠 repo는 코드 repo workflow_dispatch를 호출한다. 홈 서버는 OpenRC 수신기에서 HMAC 인증 요청을 받아 전용 checkout을 fetch·ff-only하고 make deploy를 실행한다. Argo CD는 사용하지 않는다. 코드 repo BLOG_DEPLOY_ENABLED=false이며 운영 활성화와 registry Secret·콘텐츠 dispatch token은 OPERATIONS.md 자동 게시 절차를 따른다. 이번 변경은 운영 리소스에 적용하지 않는다.

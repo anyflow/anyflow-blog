@@ -15,6 +15,8 @@ spec:
       labels:
         app: anyflow-blog
     spec:
+      imagePullSecrets:
+        - name: anyflow-blog-registry
       containers:
         - name: anyflow-blog
           image: ghcr.io/anyflow/anyflow-blog:release-20261014-3b63703
@@ -55,6 +57,8 @@ spec:
       labels:
         app: anyflow-blog-comments
     spec:
+      imagePullSecrets:
+        - name: anyflow-blog-registry
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
