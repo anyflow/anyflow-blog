@@ -105,7 +105,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .row-title { font-weight:500; min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .category-row time { font-size:12px; white-space:nowrap}
 .post-body>h2:first-child { margin-top:40px}
-.post-body p { margin:2px 0 }
+.post-body p { margin:0; padding:8px 2px }
 .post-body>p:first-child,.post-body>.block-anchor:first-child+p { margin-top:10px }
 .post-body p.notion-empty-paragraph { min-height:30px }
 .post-body ul,.post-body ol { padding-left:30px; margin:4px 0}
