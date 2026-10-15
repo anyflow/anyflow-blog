@@ -258,9 +258,26 @@ test('standalone YouTube bookmarks render cards and supply thumbnails without co
  const root=fixture(t),url='https://youtu.be/BWRY3hiIXcY?si=test',link='[BLADE <Runner> & titles](<'+url+'>)';
  post(root,'youtube',{},link+'\n\n'+link+' and [Other](https://example.com)\n\nInline '+link+' text.\n\n```md\n'+link+'\n```\n\n[Unknown](https://youtube.com.evil.test/watch?v=BWRY3hiIXcY)');
  const item=loadContent(root,path.join(root,'missing.json')).posts[0];
- assert.equal((item.html.match(/class="bookmark youtube-bookmark"/g)||[]).length,1);
+ assert.equal((item.html.match(/class="bookmark bookmark-card youtube-bookmark"/g)||[]).length,1);
  assert.match(item.html,/BLADE &lt;Runner&gt; &amp; titles/);
  assert.match(item.html,/href="https:\/\/youtu.be\/BWRY3hiIXcY\?si=test" target="_blank" rel="noopener noreferrer"/);
  assert.match(item.html,/<p>Inline <a href=/);assert.match(item.html,/youtube.com.evil.test/);
  assert.equal(item.thumbnail,'https://i.ytimg.com/vi/BWRY3hiIXcY/hqdefault.jpg');
+});
+
+test('original bookmark metadata restores cards per post and preserves repaired URLs and ordinary links',t=>{
+ const root=fixture(t),url='https://example.com/old',cover='https://example.com/cover.png',icon='https://example.com/icon.png';
+ post(root,'bookmarks',{post_id:'bookmark-post'},'[Original](<'+url+'>)\n\n[Original](https://example.com/repaired)\n\nInline [Original](<'+url+'>).\n\n[Plain](https://example.com/plain)');
+ post(root,'ordinary',{},'[Original](<'+url+'>)');
+ fs.mkdirSync(path.join(root,'_assets'));
+ const catalog=path.join(root,'_assets/bookmarks.json');
+ fs.writeFileSync(catalog,JSON.stringify({version:1,posts:{'bookmark-post':[{url,title:'Original',description:'Description <script> & text',cover,icon}]}}));
+ const posts=loadContent(root,path.join(root,'missing.json')).posts,item=posts.find(p=>p.id==='bookmark-post');
+ assert.equal((item.html.match(/class="bookmark bookmark-card"/g)||[]).length,2);
+ assert.match(item.html,/Description &lt;script&gt; &amp; text/);assert.match(item.html,/href="https:\/\/example.com\/repaired"/);
+ assert.match(item.html,/<p>Inline <a/);assert.match(item.html,/<p><a href="https:\/\/example.com\/plain"/);
+ assert.equal(item.thumbnail,cover);assert.doesNotMatch(posts.find(p=>p.title==='ordinary').html,/bookmark-card/);
+ assert.throws(()=>require('../lib/bookmark')({url:'javascript:alert(1)',title:'Bad'}),/Invalid bookmark/);
+ fs.writeFileSync(catalog,JSON.stringify({version:1,posts:{'bookmark-post':'invalid'}}));
+ assert.throws(()=>loadContent(root,path.join(root,'missing.json')),/Invalid bookmark catalog/);
 });

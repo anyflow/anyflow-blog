@@ -1,6 +1,7 @@
 const fs=require("node:fs"),path=require("node:path"),{createHash}=require("node:crypto");
 const matter=require("gray-matter"),md=new (require("markdown-it"))({html:true});
 const isNotionMetadata=require("../lib/notion-metadata");
+const bookmark=require("../lib/bookmark");
 const text=a=>(a||[]).map(x=>x[0]).join("");
 const escape=s=>String(s).replace(/([\\\x60*_[\]<>#|!~])/g,"\\$1");
 const html=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -117,7 +118,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
      if(!/^https?:\/\//.test(src))throw new Error("Invalid embed source: "+b.id);
      result='<iframe src="'+html(src)+'" title="'+html(value||b.type)+'" loading="lazy" allowfullscreen style="width:100%;height:'+Math.round(b.format?.block_height||400)+'px;border:0"></iframe>';break;
     }
-    case "bookmark":result="["+escape(text(b.properties?.title)||text(b.properties?.link))+"](<"+text(b.properties?.link)+">)";break;
+    case "bookmark":result=bookmark({url:text(b.properties?.link),title:text(b.properties?.title),description:text(b.properties?.description),cover:b.format?.bookmark_cover,icon:b.format?.bookmark_icon}).trim();break;
     case "external_object_instance":{const url=b.format?.original_url||b.format?.uri;result="["+escape(url)+"](<"+url+">)";break;}
     case "alias":{const target=b.format.alias_pointer.id,pg=pages.get(uuid(target));result="["+escape(pg?.title||text(blocks.get(target)?.properties?.title)||target)+"](<"+(pg?internal(target,p.vaultPath):"https://www.anyflow.net/"+target)+">)";break;}
     case "link_to_page":report.emptyPageLinks.push({page:p.vaultPath,block:b.id});break;

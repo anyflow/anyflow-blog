@@ -96,3 +96,15 @@ test('table inline code keeps real newlines and literal Markdown or HTML charact
  assert.match(html,/<code>literal &lt;br&gt;<\/code>/);
  assert.doesNotMatch(html,/<em>x<\/em>/);
 });
+
+test('bookmark import retains description, cover and favicon instead of flattening to a Markdown link',t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bookmark-import-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ fs.mkdirSync(path.join(root,'_assets/visuals'),{recursive:true});fs.mkdirSync(path.join(root,'post'));
+ fs.writeFileSync(path.join(root,'_assets/visuals/manifest.json'),JSON.stringify({pages:{},emojis:{}}));
+ fs.writeFileSync(path.join(root,'post/post.md'),'---\ntitle: Title\npermalink: /post\ncreated: 2025-01-01\ncategory: test\nkind: post\ndraft: false\n---\nOld.');
+ const b={id:'bookmark',type:'bookmark',properties:{link:[['https://example.com/']],title:[['Title & more']],description:[['Description']]},format:{bookmark_cover:'https://example.com/cover.png',bookmark_icon:'https://example.com/icon.png'}};
+ importNotion(root,{'/post':{pageID:'page',vaultPath:'post/post.md',blocks:[{id:'page',type:'page',content:['bookmark']},b]}});
+ const body=fs.readFileSync(path.join(root,'post/post.md'),'utf8');
+ assert.match(body,/class="bookmark bookmark-card"/);assert.match(body,/Title &amp; more/);assert.match(body,/Description/);assert.match(body,/class="bookmark-cover"/);assert.match(body,/class="bookmark-icon"/);
+ const item=loadContent(root,path.join(root,'missing.json')).posts[0];assert.equal(item.thumbnail,'https://example.com/cover.png');
+});
