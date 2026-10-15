@@ -528,3 +528,8 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 코드c85e775·콘텐츠5761ab2를 게시했다. 콘텐츠 [Actions38774626061](https://github.com/anyflow/blog/actions/runs/38774626061)가 코드 [Actions38774640449](https://github.com/anyflow/anyflow-blog/actions/runs/38774640449)를 호출했고 새 runner artifact 빌드·이미지 패키징·배포 선언6bf6742의 정적 rollout이 성공했다. 댓글 API·배포 도구 이미지·라우팅·인증 정보는 유지했다. 미리보기도 같은 콘텐츠5761ab2로 동기화했고 이전 untracked bookmark catalog는 .cache/bookmarks-before-sync-*에 보관했다. 미리보기는396글·872참조 자산·미해결0이다.
 
 운영에서 Mermaid3·SVG2의 OG PNG200/image/png·1200×630, YouTube·X의 홈 카드 src와 OG URL 동일성·이미지200/image/jpeg를 확인했다. Obsidian Auto Card Link Enhanced로 실제 AI 플랫폼·폴스타4·Mike Portnoy 글 링크를 카드로 변환해 생성 PNG·YouTube·X 이미지가 들어가는 것도 확인했다(메모리 편집기 사용, 실제 글 수정 없음). 실제 캐시 재사용 확인은 PNG5개·재렌더0이며 전수 콘텐츠 검증은 반복하지 않았다. 외부 서비스의 기존 링크 미리보기 캐시는 별도 재수집 때 갱신된다.
+
+
+## 2026-10-16 Mermaid 라이트 배경
+
+공통 .mermaid와 확대 SVG의 라이트 배경을 페이지와 같은 #fff로 변경했다. 다크는 기존 #202020, 그림 내부의 명시된 색상과 이미 흰색인 OG 캔버스는 유지한다. 코드7f39462·[Actions38776296573](https://github.com/anyflow/anyflow-blog/actions/runs/38776296573)·배포 선언3a1051b의 정적 rollout을 완료했다. 미리보기의 라이트/다크 전환·확대 배경과 운영 AI 플랫폼 글의 Mermaid3개 흰색 배경을 확인했다. 댓글 API·배포 도구는 갱신하지 않았고 전수 검증은 반복하지 않았다.
