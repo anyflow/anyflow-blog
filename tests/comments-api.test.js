@@ -139,3 +139,19 @@ test('administrator password accepts 11 characters and rejects old or too-short 
  assert.throws(()=>createCommentsHandler({store:memory(),catalog:[],secret,adminToken:'short',origins:[origin]}),/secrets/);
  assert.throws(()=>createCommentsHandler({store:memory(),catalog:[],secret:'s'.repeat(31),adminToken:token,origins:[origin]}),/secrets/);
 });
+
+test('apex visitor migration preserves both domain identities without exposing cookies or migrating administrator login',async t=>{
+ const store=memory(),handler=createCommentsHandler({store,catalog:[{id:'first'}],secret,adminToken,origins:['https://www.anyflow.net','https://anyflow.net']});
+ const visitor='p'.repeat(43),wwwVisitor='w'.repeat(43),headers={};let status,body;
+ const res={getHeader:k=>headers[k],setHeader:(k,v)=>{headers[k]=v;},writeHead:(s,h)=>{status=s;Object.assign(headers,h);},end:value=>{body=value;}};
+ await handler({method:'GET',url:'/api/identity-migration',headers:{host:'anyflow.net',origin:'https://www.anyflow.net',cookie:'anyflow_visitor='+visitor+'; anyflow_admin=OLD_ADMIN'}},res);
+ assert.equal(status,204);assert.equal(body,undefined);assert.equal(headers['Access-Control-Allow-Origin'],'https://www.anyflow.net');assert.equal(headers['Access-Control-Allow-Credentials'],'true');assert.match(headers['Set-Cookie'][0],/anyflow_apex_visitor=.*; Path=\/api;.*HttpOnly; SameSite=Lax; Secure; Domain=anyflow.net/);assert.ok(!headers['Set-Cookie'].some(c=>c.startsWith('anyflow_admin=')));
+ await handler({method:'GET',url:'/api/identity-migration',headers:{host:'anyflow.net',origin:'https://evil.example',cookie:'anyflow_visitor='+visitor}},res);assert.equal(status,403);
+ const {createHmac}=require('node:crypto'),hash=value=>createHmac('sha256',secret).update('visitor:'+value).digest('hex');
+ await store.transaction(state=>{state.comments.apex={id:'apex',post_id:'first',author:{name:'A'},body:'A',created_at:'2026-01-01',status:'pending',owner_hash:hash(visitor)};state.comments.www={id:'www',post_id:'first',author:{name:'W'},body:'W',created_at:'2026-01-01',status:'published',owner_hash:hash(wwwVisitor)};state.likes['post:first']={[hash(visitor)]:true};});
+ const req={method:'GET',url:'/api/comments?post=first',headers:{host:'www.anyflow.net',origin:'https://www.anyflow.net',cookie:'anyflow_visitor='+wwwVisitor+'; anyflow_apex_visitor='+visitor}};
+ await handler(req,res);const result=JSON.parse(body);assert.equal(status,200);assert.ok(result.comments.every(c=>c.can_edit&&c.can_delete));assert.equal(result.comments.length,2);assert.equal(result.post_liked,true);assert.equal(result.is_admin,false);assert.doesNotMatch(body,/owner_hash|actorHashes/);
+ const {applyOperation}=require('../lib/comments/operations');const actor={actorHash:hash(wwwVisitor),actorHashes:[hash(wwwVisitor),hash(visitor)],isAdmin:false};
+ await store.transaction(state=>{applyOperation(state,{kind:'like',actor,post:'first',liked:true});});assert.equal(Object.keys((await store.read()).likes['post:first']).length,1);
+ await store.transaction(state=>{applyOperation(state,{kind:'edit',id:'edit-alias',fingerprint:'edit',time:'2026-01-02',actor,post:'first',commentId:'apex',body:'Edited through www'});applyOperation(state,{kind:'like',actor,post:'first',liked:false});});assert.equal((await store.read()).comments.apex.body,'Edited through www');assert.equal(Object.keys((await store.read()).likes['post:first']).length,0);
+});

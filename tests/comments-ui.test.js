@@ -24,7 +24,8 @@ test('legacy date without a timezone keeps the original wall clock', () => {
   assert.equal(commentDate(null),'작성일 미상');
 });
 
-function fixture(initial) {
+function fixture(initial, options = {}) {
+  const migrationFailure = options.migrationFailure;
   let document, responses = [], requests = [], timers = new Map(), timerId = 0;
   class Node {
     constructor(tag) { this.tagName = tag; this.children = []; this.events = {}; this.attributes = {}; this.dataset = {}; this.style = {setProperty(){}}; this.value = ''; this._text = ''; this.disabled = false; }
@@ -49,11 +50,12 @@ function fixture(initial) {
   responses.push(initial);
   const fetch = async (url, options) => {
     requests.push({url, options, body: options.body ? JSON.parse(options.body) : null});
+    if (url === 'https://anyflow.net/api/identity-migration') { if (migrationFailure) throw new Error('migration offline'); return {ok:true,status:204}; }
     const result = await responses.shift();
     if (result instanceof Error) throw result;
     return {ok: !result.error, json: async () => result};
   };
-  vm.runInNewContext(source, {document, URL, fetch, crypto, confirm: () => true, setTimeout: fn => {const id=++timerId; timers.set(id,fn); return id;}, clearTimeout: id => timers.delete(id)});
+  vm.runInNewContext(source, {document, URL, fetch, crypto, location: options.hostname ? {hostname:options.hostname} : undefined, AbortSignal, confirm: () => true, setTimeout: fn => {const id=++timerId; timers.set(id,fn); return id;}, clearTimeout: id => timers.delete(id)});
   const ready = async () => { await new Promise(resolve => setImmediate(resolve)); };
   return {root, document, requests, responses, ready, timers, tick: async () => {const [id,fn]=timers.entries().next().value || []; if(fn){timers.delete(id); await fn(); await ready();}}, all: () => all(root), find: name => all(root).find(node => node.className === name)};
 }
@@ -324,4 +326,12 @@ test('an initial background Git refresh polls fresh comments once and then stops
   f.responses.push({...snapshot([comment('fresh')]),revision:2,refreshing:false});await f.tick();
   assert.ok(f.document.getElementById('comment-fresh'));
   assert.equal(f.timers.size,0);
+});
+
+
+test('www imports apex visitor identity before loading comments, and migration failure does not block comments', async () => {
+ for (const migrationFailure of [false,true]) {
+  const f=fixture(snapshot([]),{hostname:'www.anyflow.net',migrationFailure});await f.ready();
+  assert.equal(f.requests[0].url,'https://anyflow.net/api/identity-migration');assert.equal(f.requests[0].options.credentials,'include');assert.equal(f.requests[1].url,'/api/comments?post=post-fixed');assert.equal(f.find('comments-submit').disabled,false);
+ }
 });

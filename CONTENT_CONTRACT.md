@@ -113,7 +113,7 @@ Notion 블록 대조 범위는 변환 글 396개이며 원문 Markdown을 보존
 
 ## OG 메타데이터
 
-공통 템플릿에서 글의 제목·summary·공개 주소를 `og:title`·`og:description`·`og:url`로 제공한다. 주소는 `src/_data/site.json`의 `url`을 기준으로 절대 URL을 사용하며 현재는 `https://blog.anyflow.net`이다. `og:image`는 카드 사진·YouTube·X 이미지, 글 커버, 홈 커버 순으로 선택한다. Mermaid의 별도 OG 이미지 생성은 하지 않으며 해당 글의 커버로 대체한다. YouTube·X 이미지는 서비스의 공개 이미지 URL을 사용한다. X는 첨부 사진·동영상 포스터를 사용하고 조회 결과를 빌드 캐시에 보관한다. 이미지가 없거나 조회에 실패하면 다음 그림을 사용한다. 텍스트 X 게시물의 별도 이미지 생성은 하지 않는다. RSS·sitemap은 추가하지 않는다.
+공통 템플릿에서 글의 제목·summary·공개 주소를 `og:title`·`og:description`·`og:url`로 제공한다. 주소는 `src/_data/site.json`의 `url`을 기준으로 절대 URL을 사용하며 현재는 `https://www.anyflow.net`이다. `og:image`는 카드 사진·YouTube·X 이미지, 글 커버, 홈 커버 순으로 선택한다. Mermaid의 별도 OG 이미지 생성은 하지 않으며 해당 글의 커버로 대체한다. YouTube·X 이미지는 서비스의 공개 이미지 URL을 사용한다. X는 첨부 사진·동영상 포스터를 사용하고 조회 결과를 빌드 캐시에 보관한다. 이미지가 없거나 조회에 실패하면 다음 그림을 사용한다. 텍스트 X 게시물의 별도 이미지 생성은 하지 않는다. RSS는 추가하지 않는다. sitemap.xml은 매 빌드에서 홈과 공개 글의 현재 URL로 생성하며 draft·noindex 글은 제외한다. 글 삭제·발행 취소·주소 변경도 같은 배포에서 반영한다. robots.txt는 www 사이트맵을 안내한다.
 
 ## 댓글·Like와 공개 경계
 

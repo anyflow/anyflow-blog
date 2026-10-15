@@ -554,5 +554,11 @@
     showTasks();
   }
 
-  load();
+  async function start() {
+    if (typeof location !== 'undefined' && location.hostname === 'www.anyflow.net') {
+      try { await fetch('https://anyflow.net/api/identity-migration', {credentials: 'include', signal: AbortSignal.timeout(3000)}); } catch {}
+    }
+    await load();
+  }
+  start();
 })();

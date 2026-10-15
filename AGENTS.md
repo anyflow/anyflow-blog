@@ -224,3 +224,11 @@ Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 
 관련59테스트와 실제 미리보기의 작성·답글·수정·연속 Like·삭제를 확인했다. 시험 댓글은 삭제했고 Git 차단 상태에서도 접수·조회가 Git 완료를 기다리지 않는다. 전체 콘텐츠 전수 검증은 반복하지 않았다.
 
 코드ec12b58·[Actions38719434788](https://github.com/anyflow/anyflow-blog/actions/runs/38719434788)·배포 선언19f5aff를 게시했다. 정적·API rollout 완료, API Ready1/1·Recreate, 댓글 PVC Bound1Gi·큐0600·미완료0을 확인했다. 운영 GET200·preview=false·revision/tasks/refreshing 응답과 새 UI 코드를 읽기 검증했다. 관련59테스트 통과, Git 차단 HTTP 접수 작성26.2ms·수정21.5ms·삭제26.2ms는 격리 시험 수치이며 운영 쓰기 성능 실측이 아니다. 실제 preview 시험 댓글2개는 삭제했고 Like는 원래 상태로 복원했다. 운영 댓글·Like 쓰기 및 실제 알림 메일 재발송·전체 콘텐츠 전수 검증은 수행하지 않았다.
+
+## 2026-10-15 www 대표 주소·자동 사이트맵
+
+대표 주소는 https://www.anyflow.net이며 canonical·OG·sitemap·robots는 site.url을 따른다. sitemap.xml은 매 빌드에서 현재 공개 posts와 홈으로 재생성하며 noindex 글은 제외한다. 발행·삭제·draft 전환·permalink 변경은 사이트와 같은 배포에 반영한다. sitemap lastmod는 검증 가능한 수정일이 없어 넣지 않는다. RSS는 추가하지 않는다.
+
+anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 www로301 이동한다. 기존 열린 페이지와 방문자 식별 이전을 위해 /api/는 apex에서도 유지한다. www 댓글 초기화는 apex /api/identity-migration을 credential 포함 GET으로 호출한다. 이 endpoint는 www Origin만 허용하고 기존 방문자 식별값을 HttpOnly·Secure·SameSite=Lax·Domain=anyflow.net·Path=/api의 별도 cookie로 이전한다. 기존 www cookie를 덮어쓰지 않으며 두 식별 hash의 댓글 소유권·대기 댓글·Like·작업 영수증을 함께 인식한다. Like ON은 기존 식별값 중 하나가 이미 누른 경우 중복 추가하지 않고 OFF는 자신의 이전/현재 식별값 모두 취소한다. 서명 secret·관리자 키·관리자 인증 cookie는 이전하지 않는다. apex에서만 로그인했던 관리자는 www에서 다시 로그인한다.
+
+관련 테스트44개와 XML 파싱·www URL/중복 검사·nginx syntax를 확인했다. 미리보기 sitemap은397 URL이며 draft/noindex/삭제/주소 변경은 작은 fixture의 연속 재생성으로 검증했다. 전수 콘텐츠 검증은 반복하지 않았다. Search Console의 기존 sc-domain:anyflow.net 속성에 www 사이트맵이 이미 등록되어 있어 운영 배포 후 같은 URL을 재제출한다.
