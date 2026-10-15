@@ -12,7 +12,7 @@
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
   <link rel="canonical" href="{{ (post.url or '/') | absoluteUrl | escape }}">
   <meta property="og:url" content="{{ (post.url or '/') | absoluteUrl | escape }}">
-  {% set shareImage = post.thumbnail or post.cover or home.cover or site.cover %}
+  {% set shareImage = post.ogImage or post.thumbnail or post.cover or home.cover or site.cover %}
   {% if shareImage %}<meta property="og:image" content="{{ shareImage | absoluteUrl | escape }}">{% endif %}
   {% if post %}<meta data-pagefind-meta="tags[content]" content="{{ post.tags | join(' ') | escape }}">{% for name in post.tags %}<meta data-pagefind-filter="tag[content]" content="{{ name | escape }}">{% endfor %}{% endif %}
   {% if home.favicon %}<link rel="icon" href="{{ home.favicon | escape }}"><link rel="apple-touch-icon" href="{{ home.favicon | escape }}">{% endif %}

@@ -516,3 +516,11 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 코드067c89b·[Actions38721591107](https://github.com/anyflow/anyflow-blog/actions/runs/38721591107)·배포 선언659d3cd의 정적·API rollout을 완료했다. 운영 sitemap.xml200·text/xml·397개 고유 www URL, robots 안내, 대표 글 canonical/OG의www 일치를 확인했다. apex 홈·글(query 포함)·sitemap의301 Location이 동일 경로/query의www를 가리킨다. 운영 identity-migration204·www CORS·Secure/HttpOnly/Domain/Path 속성과 관리자 cookie 미이전을 dummy visitor로 읽기 검증했다. 실제 댓글/Like 데이터는 변경하지 않았다.
 
 기존 Search Console sc-domain:anyflow.net 속성에 https://www.anyflow.net/sitemap.xml을 재제출했고 ‘사이트맵이 제출됨’ 접수 확인과 제출일2026-10-15를 확인했다. 마지막 읽기2026-10-14·발견397은 기존 결과이므로 새 sitemap의 Google 재수집/재색인 완료로 주장하지 않는다. 전체 전수 검증은 반복하지 않았다.
+
+## 2026-10-16 모든 카드 이미지의 OG 연결
+
+사진·직접 선택한 thumbnail·YouTube·X·cardlink 이미지는 홈 카드와 동일한 URL을 og:image에 사용한다. 선택된 Mermaid·SVG·ICO·AVIF는 lib/card-images.js에서 PNG1200×630으로 생성하며 같은 Mermaid vendor 엔진·한글 폰트·strict 모드를 사용한다. 홈/본문의 Mermaid 렌더링과 테마 전환은 유지한다. 사용자가 새 속성을 입력할 필요는 없다. 카드 이미지가 없으면 기존 글 커버→홈 커버 대체를 유지한다.
+
+렌더링은 GitHub 제공 runner의 Chrome에서 수행하고 생성물 _site만 Docker 이미지에 패키징한다. Dockerfile 직접 실행 전에도 npm run build로 _site를 준비해야 한다. 브라우저·렌더링 의존성은 운영 nginx/댓글 API 이미지에 포함하지 않는다. renderer+vendor+입력 내용 기준으로 PNG 캐시를 재사용하며 Actions에 PNG·기존 X 썸네일 캐시를 보관한다. 공개 PNG URL은 실제 이미지 bytes hash다. 렌더 중 네트워크 요청을 차단하고 외부 SVG 입력은 HTTP(S)·크기·시간 제한으로 읽는다. 생성 실패는 기존 배포를 유지하며 잘못된 이미지로 새 배포하지 않는다.
+
+관련11테스트, 실제 PNG5개(Mermaid3·SVG2)의1200×630·본문 선택/OG 연결, YouTube(폴스타4)·X(Mike Portnoy) 이미지200/image/jpeg를 확인했다. PromLabs bookmark cover의 이전404 주소는 현재 공식 사이트의 동일 favicon /favicon.svg로2개 metadata 기록을 수정했다. 작성 vault의 다른 편집은 포함하지 않는다. 전체 콘텐츠 전수 검증은 반복하지 않는다.

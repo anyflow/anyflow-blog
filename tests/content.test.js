@@ -316,3 +316,10 @@ test('malformed cardlink blocks fail clearly and unsafe image protocols never be
  }
  const root=fixture(t);post(root,'safe-card',{},'```cardlink\nurl: https://example.com/\ntitle: Safe\nimage: javascript:alert(1)\nfavicon: data:image/svg+xml,bad\n```');const item=loadContent(root,path.join(root,'missing.json')).posts[0];assert.doesNotMatch(item.html,/javascript:|data:image/);assert.equal(item.thumbnail,'');
 });
+
+
+test('selected Mermaid thumbnail keeps the same diagram for home and maps its generated PNG to OG',t=>{
+ const root=fixture(t);post(root,'og-diagram',{thumbnail:'[[#^selected]]'},'```mermaid\ngraph TD; A-->B;\n```\n\n```mermaid\ngraph TD; C-->D;\n```\n^selected');
+ const first=loadContent(root,path.join(root,'missing.json'),{},{}).posts[0],{key}=require('../lib/card-images');assert.match(first.thumbnailDiagram,/C-->D/);
+ const mapped=loadContent(root,path.join(root,'missing.json'),{},{[key(first)]:'/images/cards/diagram.png'}).posts[0];assert.equal(mapped.ogImage,'/images/cards/diagram.png');assert.equal(mapped.thumbnailDiagram,first.thumbnailDiagram);assert.equal(mapped.thumbnail,'');
+});

@@ -244,3 +244,11 @@ Auto Card Link Enhanced의 fenced cardlink YAML을 공통 Markdown 변환 단계
 잘못된 YAML·url·필드 타입은 해당 글 주소를 포함한 오류로 빌드를 중단한다. 제목·설명은 HTML escape하고 위험한 이미지 protocol은 제외한다. cardlink 문법을 설명하는 바깥 코드 블록은 그대로 유지한다. 관련6테스트·미리보기 빌드·격리된 localhost 시험 카드2개의 높이110px·이미지3개 로드를 확인했다. 시험 HTML은 _preview/_cardlink-review에만 만들었고 실제 글·vault·운영 게시물에는 추가하지 않았다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
 
 코드6115bbe·[Actions38724192774](https://github.com/anyflow/anyflow-blog/actions/runs/38724192774)·배포 선언4b2aab4의 정적 rollout을 완료했다. 기존 운영 북마크 페이지200과 시험 페이지의 운영404를 확인했다. 댓글 API·배포 도구 이미지는 유지했다. cardlink의 실제 표시는 격리된 로컬 미리보기에서 확인했으며 운영에 시험 게시물을 추가하지 않았다.
+
+## 2026-10-16 모든 카드 이미지의 OG 연결
+
+사진·직접 선택한 thumbnail·YouTube·X·cardlink 이미지는 홈 카드와 동일한 URL을 og:image에 사용한다. 선택된 Mermaid·SVG·ICO·AVIF는 lib/card-images.js에서 PNG1200×630으로 생성하며 같은 Mermaid vendor 엔진·한글 폰트·strict 모드를 사용한다. 홈/본문의 Mermaid 렌더링과 테마 전환은 유지한다. 사용자가 새 속성을 입력할 필요는 없다. 카드 이미지가 없으면 기존 글 커버→홈 커버 대체를 유지한다.
+
+렌더링은 GitHub 제공 runner의 Chrome에서 수행하고 생성물 _site만 Docker 이미지에 패키징한다. Dockerfile 직접 실행 전에도 npm run build로 _site를 준비해야 한다. 브라우저·렌더링 의존성은 운영 nginx/댓글 API 이미지에 포함하지 않는다. renderer+vendor+입력 내용 기준으로 PNG 캐시를 재사용하며 Actions에 PNG·기존 X 썸네일 캐시를 보관한다. 공개 PNG URL은 실제 이미지 bytes hash다. 렌더 중 네트워크 요청을 차단하고 외부 SVG 입력은 HTTP(S)·크기·시간 제한으로 읽는다. 생성 실패는 기존 배포를 유지하며 잘못된 이미지로 새 배포하지 않는다.
+
+관련11테스트, 실제 PNG5개(Mermaid3·SVG2)의1200×630·본문 선택/OG 연결, YouTube(폴스타4)·X(Mike Portnoy) 이미지200/image/jpeg를 확인했다. PromLabs bookmark cover의 이전404 주소는 현재 공식 사이트의 동일 favicon /favicon.svg로2개 metadata 기록을 수정했다. 작성 vault의 다른 편집은 포함하지 않는다. 전체 콘텐츠 전수 검증은 반복하지 않는다.

@@ -6,13 +6,16 @@ const {loadContent}=require("../lib/content");
   if(!["_site","_preview"].includes(target)) throw new Error("Build output must be _site or _preview");
   const output=path.resolve(target);
   const staging=path.resolve(".cache/build-"+Date.now());
-  const content=loadContent();
+  let content=loadContent();
   require("../lib/validate-content").validateContent(content);
   if(!content.posts.length) throw new Error("Build requires at least one published post");
   await require("../lib/x-cache").cacheXThumbnails(content.xPosts);
+  content=loadContent();
+  const cardImages=await require("../lib/card-images").buildCardImages(content,staging);
   process.env.BLOG_OUTPUT_DIR=staging;
   const engine=new Eleventy("src",staging);
   await engine.write();
+  for(const url of Object.values(cardImages))if(!fs.existsSync(path.join(staging,url)))throw new Error("Missing generated card image: "+url);
   if(!fs.existsSync(path.join(staging,"index.html"))) throw new Error("Build did not produce a home page in staging");
   for(const [source,url] of content.assets) {
     const destination=path.join(staging,decodeURIComponent(url));

@@ -1,14 +1,5 @@
 node_modules/
-_site/
 _preview/
 .git
-.cache/*
-!.cache/blog/
-!.cache/blog/**
-.cache/blog/.git/
-.cache/blog/.obsidian/
-.cache/blog/.gitignore
-.cache/blog/.mcp.json
+.cache/
 src/posts/
-
-.cache/blog/.github/
