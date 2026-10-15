@@ -143,7 +143,7 @@ function importNotion(root,reference,aliases={},imageMap={}) {
   const file=path.join(root,p.vaultPath),before=fs.readFileSync(file,"utf8"),parsed=matter(before);
   const opening=before.indexOf("\n---",4);if(opening<0)throw new Error("Missing frontmatter: "+file);
   if(parsed.data.kind!=="post"||parsed.data.draft!==false)throw new Error("Import target is not a published post: "+file);
-  const header=before.slice(0,opening+4),body=serialize(p),after=header+"\n\n"+body;
+  const header=before.slice(0,opening+4),body=require("../lib/markdown-source")(serialize(p)).source,after=header+"\n\n"+body;
   report.pages.push({path:p.vaultPath,before:createHash("sha256").update(before).digest("hex"),after:createHash("sha256").update(after).digest("hex")});
   return {file,after,data:parsed.data};
  });

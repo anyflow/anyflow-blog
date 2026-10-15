@@ -64,7 +64,7 @@ test("empty paragraphs and paragraph line breaks survive import without changing
  assert.deepEqual(report.emptyParagraphs.map(p=>p.id),["empty1","empty2","quoteEmpty","calloutEmpty","listEmpty","columnEmpty","parent"]);
  assert.equal(report.paragraphLineBreaks.length,5);
  assert.match(raw,/<br>First\nsecond<br><br>\\<strong\\>literal\\<\/strong\\><br>/);
- assert.match(raw,/<strong>Bold<\/strong><br><br><strong>next<\/strong>/);
+ assert.ok(raw.includes("**Bold**<br><br>**next**"));
  assert.match(raw,/`code\ncode`/);assert.match(raw,/\\`literal\\`<br><br>end/);
  assert.match(raw,/```text\na\n\nb\n\n```/);
  const current=loadContent(root,path.join(root,"none"));validateContent(current);
