@@ -72,7 +72,7 @@ test('local cover and icon assets, emoji catalog, home metadata and explicit cle
  const visuals=path.join(root,'_assets/visuals');fs.mkdirSync(path.join(visuals,'icons'),{recursive:true});
  fs.writeFileSync(path.join(visuals,'icons/pin.webp'),'emoji image');
  fs.writeFileSync(path.join(visuals,'manifest.json'),JSON.stringify({emojis:{'📌':'icons/pin.webp'}}));
- const home=post(root,'home',{kind:'page',permalink:'/',icon:'🌼',cover:'./home.png',cover_position:'50% 50%'});
+ const home=post(root,'home',{kind:'root',permalink:'/',icon:'🌼',cover:'./home.png',cover_position:'50% 50%'});
  fs.writeFileSync(path.join(path.dirname(home),'home.png'),'home image');
  const custom=post(root,'custom',{icon:'./custom.svg'});fs.writeFileSync(path.join(path.dirname(custom),'custom.svg'),'<svg/>');
  post(root,'native',{icon:'🫧'});post(root,'cleared',{icon:'',cover:''});
@@ -116,7 +116,7 @@ test('cover crop top-aligns home and centers posts, ignoring old coordinates',t=
   const source=post(root,name,{cover:'./cover.png',...data});
   fs.writeFileSync(path.join(path.dirname(source),'cover.png'),'cover');
  }
- const home=post(root,'home',{kind:'page',permalink:'/',cover:'./cover.png'});
+ const home=post(root,'home',{kind:'root',permalink:'/',cover:'./cover.png'});
  fs.writeFileSync(path.join(path.dirname(home),'cover.png'),'cover');
  const reference=path.join(root,'reference.json');
  fs.writeFileSync(reference,JSON.stringify({'/automatic':{coverPosition:'0% 0%'},'/':{coverPosition:'0% 0%'}}));
@@ -169,7 +169,7 @@ test('Obsidian columns retain ratios, captions and nested content',t=>{
  post(root,'columns',{},'> [!column|bad]\n> Text.');assert.throws(()=>loadContent(root,path.join(root,'none')),/Invalid column ratio/);
 });
 test('the home favicon is a referenced asset declared on home and post pages',t=>{
- const root=fixture(t),file=post(root,'first'),home=post(root,'home',{kind:'page',permalink:'/',favicon:'./favicon.png'});
+ const root=fixture(t),file=post(root,'first'),home=post(root,'home',{kind:'root',permalink:'/',favicon:'./favicon.png'});
  fs.writeFileSync(path.join(path.dirname(home),'favicon.png'),'favicon');
  const result=loadContent(root,path.join(root,'none'));assert.equal(result.home.favicon,'/assets/home/favicon.png');assert.equal(result.assets.size,1);
  const nunjucks=require('nunjucks'),env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname,'../src/_includes')));

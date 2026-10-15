@@ -1,14 +1,16 @@
 {% from "tags.njk" import tag %}
 {% from "icon.njk" import icon %}
+{% set pageTitle = post.title or home.title or site.title %}
+{% if post %}{% set pageDescription = post.summary or site.description %}{% else %}{% set pageDescription = home.summary or site.description %}{% endif %}
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if post %}{{ post.title | escape }}{% else %}{{ site.title | escape }}{% endif %}</title>
-  <meta name="description" content="{{ (post.summary or site.description) | escape }}">
+  <title>{{ pageTitle | escape }}</title>
+  <meta name="description" content="{{ pageDescription | escape }}">
   {% if post.noindex %}<meta name="robots" content="noindex">{% endif %}
-  <meta property="og:title" content="{{ (post.title or site.title) | escape }}">
-  <meta property="og:description" content="{{ (post.summary or site.description) | escape }}">
+  <meta property="og:title" content="{{ pageTitle | escape }}">
+  <meta property="og:description" content="{{ pageDescription | escape }}">
   <meta property="og:type" content="{% if post %}article{% else %}website{% endif %}">
   <link rel="canonical" href="{{ (post.url or '/') | absoluteUrl | escape }}">
   <meta property="og:url" content="{{ (post.url or '/') | absoluteUrl | escape }}">
@@ -28,7 +30,7 @@
 </head>
 <body>
 <header class="site-header">
-  <nav class="breadcrumbs" aria-label="위치"><a class="site-logo" href="/">{{ icon(home) }} <span>{{ site.title | escape }}</span></a>{% if post %}<span class="crumb-divider">/</span><a class="post-crumb" href="{{ post.url }}">{{ icon(post) }} <span>{{ post.title | escape }}</span></a>{% endif %}</nav>
+  <nav class="breadcrumbs" aria-label="위치"><a class="site-logo" href="/">{{ icon(home) }} <span>{{ (home.title or site.title) | escape }}</span></a>{% if post %}<span class="crumb-divider">/</span><a class="post-crumb" href="{{ post.url }}">{{ icon(post) }} <span>{{ post.title | escape }}</span></a>{% endif %}</nav>
   <div class="header-actions">
     <button class="search-button" type="button" aria-label="Search" aria-haspopup="dialog" aria-controls="search-dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.7"/><path d="m12.5 12.5 4.5 4.5"/></svg><span>Search</span></button>
     <button class="share-button" type="button" aria-label="Share" popovertarget="share-menu" aria-haspopup="dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 10-6M5 10l10 6"/><circle cx="4" cy="10" r="2"/><circle cx="16" cy="3" r="2"/><circle cx="16" cy="17" r="2"/></svg><span>Share</span></button>
@@ -47,7 +49,7 @@
 {% if cover %}<div class="page-cover"><img src="{{ cover | escape }}" alt="" style="object-position:{{ visual.coverPosition | escape }}"></div>{% else %}<div class="page-cover empty-cover"></div>{% endif %}
 <div class="page-header page-width">
   {% if visual.icon or visual.iconImage %}<div class="page-icon">{{ icon(visual,true) }}</div>{% endif %}
-  <h1 class="page-title">{{ (post.title or site.title) | escape }}</h1>
+  <h1 class="page-title">{{ pageTitle | escape }}</h1>
   {% if post %}<div class="properties">
     <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="currentColor" stroke="none"/><path d="m6 7.5 3 3 3-3" stroke="var(--bg)"/></svg>Category</div><div class="property-value">{{ tag(post.category,post.tagStyles) }}</div></div>
     <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M7 5h8M7 9h8M7 13h8"/><circle cx="3" cy="5" r=".8"/><circle cx="3" cy="9" r=".8"/><circle cx="3" cy="13" r=".8"/></svg>Tags</div><div class="property-value">{% for name in post.tags %}{{ tag(name,post.tagStyles,true) }}{% endfor %}</div></div>
@@ -56,7 +58,7 @@
 </div>
 <div class="page-layout page-width">
   <main class="content {% if post %}post-content{% else %}home-content{% endif %}" id="main-content">{{ content | safe }}</main>
-  <nav class="toc" aria-label="목차">{% if post %}{% for item in post.toc %}<a href="#{{ item.id }}" class="toc-level-{{ item.level }}" title="{{ item.text | escape }}">{{ item.text | escape }}</a>{% endfor %}{% else %}<a href="#who-and-why">Who and Why am I here?</a><a href="#recent">Recent Posts</a><a href="#by-category">By Category</a>{% endif %}</nav>
+  <nav class="toc" aria-label="목차">{% set pageToc = post.toc if post else home.toc %}{% for item in pageToc %}<a href="#{{ item.id }}" class="toc-level-{{ item.level }}" title="{{ item.text | escape }}">{{ item.text | escape }}</a>{% endfor %}</nav>
 </div>
 <button class="back-to-top" type="button" aria-label="맨 위로">⌃ <span>TOP</span></button>
 <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">

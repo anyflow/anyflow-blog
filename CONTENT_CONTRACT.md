@@ -4,7 +4,7 @@
 
 콘텐츠 원본은 독립 Obsidian blog vault와 비공개 `anyflow/blog` 저장소다. `make sync`는 저장소 루트를 `.cache/blog/`로 동기화한다. 카테고리와 글·첨부는 vault 루트 아래에 위치한다.
 
-- `kind: post`이며 `draft: false`인 문서만 게시한다.
+- 글은 `kind: post`·`draft: false`, 홈은 `kind: root`·`permalink: /`·`draft: false`인 문서를 게시한다.
 - frontmatter가 없는 문서와 초안은 생성 대상에서 제외한다.
 - 글 폴더에 Markdown과 참조 첨부를 함께 둔다.
 - `permalink`는 문서 위치와 독립적으로 공개 URL을 결정한다.
@@ -144,3 +144,8 @@ Auto Card Link Enhanced의 fenced cardlink YAML을 공통 Markdown 변환 단계
 ## Markdown 작성 형식
 
 일반 강조는 ** 문법을 사용한다. 구두점·한글 경계 등에서 같은 표시를 보장하지 못하는 경우에는 HTML 강조를 유지한다. 단순 목록 항목 사이에는 빈 줄을 넣지 않으며 순서 목록은 실제1,2,3 순차 번호를 작성한다. 한 항목 안의 여러 문단·코드·하위 목록에 필요한 구분은 유지한다.
+
+
+## 홈 작성 원본
+
+루트 blog.md의 kind는 root다. title·summary·본문·제목·연락처·소개 카드 링크와 섹션 순서는 Markdown을 따른다. 목차도 같은 제목에서 생성한다. [최근 포스트](<최근 포스트.csv>)와 [Blog](<Blog.csv>) 독립 링크 위치에 최신 글 카드·카테고리 목록을 렌더링하며 CSV 파일 자체는 게시하지 않는다. 링크 앞의 제목은 자유롭게 변경하고 두 목록은 한 번씩만 배치한다. 템플릿은 동적 목록·소개 링크 배치·댓글 UI만 담당한다. 기존 #who-and-why·#recent·#by-category 링크는 해당 영역에서 유지한다.

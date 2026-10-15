@@ -344,3 +344,8 @@ html:has(.image-viewer[open]) { overflow:hidden }
 .post-body details.callout[open]>summary .callout-toggle::before { transform:rotate(90deg) }
 
 [data-theme=dark] .mermaid,[data-theme=dark] .image-viewer>svg { background:var(--soft) }
+
+@media(min-width:601px) {
+  .profile-columns>.bookmark { position:relative }
+  .profile-columns>.bookmark>img { position:absolute; right:0; top:0; width:46%; height:100% }
+}
