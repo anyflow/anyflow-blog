@@ -38,7 +38,7 @@
 
 ## 5·6단계 방문 통계·댓글 — 운영 반영, 신규 댓글 게시 검증 대기
 
-- 기존 GA4 계정 `100207646`·속성 `333773406`·웹 스트림 `4090770035`의 측정 ID `G-YWPHXJFYET`를 확인했다. `src/js/analytics.js`는 `anyflow.net`·`www.anyflow.net`에서만 로드하며 localhost·`blog.anyflow.net`은 측정하지 않는다. 기존 gtag·GTM·UA와 중복 초기화를 막는다. 새 코드의 실제 GA 수신과 UA 시절 export 백업 유무는 미확인이다.
+- 기존 GA4 계정 `100207646`·속성 `333773406`·웹 스트림 `4090770035`의 측정 ID `G-YWPHXJFYET`를 확인했다. `src/js/analytics.js`는 `anyflow.net`·`www.anyflow.net`에서만 로드하며 localhost·`blog.anyflow.net`은 측정하지 않는다. 기존 gtag·GTM·UA와 중복 초기화를 막는다. 2026-10-15 기존 GA4 속성333773406의 실시간 page_view → page_location에서 운영 검증 URL https://anyflow.net/blog-construction/prepare?ga_verify=20261015-check-1과 이벤트1건 수신을 확인했다. 운영 페이지 측정 ID는 G-YWPHXJFYET이며 태그 설정·시험 이벤트를 추가하지 않았다. UA 통계 백업 확인은 사용자 요청으로 범위에서 제외했다.
 - `lib/comments/`·`scripts/comments-server.js`·`src/js/comments.js`가 수신 API·Git 저장·Disqus와 유사한 UI를 제공한다. 방문자 쿠키는 1년, 관리자 쿠키는 7일이며 HTTPS에서 HttpOnly·Secure·SameSite=Lax를 적용한다. 공개 JSON에서 작성 권한 검증값·대기 댓글을 제외한다. Git 충돌 재시도와 재시작 후 PID 잠금 복구를 처리한다.
 - 댓글 데이터는 비공개 `anyflow/blog-comments`에 보관한다. 신규 댓글·답글의 incoming 브랜치로 Actions가 PR을 만들고 승인 OFF는 자동 merge, ON은 관리자 승인 후 공개한다. Like·공개 댓글의 직접 수정·삭제는 main에 기록한다. 이 댓글 전용 Actions는 보류 중인 3단계의 블로그 전체 자동 배포와 별개다.
 - 과거 댓글 198개(Disqus 79·이미지 119, 공개 196·삭제 2, 답글 102)를 62개 글과 홈에 이관했다. Like 95개 대상의 댓글 24·글과 홈 27을 보존했으며 0명시 대상은 62개다. 원본 XML·OCR·텍스트와 이미지 46개를 댓글 저장소에 비공개 보관한다. 확인한 백업 44블록은 작성 vault 본문에서 제거하고 원본 자산은 유지했다. Cassandra 글의 잘린 날짜가 있는 1블록은 확인 대상으로 남긴다.
@@ -181,4 +181,4 @@ GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 di
 
 site.url은 https://anyflow.net이다. 관리자 키는 운영 Secret에서 관리하며 Git·문서에 값을 넣지 않는다. 서명 secret의 최소 32자와 관리자 키의 최소 8자 검증을 구분한다. 키 변경 시 관리자 쿠키 서명이 달라져 기존 로그인은 무효화된다. www·blog 도메인의 redirect는 이번 변경 범위에 포함하지 않는다.
 
-코드22a309a·배포 선언15ed5c6을 게시하고 정적·댓글 API의 새 digest rollout을 확인했다. 홈·대표 글 canonical·og:url은 anyflow.net이다. 운영 관리자 키를 Secret에서 교체하고 API를 재시작했으며 새 키 로그인200·이전 키401·이전 관리자 세션 무효화·검증 세션 로그아웃을 확인했다. 키 값과 쿠키는 문서·Git에 넣지 않았다. 관련 테스트3개와 미리보기 빌드를 확인했고 전수 검증은 반복하지 않았다. GA4 실제 수신 확인은 Google Analytics 로그인 대기다.
+코드22a309a·배포 선언15ed5c6을 게시하고 정적·댓글 API의 새 digest rollout을 확인했다. 홈·대표 글 canonical·og:url은 anyflow.net이다. 운영 관리자 키를 Secret에서 교체하고 API를 재시작했으며 새 키 로그인200·이전 키401·이전 관리자 세션 무효화·검증 세션 로그아웃을 확인했다. 키 값과 쿠키는 문서·Git에 넣지 않았다. 관련 테스트3개와 미리보기 빌드를 확인했고 전수 검증은 반복하지 않았다. 2026-10-15 기존 GA4 속성333773406의 실시간 page_view → page_location에서 운영 검증 URL https://anyflow.net/blog-construction/prepare?ga_verify=20261015-check-1과 이벤트1건 수신을 확인했다. 운영 페이지 측정 ID는 G-YWPHXJFYET이며 태그 설정·시험 이벤트를 추가하지 않았다.
