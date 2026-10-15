@@ -182,3 +182,9 @@ GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 di
 site.url은 https://anyflow.net이다. 관리자 키는 운영 Secret에서 관리하며 Git·문서에 값을 넣지 않는다. 서명 secret의 최소 32자와 관리자 키의 최소 8자 검증을 구분한다. 키 변경 시 관리자 쿠키 서명이 달라져 기존 로그인은 무효화된다. www·blog 도메인의 redirect는 이번 변경 범위에 포함하지 않는다.
 
 코드22a309a·배포 선언15ed5c6을 게시하고 정적·댓글 API의 새 digest rollout을 확인했다. 홈·대표 글 canonical·og:url은 anyflow.net이다. 운영 관리자 키를 Secret에서 교체하고 API를 재시작했으며 새 키 로그인200·이전 키401·이전 관리자 세션 무효화·검증 세션 로그아웃을 확인했다. 키 값과 쿠키는 문서·Git에 넣지 않았다. 관련 테스트3개와 미리보기 빌드를 확인했고 전수 검증은 반복하지 않았다. 2026-10-15 기존 GA4 속성333773406의 실시간 page_view → page_location에서 운영 검증 URL https://anyflow.net/blog-construction/prepare?ga_verify=20261015-check-1과 이벤트1건 수신을 확인했다. 운영 페이지 측정 ID는 G-YWPHXJFYET이며 태그 설정·시험 이벤트를 추가하지 않았다.
+
+## 2026-10-15 YouTube 북마크 카드
+
+Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 obsidian-markdown 렌더러에서 썸네일·제목·YouTube 주소가 있는 북마크 카드로 표시한다. 한 문단 전체가 단일 YouTube 링크인 경우에만 적용하며 문장 안 링크·여러 링크·코드 예제·이미지 링크는 유지한다. youtube.js의 URL 검증·썸네일 추출을 재사용하고 생성 이미지도 기존 카드 대표 이미지 수집에 포함한다. 글 Markdown과 기존 영상 iframe은 변경하지 않았다. 코드f67e26a의 관련 테스트1개·미리보기 빌드와 Blade Runner 다크 화면에서 높이110px·썸네일 로드·가로 넘침 없음을 확인했다. 전수 검증은 반복하지 않는다.
+
+[Actions38677509011](https://github.com/anyflow/anyflow-blog/actions/runs/38677509011) 성공과 배포 선언c70f26a의 정적 rollout을 완료했다. 운영 www.anyflow.net/liberalart/blade-runner에서 북마크 카드 HTML·높이110px·썸네일 로드를 확인했다. 미리보기와 운영에 반영했으며 글 본문과 일반 링크는 보존했다.
