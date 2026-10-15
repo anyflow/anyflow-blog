@@ -196,3 +196,11 @@ Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 
 코드f609c05·콘텐츠85a9453을 게시했다. 관련 테스트3개와 미리보기 빌드를 확인했다. 복원 범위의279카드·82글 매칭 누락0, OpenTelemetry의15카드와 대표 카드의 favicon·커버 로드를 확인했다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
 
 [Actions38678597379](https://github.com/anyflow/anyflow-blog/actions/runs/38678597379)과 배포 선언7ffe38a의 정적 rollout을 완료했다. 운영 OpenTelemetry의15개 북마크 카드·설명과 대표 카드 favicon·커버 로드를 확인했으며 raw bookmark catalog의 공개 자산 경로는404다. 정적 이미지만 갱신했고 댓글 API·배포 도구 이미지는 유지했다.
+
+## 2026-10-15 접기 화살표·링크 색상·커버 높이
+
+모든 본문 접기 callout은 info 이모지 대신 CSS 삼각형을 표시한다. 접힘은 오른쪽, 펼침은 아래 방향이며 native details/summary의 키보드·초기 open 상태를 유지한다. 일반 info callout의 아이콘은 유지한다. 본문 일반 링크는 라이트 #4A6F8F·다크 #8FB3D0이며 밑줄을 유지하고 hover에서 조금 더 선명하게 표시한다. 북마크·태그·메뉴 색상은 유지한다. PC 커버 높이는 사용자 승인한280px, 모바일은 기존200px다. 커버 없는 페이지 높이는 변경하지 않았다.
+
+코드c63c827의 관련 테스트2개·미리보기 빌드와 OpenTelemetry의3개 토글·90도 화살표 회전·라이트/다크 링크색·북마크색 유지·모바일390×844 커버200px·가로 넘침 없음을 확인했다. viewport와 테마를 원래대로 복원했다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
+
+[Actions38679663108](https://github.com/anyflow/anyflow-blog/actions/runs/38679663108) 성공과 배포 선언889b2e3의 정적 rollout을 완료했다. 운영 OpenTelemetry에서 커버280px·라이트 링크 rgb(74,111,143)·공통 토글3개와 펼침90도 회전을 확인했다. 댓글 API·배포 도구 이미지는 유지했다.
