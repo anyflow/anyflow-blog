@@ -54,7 +54,55 @@
   const root = document.querySelector('.comments[data-post-id]');
   if (!root) return;
   const postId = root.dataset.postId, expanded = new Set();
-  let snapshot = null, activeEditor = null;
+  let snapshot = null, activeEditor = null, pollTimer = null, pollFailures = 0, publicationPolls = 0, identityEpoch = 0;
+  const clientId = crypto.randomUUID(), sequences = new Map(), likeIntentions = new Map(), commentIntentions = new Map(), busyComments = new Set();
+  const failedRequests = new Map(), recoveredTasks = new Set(), publicationWaiting = new Set();
+
+  function visibleSnapshot() {
+    const result = {...snapshot, comments: snapshot.comments.map(comment => ({...comment}))};
+    for (const [id, intention] of likeIntentions) {
+      const item = id === null ? result : result.comments.find(comment => comment.id === id);
+      if (!item) continue;
+      const countKey = id === null ? 'post_likes' : 'likes', likedKey = id === null ? 'post_liked' : 'liked';
+      item[countKey] = Math.max(0, item[countKey] + Number(intention.liked) - Number(item[likedKey]));
+      item[likedKey] = intention.liked;
+    }
+    for (const [id, intention] of commentIntentions) {
+      const index = result.comments.findIndex(comment => comment.id === id);
+      if (index < 0 && intention.comment) result.comments.push(intention.comment);
+      else if (index >= 0) Object.assign(result.comments[index], intention.patch);
+    }
+    return result;
+  }
+
+  function schedulePoll() {
+    if (pollTimer || !snapshot) return;
+    const working = snapshot.refreshing || (snapshot.tasks || []).some(task => ['queued', 'retrying'].includes(task.status));
+    if (!working && !publicationPolls) return;
+    pollTimer = setTimeout(async () => {
+      pollTimer = null;
+      try {
+        update(await request('/api/comments?post=' + encodeURIComponent(postId)));
+        pollFailures = 0;
+        if (!working && publicationPolls) publicationPolls--;
+      } catch {
+        pollFailures++;
+        notice.textContent = '저장 상태를 확인하지 못했습니다. 접수된 작업은 서버에서 계속 처리됩니다.';
+        retry.hidden = false;
+      }
+      if (pollFailures < 5) schedulePoll();
+    }, Math.min(1000 * 2 ** pollFailures, 16000));
+  }
+
+  function showTasks() {
+    const tasks = snapshot.tasks || [];
+    const failed = tasks.find(task => task.status === 'failed' && !recoveredTasks.has(task.id));
+    if (failed) notice.textContent = failed.message || '댓글 저장에 실패했습니다. 다시 시도해 주세요.';
+    else if (tasks.some(task => task.status === 'retrying')) notice.textContent = '저장을 다시 시도하고 있습니다.';
+    else if (tasks.some(task => task.status === 'queued')) notice.textContent = '게시 처리 중입니다.';
+    else if (!failedRequests.size) notice.textContent = '';
+    schedulePoll();
+  }
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -78,27 +126,36 @@
   notice.setAttribute('aria-live', 'polite');
   const previewNotice = element('p', 'comments-help', '미리보기에서 작성한 댓글과 Like는 운영에 반영되지 않습니다.');
   previewNotice.hidden = true;
-  const retry = button('다시 연결', () => load(), 'comments-retry');
+  const retry = button('다시 시도', () => action(retry, async () => {
+    for (const operation of [...failedRequests.values()]) await operation();
+    await load();
+  }), 'comments-retry');
   retry.hidden = true;
   const commentHint = '댓글 (댓글 수정·삭제는 작성한 브라우저에서 가능합니다. 쿠키가 지워지면 권한을 잃으며, Like도 같은 브라우저를 기준으로 처리합니다.)';
   let composer;
   composer = editor();
+  const taskFailures = element('div', 'comments-task-failures');
   const list = element('div', 'comments-list');
   const admin = element('details', 'comments-admin'), adminTitle = element('summary', '', '관리자');
   const adminBody = element('div', 'comments-admin-body');
   admin.append(adminTitle, adminBody);
-  root.append(toolbar, notice, previewNotice, retry, composer.form, list, admin);
+  root.append(toolbar, notice, previewNotice, retry, composer.form, taskFailures, list, admin);
   heading.textContent = 'Comments';
 
   async function request(path, method = 'GET', payload) {
+    const epoch = identityEpoch;
     const response = await fetch(path, {
       method, credentials: 'same-origin', headers: payload ? {'Content-Type': 'application/json'} : {},
       ...(payload ? {body: JSON.stringify(payload)} : {})
     });
     let result;
     try { result = await response.json(); } catch { throw new Error('댓글 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'); }
-    if (!response.ok) throw new Error(result.message || '요청을 처리하지 못했습니다. 다시 시도해 주세요.');
-    return result;
+    if (!response.ok) {
+      const error = new Error(result.message || '요청을 처리하지 못했습니다. 다시 시도해 주세요.');
+      error.status = response.status;
+      throw error;
+    }
+    return {...result, identityEpoch: epoch};
   }
 
   async function action(trigger, operation) {
@@ -113,9 +170,10 @@
     retry.disabled = true;
     try {
       const result = await request('/api/comments?post=' + encodeURIComponent(postId));
+      pollFailures = 0;
       update(result);
-      notice.textContent = '';
-      retry.hidden = true;
+      if (!(snapshot.tasks || []).some(task => ['queued','retrying','failed'].includes(task.status))) notice.textContent = '';
+      retry.hidden = failedRequests.size === 0;
     } catch {
       notice.textContent = '댓글을 일시적으로 불러올 수 없습니다. 본문은 계속 읽을 수 있으며 작성 중인 내용은 유지됩니다.';
       retry.hidden = false;
@@ -129,14 +187,37 @@
   }
 
   function likeButton(commentId, likes, liked) {
-    const node = button('', () => action(node, async () => {
-      const result = await request('/api/likes', 'PUT', {post_id: postId, comment_id: commentId, liked: node.getAttribute('aria-pressed') !== 'true'});
+    const node = button('', () => {
       const restoreFocus = document.activeElement === node;
-      update(result);
-      notice.textContent = '';
-      const next = commentId === null ? postLike : document.getElementById('comment-like-' + commentId);
-      if (restoreFocus) next?.focus({preventScroll: true});
-    }), 'comments-like');
+      const desired = node.getAttribute('aria-pressed') !== 'true';
+      const sequence = (sequences.get(commentId) || 0) + 1;
+      sequences.set(commentId, sequence);
+      const intention = {liked: desired, sequence};
+      failedRequests.delete('like-' + commentId);
+      likeIntentions.set(commentId, intention);
+      notice.textContent = '저장 중입니다.';
+      render();
+      if (restoreFocus) (commentId === null ? postLike : document.getElementById('comment-like-' + commentId))?.focus({preventScroll: true});
+      const payload = {post_id: postId, comment_id: commentId, liked: desired, request_id: crypto.randomUUID(), client_id: clientId, sequence};
+      const send = async () => {
+        try {
+          const result = await request('/api/likes', 'PUT', payload);
+          if (sequences.get(commentId) === sequence) failedRequests.delete('like-' + commentId);
+          if (likeIntentions.get(commentId) === intention) likeIntentions.delete(commentId);
+          update(result);
+        } catch (error) {
+          if (likeIntentions.get(commentId) === intention) {
+            likeIntentions.delete(commentId);
+            if (!error.status || error.status >= 500) failedRequests.set('like-' + commentId, send);
+            else failedRequests.delete('like-' + commentId);
+            notice.textContent = error.message;
+            retry.hidden = false;
+            render();
+          }
+        }
+      };
+      send();
+    }, 'comments-like');
     if (commentId !== null) node.id = 'comment-like-' + commentId;
     updateLike(node, commentId, likes, liked);
     return node;
@@ -196,25 +277,49 @@
         const submittedBody = body.value;
         const payload = {post_id: postId, body: submittedBody};
         if (!snapshot.is_admin) Object.assign(payload, {name: name.value, link: link.value});
-        if (!editing) {
-          if (comment) payload.parent_id = comment.id;
-          const requestBody = JSON.stringify(payload);
-          if (result.requestBody !== requestBody) { result.requestId = crypto.randomUUID(); result.requestBody = requestBody; }
-          payload.request_id = result.requestId;
+        if (!editing && comment) payload.parent_id = comment.id;
+        if (editing) payload.expected_version = comment.version;
+        const requestBody = JSON.stringify(payload);
+        if (result.requestBody !== requestBody) { result.requestId = crypto.randomUUID(); result.requestBody = requestBody; }
+        payload.request_id = result.requestId;
+        const localId = editing ? comment.id : 'local-' + result.requestId;
+        commentIntentions.set(localId, editing ? {patch: {body: submittedBody, saving: true}} : {comment: {
+          id: localId, parent_id: comment?.id || null, author: {name: snapshot.is_admin ? '관리자' : name.value, link: link.value, is_admin: snapshot.is_admin},
+          body: submittedBody, created_at: new Date().toISOString(), status: 'pending', likes: 0, liked: false, saving: true
+        }});
+        if (editing) busyComments.add(comment.id);
+        result.inFlight = true;
+        notice.textContent = '저장 중입니다.';
+        render();
+        try {
+          const response = await request(editing ? '/api/comments/' + encodeURIComponent(comment.id) : '/api/comments', editing ? 'PATCH' : 'POST', payload);
+          commentIntentions.delete(localId);
+          if (body.value === submittedBody) {
+            body.value = '';
+            if (comment && activeEditor === result) activeEditor = null;
+          }
+          result.requestId = null;
+          result.requestBody = null;
+          update(response);
+          showTasks();
+          if (!(response.tasks || []).length) notice.textContent = response.pending ? '댓글이 접수되었습니다. 관리자 승인 후 공개됩니다.' : '댓글을 저장했습니다.';
+        } catch (error) {
+          commentIntentions.delete(localId);
+          if (error.status && error.status < 500) {
+            result.requestId = null; result.requestBody = null;
+            if (error.status === 409) {
+              await load();
+              const current = snapshot.comments.find(item => item.id === comment?.id);
+              if (current) comment.version = current.version;
+            }
+          }
+          render();
+          throw error;
+        } finally {
+          busyComments.delete(comment?.id);
+          result.inFlight = false;
+          render();
         }
-        const response = await request(editing ? '/api/comments/' + encodeURIComponent(comment.id) : '/api/comments', editing ? 'PATCH' : 'POST', payload);
-        const unchanged = body.value === submittedBody;
-        if (unchanged) body.value = '';
-        result.requestId = null;
-        result.requestBody = null;
-        if (comment && activeEditor === result && unchanged) activeEditor = null;
-        update(response);
-        notice.textContent = response.pending ? '댓글이 접수되었습니다. 관리자 승인 후 공개됩니다.' : editing ? '댓글을 수정했습니다.' : '댓글을 등록했습니다.';
-        if (comment && unchanged && !activeEditor) {
-          const target = document.getElementById('comment-' + (editing ? comment.id : response.comment_id)) || composer.body;
-          target.focus({preventScroll: true});
-        }
-        else if (form.contains(document.activeElement)) body.focus({preventScroll: true});
       });
     });
     return result;
@@ -233,7 +338,8 @@
     const focused = root.contains(document.activeElement) ? document.activeElement : null;
     const selection = focused && typeof focused.selectionStart === 'number' ? [focused.selectionStart, focused.selectionEnd] : null;
     list.replaceChildren();
-    const rows = commentRows(snapshot.comments);
+    const visible = visibleSnapshot();
+    const rows = commentRows(visible.comments);
     for (const row of rows) {
       const comment = row.comment;
       if (row.ancestors.some(id => !expanded.has(id))) continue;
@@ -251,7 +357,10 @@
       }
       header.append(author);
       if (comment.author.is_admin) header.append(element('span', 'comment-badge', '관리자'));
-      if (comment.status === 'pending') header.append(element('span', 'comment-badge', '승인 대기'));
+      const task = (snapshot.tasks || []).find(task => task.comment_id === comment.id && ['queued','retrying'].includes(task.status));
+      if (comment.saving) header.append(element('span', 'comment-badge', '저장 중'));
+      else if (task) header.append(element('span', 'comment-badge', '게시 처리 중'));
+      else if (comment.status === 'pending') header.append(element('span', 'comment-badge', snapshot.moderation ? '승인 대기' : '게시 처리 중'));
       const time = element(comment.created_at ? 'time' : 'span', 'comment-date');
       if (comment.created_at) time.dateTime = comment.created_at;
       time.textContent = commentDate(comment.created_at);
@@ -259,7 +368,7 @@
       if (comment.updated_at && comment.updated_at !== comment.created_at) header.append(element('span', 'comment-edited', '수정됨'));
       article.append(header);
       if (row.depth >= 2 && comment.parent_id) {
-        const parent = snapshot.comments.find(item => item.id === row.ancestors.at(-1));
+        const parent = visible.comments.find(item => item.id === row.ancestors.at(-1));
         if (parent) {
           const reference = element('a', row.depth >= 3 ? 'comment-parent' : 'comment-parent comment-parent-mobile', '↳ ' + parent.author.name + '에게 답글');
           reference.href = '#' + encodeURIComponent('comment-' + parent.id);
@@ -276,26 +385,52 @@
       }
       article.append(element('div', 'comment-body', comment.body));
       const actions = element('div', 'comment-actions');
-      actions.append(likeButton(comment.id, comment.likes, comment.liked));
-      actions.append(button('답글', () => openEditor(comment, false)));
-      if (comment.can_edit) actions.append(button('수정', () => openEditor(comment, true)));
-      if (comment.can_delete) {
-        const remove = button('삭제', () => action(remove, async () => {
-          if (!confirm('댓글을 삭제할까요? 답글은 유지됩니다.')) return;
-          if (activeEditor?.target === comment.id) activeEditor = null;
-          update(await request('/api/comments/' + encodeURIComponent(comment.id), 'DELETE', {post_id: postId}));
-          notice.textContent = '댓글을 삭제했습니다.';
-          document.getElementById('comment-' + comment.id)?.focus({preventScroll: true});
-        }));
-        actions.append(remove);
-      }
-      if (snapshot.is_admin && comment.status === 'pending') {
-        const approve = button('승인', () => action(approve, async () => {
-          update(await request('/api/admin/comments/' + encodeURIComponent(comment.id) + '/approve', 'POST', {post_id: postId}));
-          notice.textContent = '댓글을 승인했습니다.';
-          document.getElementById('comment-' + comment.id)?.focus({preventScroll: true});
-        }));
-        actions.append(approve);
+      if (!comment.id.startsWith('local-')) {
+        actions.append(likeButton(comment.id, comment.likes, comment.liked));
+        const reply = button('답글', () => openEditor(comment, false));
+        reply.disabled = busyComments.has(comment.id);
+        actions.append(reply);
+        if (comment.can_edit) {
+          const edit = button('수정', () => openEditor(comment, true));
+          edit.disabled = busyComments.has(comment.id); actions.append(edit);
+        }
+        if (comment.can_delete) {
+          const remove = button('삭제', () => action(remove, async () => {
+            if (!confirm('댓글을 삭제할까요? 답글은 유지됩니다.')) return;
+            if (activeEditor?.target === comment.id) activeEditor = null;
+            const payload = {post_id: postId, request_id: crypto.randomUUID(), expected_version: comment.version};
+            busyComments.add(comment.id);
+            commentIntentions.set(comment.id, {patch: {status: 'deleted'}});
+            notice.textContent = '저장 중입니다.';
+            render();
+            const send = async () => {
+              try {
+                const result = await request('/api/comments/' + encodeURIComponent(comment.id), 'DELETE', payload);
+                failedRequests.delete(payload.request_id);
+                commentIntentions.delete(comment.id);
+                update(result); showTasks();
+              } catch (error) {
+                commentIntentions.delete(comment.id);
+                if (!error.status || error.status >= 500) failedRequests.set(payload.request_id, send);
+                else failedRequests.delete(payload.request_id);
+                retry.hidden = false;
+                render(); throw error;
+              } finally { busyComments.delete(comment.id); render(); }
+            };
+            await send();
+            document.getElementById('comment-' + comment.id)?.focus({preventScroll: true});
+          }));
+          remove.disabled = busyComments.has(comment.id);
+          actions.append(remove);
+        }
+        if (snapshot.is_admin && comment.status === 'pending') {
+          const approve = button('승인', () => action(approve, async () => {
+            update(await request('/api/admin/comments/' + encodeURIComponent(comment.id) + '/approve', 'POST', {post_id: postId, request_id: crypto.randomUUID()}));
+            showTasks();
+            document.getElementById('comment-' + comment.id)?.focus({preventScroll: true});
+          }));
+          actions.append(approve);
+        }
       }
       if (row.replies) {
         const toggle = button('답글 ' + row.replies + '개', () => {
@@ -335,12 +470,13 @@
       input.addEventListener('change', () => {
         const desired = input.checked;
         action(input, async () => {
-          try { await request('/api/admin/settings', 'PUT', {moderation: desired}); await load(); }
+          try { const response = await request('/api/admin/settings', 'PUT', {moderation: desired, post_id: postId, request_id: crypto.randomUUID()}); update(response); }
           catch (error) { input.checked = !desired; throw error; }
         });
       });
       const logout = button('관리자 로그아웃', () => action(logout, async () => {
         await request('/api/admin/session', 'DELETE', {});
+        identityEpoch++;
         await load();
         adminTitle.focus({preventScroll: true});
       }));
@@ -357,6 +493,7 @@
         if (!form.reportValidity()) return;
         action(submit, async () => {
           await request('/api/admin/login', 'POST', {token: token.value});
+          identityEpoch++;
           token.value = '';
           await load();
           adminTitle.focus({preventScroll: true});
@@ -366,20 +503,55 @@
     }
   }
 
-  function update(result) {
-    snapshot = result;
-    previewNotice.hidden = !result.preview;
-    composer.submit.disabled = false;
+  function render() {
+    if (!snapshot) return;
+    const visible = visibleSnapshot();
+    previewNotice.hidden = !snapshot.preview;
+    composer.submit.disabled = Boolean(composer.inFlight);
     updateIdentity(composer);
-    if (activeEditor) updateIdentity(activeEditor);
-    if (activeEditor) activeEditor.submit.disabled = false;
-    count.textContent = result.comments.filter(comment => comment.status !== 'deleted').length + '개 댓글';
+    if (activeEditor) { updateIdentity(activeEditor); activeEditor.submit.disabled = Boolean(activeEditor.inFlight); }
+    count.textContent = visible.comments.filter(comment => comment.status !== 'deleted').length + '개 댓글';
     postLike.disabled = false;
-    updateLike(postLike, null, result.post_likes, result.post_liked);
+    updateLike(postLike, null, visible.post_likes, visible.post_liked);
     renderList();
     renderAdmin();
+    taskFailures.replaceChildren();
+    for (const task of snapshot.tasks || []) {
+      if (task.status !== 'failed' || !task.body || recoveredTasks.has(task.id)) continue;
+      taskFailures.append(button('저장 실패한 댓글 내용 복원', () => {
+        const comment = snapshot.comments.find(item => item.id === task.comment_id);
+        if (task.kind === 'edit' && comment?.can_edit) {
+          openEditor(comment, true);
+          if (activeEditor?.target !== comment.id || activeEditor.inFlight) return;
+          activeEditor.body.value = task.body;
+        } else if (!composer.body.value || confirm('작성 중인 내용을 실패한 댓글로 바꿀까요?')) {
+          composer.body.value = task.body;
+          composer.requestId = null; composer.requestBody = null;
+          composer.body.focus({preventScroll: true});
+        } else return;
+        recoveredTasks.add(task.id);
+        render(); showTasks();
+      }, 'comments-retry'));
+    }
     const setting = adminBody.querySelector('input[type=checkbox]');
-    if (setting) setting.checked = result.moderation;
+    if (setting) setting.checked = snapshot.moderation;
+  }
+
+  function update(result) {
+    if (result.identityEpoch !== undefined && result.identityEpoch !== identityEpoch) { render(); return; }
+    if (snapshot && Number(result.revision || 0) < Number(snapshot.revision || 0)) { render(); return; }
+    if (!result.moderation) {
+      for (const task of result.tasks || []) {
+        if (task.kind === 'create' && task.status === 'done' && !publicationWaiting.has(task.id) && result.comments.some(comment => comment.id === task.comment_id && comment.status === 'pending')) {
+          publicationWaiting.add(task.id);
+          publicationPolls = 30;
+        }
+      }
+    }
+    if (!result.comments.some(comment => comment.status === 'pending') || result.moderation) publicationPolls = 0;
+    snapshot = result;
+    render();
+    showTasks();
   }
 
   load();

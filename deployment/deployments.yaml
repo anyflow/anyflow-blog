@@ -49,6 +49,8 @@ metadata:
   namespace: service
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: anyflow-blog-comments
@@ -74,6 +76,8 @@ spec:
               value: "false"
             - name: COMMENTS_DATA_DIR
               value: /data/repository
+            - name: COMMENTS_QUEUE_DIR
+              value: /data/queue
             - name: COMMENTS_GIT_REMOTE
               value: git@github.com:anyflow/blog-comments.git
             - name: COMMENTS_CONFIG
@@ -94,6 +98,11 @@ spec:
               memory: 64Mi
             limits:
               memory: 256Mi
+          startupProbe:
+            tcpSocket:
+              port: 3000
+            periodSeconds: 2
+            failureThreshold: 60
           readinessProbe:
             tcpSocket:
               port: 3000
@@ -106,7 +115,8 @@ spec:
               drop: [ALL]
       volumes:
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: anyflow-blog-comments-state
         - name: credentials
           secret:
             secretName: anyflow-blog-comments

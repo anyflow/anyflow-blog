@@ -25,7 +25,7 @@ test('legacy date without a timezone keeps the original wall clock', () => {
 });
 
 function fixture(initial) {
-  let document, responses = [], requests = [];
+  let document, responses = [], requests = [], timers = new Map(), timerId = 0;
   class Node {
     constructor(tag) { this.tagName = tag; this.children = []; this.events = {}; this.attributes = {}; this.dataset = {}; this.style = {setProperty(){}}; this.value = ''; this._text = ''; this.disabled = false; }
     set textContent(value) { this._text = String(value); this.replaceChildren(); }
@@ -49,13 +49,13 @@ function fixture(initial) {
   responses.push(initial);
   const fetch = async (url, options) => {
     requests.push({url, options, body: options.body ? JSON.parse(options.body) : null});
-    const result = responses.shift();
+    const result = await responses.shift();
     if (result instanceof Error) throw result;
     return {ok: !result.error, json: async () => result};
   };
-  vm.runInNewContext(source, {document, URL, fetch, crypto, confirm: () => true});
+  vm.runInNewContext(source, {document, URL, fetch, crypto, confirm: () => true, setTimeout: fn => {const id=++timerId; timers.set(id,fn); return id;}, clearTimeout: id => timers.delete(id)});
   const ready = async () => { await new Promise(resolve => setImmediate(resolve)); };
-  return {root, document, requests, responses, ready, all: () => all(root), find: name => all(root).find(node => node.className === name)};
+  return {root, document, requests, responses, ready, timers, tick: async () => {const [id,fn]=timers.entries().next().value || []; if(fn){timers.delete(id); await fn(); await ready();}}, all: () => all(root), find: name => all(root).find(node => node.className === name)};
 }
 const snapshot = comments => ({comments,post_likes:0,post_liked:false,is_admin:false,moderation:false});
 test('UI renders untrusted text safely and preserves composing state through likes and network failures', async () => {
@@ -197,4 +197,131 @@ test('admin identity fields hide and disable in all editors and return after log
  f.all().find(n=>n.tagName==='button'&&n.textContent==='관리자 로그아웃').events.click();await f.ready();
  assert.equal(identity.hidden,false);assert.equal(name.disabled,false);assert.equal(link.disabled,false);assert.equal(name.required,true);
  assert.equal(name.value,'방문자');assert.equal(link.value,'https://visitor.example');
+});
+
+
+test('double Like sends both intents immediately and stale acknowledgements never revert the last selection', async () => {
+  const f=fixture({...snapshot([]), revision: 1}); await f.ready();
+  let first,second;
+  f.responses.push(new Promise(resolve=>{first=resolve;}),new Promise(resolve=>{second=resolve;}));
+  const like=f.find('comments-like');
+  like.events.click();
+  assert.equal(like.textContent,'❤️ 1'); assert.equal(like.disabled,false);
+  like.events.click();
+  assert.equal(like.textContent,'🩶 0');
+  const sent=f.requests.filter(request=>request.url==='/api/likes');
+  assert.equal(sent.length,2); assert.equal(sent[0].body.liked,true); assert.equal(sent[1].body.liked,false);
+  assert.equal(sent[0].body.client_id,sent[1].body.client_id); assert.equal(sent[1].body.sequence,2);
+  second({...snapshot([]),revision:3}); await f.ready();
+  first({...snapshot([]),post_liked:true,post_likes:1,revision:2}); await f.ready();
+  assert.equal(like.textContent,'🩶 0'); assert.equal(like.getAttribute('aria-pressed'),'false');
+});
+
+test('first Like acknowledgement retains the later unacknowledged intention', async () => {
+  const f=fixture({...snapshot([]),revision:1});await f.ready();
+  let first,second;
+  f.responses.push(new Promise(resolve=>{first=resolve;}),new Promise(resolve=>{second=resolve;}));
+  f.find('comments-like').events.click();f.find('comments-like').events.click();
+  first({...snapshot([]),post_liked:true,post_likes:1,revision:2}); await f.ready();
+  assert.equal(f.find('comments-like').textContent,'🩶 0');
+  second({...snapshot([]),revision:3}); await f.ready();
+  assert.equal(f.find('comments-like').textContent,'🩶 0');
+});
+
+test('create, edit and delete display before acceptance and a failed create retains its draft and request ID',async()=>{
+  const existing=comment('a',null,{can_edit:true,can_delete:true,version:1});
+  const f=fixture({...snapshot([existing]),revision:1});await f.ready();
+  const composer=f.find('comments-form'),body=composer.children.find(n=>n.tagName==='label').children[1];
+  body.value='새 댓글';let finish;
+  f.responses.push(new Promise(resolve=>{finish=resolve;}));
+  composer.events.submit({preventDefault(){}});
+  assert.ok(f.all().some(n=>n.className==='comment-body'&&n.textContent==='새 댓글'));
+  assert.ok(f.all().some(n=>n.className==='comment-badge'&&n.textContent==='저장 중'));
+  assert.equal(f.find('comments-submit').disabled,true);
+  const id=f.requests.at(-1).body.request_id;
+  finish({error:true,message:'접수 실패'});await f.ready();
+  assert.equal(body.value,'새 댓글');assert.ok(!f.all().some(n=>n.className==='comment-body'&&n.textContent==='새 댓글'));
+  f.responses.push({...snapshot([existing,comment('new',null,{body:'새 댓글'})]),revision:2,comment_id:'new'});
+  composer.events.submit({preventDefault(){}});await f.ready();
+  assert.equal(f.requests.at(-1).body.request_id,id);assert.equal(body.value,'');
+  f.all().find(n=>n.tagName==='button'&&n.textContent==='수정').events.click();
+  const edit=f.all().filter(n=>n.className==='comments-form')[1];edit.children.find(n=>n.tagName==='label').children[1].value='수정된 본문';
+  f.responses.push(new Promise(resolve=>{finish=resolve;}));edit.events.submit({preventDefault(){}});
+  assert.equal(f.document.getElementById('comment-a').children.find(n=>n.className==='comment-body').textContent,'수정된 본문');
+  assert.equal(f.requests.at(-1).body.expected_version,1);
+  finish({...snapshot([comment('a',null,{body:'수정된 본문',can_edit:true,can_delete:true,version:2})]),revision:3});await f.ready();
+  f.responses.push(new Promise(resolve=>{finish=resolve;}));
+  f.all().find(n=>n.tagName==='button'&&n.textContent==='삭제').events.click();
+  assert.equal(f.document.getElementById('comment-a'),undefined);
+  assert.equal(f.requests.at(-1).body.expected_version,2);
+  finish({...snapshot([]),revision:4});await f.ready();
+});
+
+test('queued task polling settles without permanent idle polling and failed task body is recoverable',async()=>{
+  const task={id:'task',kind:'create',status:'queued',comment_id:'new',body:'보존할 본문'};
+  const f=fixture({...snapshot([]),revision:1,tasks:[task]});await f.ready();
+  assert.equal(f.timers.size,1);
+  f.responses.push({...snapshot([]),revision:2,tasks:[{...task,status:'failed',message:'저장 충돌'}]});
+  await f.tick();
+  assert.equal(f.timers.size,0);assert.match(f.find('comments-notice').textContent,/저장 충돌/);
+  f.all().find(n=>n.tagName==='button'&&n.textContent==='저장 실패한 댓글 내용 복원').events.click();
+  const form=f.find('comments-form'),body=form.children.find(n=>n.tagName==='label').children[1];
+  assert.equal(body.value,'보존할 본문');
+});
+
+
+test('a completed incoming comment polls briefly for PR publication and stops as soon as published',async()=>{
+  const task={id:'done-create',kind:'create',status:'done',comment_id:'new'};
+  const f=fixture({...snapshot([comment('new',null,{status:'pending'})]),revision:1,tasks:[task]});await f.ready();
+  assert.equal(f.timers.size,1);assert.ok(f.all().some(n=>n.className==='comment-badge'&&n.textContent==='게시 처리 중'));
+  f.responses.push({...snapshot([comment('new')]),revision:2,tasks:[task]});await f.tick();
+  assert.equal(f.timers.size,0);assert.ok(!f.all().some(n=>n.className==='comment-badge'&&n.textContent==='게시 처리 중'));
+});
+
+
+test('late snapshots cannot undo login or restore administrator UI after logout',async()=>{
+  const f=fixture({...snapshot([]),revision:1});await f.ready();
+  let oldVisitor,oldAdmin;
+  f.responses.push(new Promise(resolve=>{oldVisitor=resolve;}));
+  f.find('comments-like').events.click();
+  const login=f.find('comments-admin-login');
+  login.children.find(n=>n.tagName==='label').children.find(n=>n.tagName==='input').value='test-only';
+  f.responses.push({is_admin:true},{...snapshot([]),revision:2,is_admin:true});
+  login.events.submit({preventDefault(){}});await f.ready();
+  assert.equal(f.find('comments-identity').hidden,true);
+  oldVisitor({...snapshot([]),revision:9});await f.ready();
+  assert.equal(f.find('comments-identity').hidden,true);
+  f.responses.push(new Promise(resolve=>{oldAdmin=resolve;}));
+  f.find('comments-like').events.click();
+  f.responses.push({is_admin:false},{...snapshot([]),revision:3,is_admin:false});
+  f.all().find(n=>n.tagName==='button'&&n.textContent==='관리자 로그아웃').events.click();await f.ready();
+  assert.equal(f.find('comments-identity').hidden,false);
+  oldAdmin({...snapshot([]),revision:10,is_admin:true});await f.ready();
+  assert.equal(f.find('comments-identity').hidden,false);
+  assert.ok(f.find('comments-admin-login'));
+});
+
+
+test('a retried failed Like retains its ID and sequence without overwriting newer clicks',async()=>{
+  const f=fixture({...snapshot([]),revision:1});await f.ready();
+  f.responses.push(new Error('network'));f.find('comments-like').events.click();await f.ready();
+  const original=f.requests.at(-1).body;let finish;
+  f.responses.push(new Promise(resolve=>{finish=resolve;}));
+  f.find('comments-retry').events.click();
+  assert.equal(f.requests.at(-1).body.request_id,original.request_id);assert.equal(f.requests.at(-1).body.sequence,1);
+  f.responses.push({...snapshot([]),revision:3,post_likes:1,post_liked:true},{...snapshot([]),revision:4});
+  f.find('comments-like').events.click();f.find('comments-like').events.click();await f.ready();
+  f.responses.push({...snapshot([]),revision:4});
+  finish({...snapshot([]),revision:2,post_likes:1,post_liked:true});await f.ready();
+  assert.equal(f.find('comments-like').textContent,'🩶 0');
+  assert.equal(f.requests.filter(request=>request.url==='/api/likes').at(-1).body.sequence,3);
+});
+
+
+test('an initial background Git refresh polls fresh comments once and then stops',async()=>{
+  const f=fixture({...snapshot([]),revision:1,refreshing:true});await f.ready();
+  assert.equal(f.timers.size,1);
+  f.responses.push({...snapshot([comment('fresh')]),revision:2,refreshing:false});await f.tick();
+  assert.ok(f.document.getElementById('comment-fresh'));
+  assert.equal(f.timers.size,0);
 });

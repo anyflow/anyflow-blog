@@ -216,3 +216,9 @@ Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 
 ## 2026-10-15 홈·글 커버 정렬 분리
 
 사용자 요청으로 홈(root) 웹 커버만50% 0%를 유지하고 모든 글 커버는50% 50%로 복원했다. 높이30vh와 Obsidian 편집 설정은 유지한다. 관련 커버 테스트와 홈·글 미리보기로 확인하며 전수 검증은 반복하지 않는다.
+
+## 2026-10-15 댓글·Like 비동기 접수
+
+기존 API 프로세스의 QueueStore가 PVC에 fsync한 뒤202를 반환하고 단일 async 처리기로 Git 저장을 수행한다. 브라우저는 즉시 표시하며 별도 작업 큐를 두지 않는다. request_id 중복 방지·Like sequence·댓글 version 충돌·재시작 replay·소유자/관리자 권한·기존 PR/승인/알림을 유지한다. API는1 replica·Recreate이며 anyflow-blog-comments-state1Gi PVC를 사용한다. 최초 PVC는 관리자 bootstrap으로 만들고 CronJob 권한은 유지한다. 상세 구조·실패·rollback 절차는 OPERATIONS.md의 동일 제목을 따른다.
+
+관련59테스트와 실제 미리보기의 작성·답글·수정·연속 Like·삭제를 확인했다. 시험 댓글은 삭제했고 Git 차단 상태에서도 접수·조회가 Git 완료를 기다리지 않는다. 전체 콘텐츠 전수 검증은 반복하지 않았다.

@@ -488,3 +488,17 @@ CronJob에는 Secret 조회·수정 권한이 없다. Git 키는 읽기 전용 v
 코드22a309a의 [Actions](https://github.com/anyflow/anyflow-blog/actions/runs/38676401611)가 성공했고 배포 선언15ed5c6의 정적·댓글 API digest를 운영에 반영했다. site.url=https://anyflow.net이며 홈과 Kubernetes Gateway API 글의 canonical·og:url을 확인했다. 미리보기에도 같은 설정을 빌드했다. 공유 버튼은 현재 브라우저 주소를 사용하며 www·blog redirect는 이번 범위에 포함하지 않았다.
 
 운영 Secret의 config.json에서 관리자 키만 교체하고 서명 secret·Git 키·다른 항목을 보존했다. API 새 버전 배포 후 Secret 교체·rollout restart를 수행했다. 새 키 로그인200·이전 키401·이전 쿠키 권한 없음·검증 세션 로그아웃을 확인했다. 복구용 설정은 비추적 .cache/admin-rotation/config.before.json에0600으로 보관하며 키·쿠키 값은 Git·문서에 넣지 않는다. 관련 테스트3개만 실행했고 전체 회귀·전수 검증은 반복하지 않았다. 2026-10-15 기존 GA4 속성333773406의 실시간 page_view → page_location에서 운영 검증 URL https://anyflow.net/blog-construction/prepare?ga_verify=20261015-check-1과 이벤트1건 수신을 확인했다. 운영 페이지 측정 ID는 G-YWPHXJFYET이며 태그 설정·시험 이벤트를 추가하지 않았다.
+
+## 2026-10-15 댓글·Like 비동기 접수
+
+- `QueueStore`가 기존 API 프로세스 안에서 실행된다. 별도 DB·Redis·프로세스·Pod는 없다. 방문자의 HTTP 요청은 검증·권한 확인 후 PVC의 `queue/queue.json`에 기록하고 파일 fsync → atomic rename → 디렉터리 fsync가 끝나야202를 반환한다. 큐 파일은0600이며 Git 작업 사본 밖에 둔다.
+- 큐는 최종 Git 스냅샷, 미완료 작업, 접수/완료 영수증, Like 요청 순서를 보존한다. 브라우저는 작업 큐를 보관하지 않는다. 화면은 즉시 바꾸며 `저장 중`은 접수 전, `게시 처리 중`은 접수 후 Git/PR 처리 중, `승인 대기`는 관리자 승인 ON인 경우다.
+- 단일 async 처리기가 현재 대기 작업의 고정 batch를 순서대로 적용한다. Git 작업 중 새 요청은 다음 batch에 들어간다. 같은 batch의 main 변경은 한 commit·push로 저장한다. 신규 댓글의 incoming 브랜치·PR·승인·알림 경로는 유지하므로 각 신규 댓글의 review 브랜치 push는 별도다.
+- 모든 변경 요청의 `request_id`는 같은 브라우저 내 중복을 방지한다. 같은 ID에 다른 내용을 보내면409다. Like는 명시적 `liked`와 페이지별 `client_id`·대상별 증가 `sequence`를 사용하며 네트워크 순서가 뒤집혀 도착한 과거 의도는 superseded로 처리한다. 이미 진행 중인 저장은 취소하지 않는다.
+- 작성 시 접수 응답에 실제 댓글 ID와 version을 반환한다. 이 ID로 Git 완료 전에도 후속 수정·삭제·답글을 접수한다. 접수 전 임시 행은 변경을 허용하지 않는다. 수정·삭제의 `expected_version`이 다르면409이며, Git 처리 시 외부 변경과 충돌하면 해당 작업만 failed로 기록한다. 독립 작업은 계속 처리한다.
+- GET·접수 응답은 로컬 상태와 revision·작업 상태를 제공한다. 오래된 revision/인증 상태 응답은 최신 화면을 덮지 않는다. Git mirror가 오래됐으면 먼저 로컬 응답을 반환하고 `refreshing` 신호로 새 스냅샷을 한 번 더 조회한다. 진행 작업과 신규 PR 공개 확인 동안만 폴링하며 idle 폴링은 없다.
+- Git 장애는 작업을 지우지 않고 자동 재시도한다. 재시작은 PVC의 미완료 작업을 다시 소비한다. 댓글 자체의 applied_requests는 Git 성공 직후 API가 강제 종료되어도 수정·삭제를 중복 적용하지 않게 한다. 공개 API·export에는 소유권 hash·receipt·내부 review 속성을 내보내지 않으며 관리자 작업의 영수증은 로그아웃하면 숨긴다.
+- 운영 저장은 `anyflow-blog-comments-state`1Gi PVC의 `/data/repository`와 `/data/queue`다. API Deployment는1 replica·Recreate로 동시 소비를 막는다. 신규 PVC는 기존 관리자 `make deploy-automation`으로 bootstrap하며 CronJob 권한은 넓히지 않는다. PVC는 `make delete`에서 삭제하지 않는다. old API로 rollback할 때는 미완료 큐를 먼저 비우거나 큐 호환 버전으로 되돌려야 한다.
+- Git 전용 checkout은 큐에 접수 내용이 보존되어 있으므로 강제 종료로 남은 comments/likes/public/requests 작업 파일만 복구하고 replay한다. 일반 GitStore의 미저장 변경 보호는 유지한다. 운영 Secret·쿠키·댓글 저장소와 사이트 도메인·라우팅은 변경하지 않는다.
+
+최종 확인: 관련 테스트59개(큐·HTTP·UI·Git·배포 선언/폴러), Git 차단 중 즉시 접수, 연속/역순 Like·작성→수정→답글→삭제·중복·권한·version 충돌·디스크 실패·Git 장애·SIGKILL 복구·Git 성공 후 ACK 전 중단·review 분리·로그아웃 후 늦은 응답·초기 mirror refresh를 검증한다. 실제 미리보기의 작성·답글·수정·연속 Like·삭제도 확인했으며 시험 댓글은 삭제했다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
