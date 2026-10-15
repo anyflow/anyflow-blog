@@ -61,7 +61,7 @@
 
 blog vault에 Pixel Banner를 설치하고 커버 필드는 `cover`, 이모지 필드는 `icon`, 이미지 아이콘 필드는 `icon_image`로 연결한다. 좌표 속성은 작성 원본에 보관하지 않으며 Pixel Banner의 전역 x/y 기본값은 50이다. 커버 선택기는 `_assets/visuals/covers/`, 이미지 아이콘 선택기는 `_assets/visuals/icons/`를 기본 필터로 사용한다. 기존 글·홈의 좌표 속성을 제거하고 본문은 유지한다. 플러그인의 다른 편집기 꾸밈 속성은 공개 블로그의 고정 UI와 별개다.
 
-새 글은 커버만 선택하며 좌표를 입력할 필요가 없다. 홈·글의 웹 커버는 가로 중앙·세로 상단(`50% 0%`)으로 자동 적용한다. Obsidian 편집 화면은 기존 `50% 50%`를 유지한다. 웹은 이전 좌표가 남아 있어도 무시한다. 커버는 `Pixel Banner: 💾 Select Banner from Vault`, 이모지는 `Pixel Banner: 📰 Set Banner Icon Text / Emoji` 명령을 사용한다. 커버 선택 후 위치 조절 창은 자동으로 열지 않으며 위치 조절 명령은 사용하지 않는다. `cover_x`·`cover_y`·`cover_position`은 작성 속성에서 제거한다. 이모지 선택기는 기존 문자열에 붙이는 방식이므로 교체할 때 입력칸을 비운 뒤 선택하고 Insert / Update를 누른다.
+새 글은 커버만 선택하며 좌표를 입력할 필요가 없다. 홈(root)의 웹 커버는 가로 중앙·세로 상단(`50% 0%`), 글 커버는 가로·세로 중앙(`50% 50%`)으로 자동 적용한다. Obsidian 편집 화면은 기존 `50% 50%`를 유지한다. 웹은 이전 좌표가 남아 있어도 무시한다. 커버는 `Pixel Banner: 💾 Select Banner from Vault`, 이모지는 `Pixel Banner: 📰 Set Banner Icon Text / Emoji` 명령을 사용한다. 커버 선택 후 위치 조절 창은 자동으로 열지 않으며 위치 조절 명령은 사용하지 않는다. `cover_x`·`cover_y`·`cover_position`은 작성 속성에서 제거한다. 이모지 선택기는 기존 문자열에 붙이는 방식이므로 교체할 때 입력칸을 비운 뒤 선택하고 Insert / Update를 누른다.
 
 ## 본문 형식과 전체 변환 검증
 
