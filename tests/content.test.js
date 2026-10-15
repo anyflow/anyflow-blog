@@ -55,7 +55,7 @@ test('author metadata takes priority over captured reference metadata',t=>{
  fs.writeFileSync(visuals,JSON.stringify({'/first':{icon:'📝',cover:'/old-cover.png',properties:[{text:'test'},{text:'Old'}]}}));
  const current=loadContent(root,visuals).posts[0];
  assert.deepEqual(current.tags,['new']);assert.equal(current.icon,'⭐');
- assert.equal(current.cover,'/assets/first/cover.png');assert.equal(current.coverPosition,'50% 50%');
+ assert.equal(current.cover,'/assets/first/cover.png');assert.equal(current.coverPosition,'50% 0%');
 });
 test('attachments cannot escape the content root through a symlink',t=>{
  const root=fixture(t), outside=fixture(t), file=post(root,'first',{},'![private](./private.png)');
@@ -79,8 +79,8 @@ test('local cover and icon assets, emoji catalog, home metadata and explicit cle
  const reference=path.join(root,'reference.json');fs.writeFileSync(reference,JSON.stringify({'/cleared':{icon:'📝',cover:'/old.png'}}));
  const result=loadContent(root,reference),first=result.posts.find(p=>p.title==='first');
  assert.equal(first.icon,'📌');assert.equal(first.iconImage,'/assets/_assets/visuals/icons/pin.webp');
- assert.equal(first.cover,'/assets/first/cover.webp');assert.equal(first.coverPosition,'50% 50%');
- assert.equal(result.home.cover,'/assets/home/home.png');assert.equal(result.home.coverPosition,'50% 50%');
+ assert.equal(first.cover,'/assets/first/cover.webp');assert.equal(first.coverPosition,'50% 0%');
+ assert.equal(result.home.cover,'/assets/home/home.png');assert.equal(result.home.coverPosition,'50% 0%');
  const image=result.posts.find(p=>p.title==='custom');assert.equal(image.iconIsImage,true);assert.equal(image.iconImage,'/assets/custom/custom.svg');
  assert.equal(result.posts.find(p=>p.title==='native').icon,'🫧');assert.equal(result.posts.find(p=>p.title==='native').iconImage,'');
  const cleared=result.posts.find(p=>p.title==='cleared');assert.equal(cleared.icon,'');assert.equal(cleared.cover,'');
@@ -90,27 +90,27 @@ test('local cover and icon assets, emoji catalog, home metadata and explicit cle
  fs.writeFileSync(path.join(visuals,'icons/pin.webp'),'emoji image');fs.unlinkSync(path.join(path.dirname(source),'cover.webp'));assert.throws(()=>loadContent(root,reference),/Missing cover attachment/);
 });
 
-test('Pixel Banner image links keep covers centered and preserve icons',t=>{
+test('Pixel Banner image links top-align covers and preserve icons',t=>{
  const root=fixture(t),source=post(root,'pixel',{cover:'![[pixel/cover full.webp]]',cover_x:0,cover_y:100,cover_position:'50% 25%',icon:'⭐',icon_image:'[[pixel/pin.svg]]'});
  fs.writeFileSync(path.join(path.dirname(source),'cover full.webp'),'cover');fs.writeFileSync(path.join(path.dirname(source),'pin.svg'),'<svg/>');
  const current=loadContent(root,path.join(root,'none.json')).posts[0];
- assert.equal(current.cover,'/assets/pixel/cover%20full.webp');assert.equal(current.coverPosition,'50% 50%');
+ assert.equal(current.cover,'/assets/pixel/cover%20full.webp');assert.equal(current.coverPosition,'50% 0%');
  assert.equal(current.iconImage,'/assets/pixel/pin.svg');assert.equal(current.iconIsImage,true);
  const registry=path.join(root,'_assets/visuals');fs.mkdirSync(registry,{recursive:true});fs.writeFileSync(path.join(registry,'manifest.json'),JSON.stringify({emojis:{},pages:{'/pixel':{}}}));
  post(root,'pixel',{});const cleared=loadContent(root,path.join(root,'none.json')).posts[0];assert.equal(cleared.icon,'');assert.equal(cleared.cover,'');
  for(const value of [-1,101,'invalid']){
-  const bad=fixture(t);post(bad,'bad',{cover_y:value});assert.equal(loadContent(bad).posts[0].coverPosition,'50% 50%');
+  const bad=fixture(t);post(bad,'bad',{cover_y:value});assert.equal(loadContent(bad).posts[0].coverPosition,'50% 0%');
  }
 });
 
-test('cover crop always centers home and posts, ignoring old coordinates',t=>{
+test('cover crop always top-aligns home and posts, ignoring old coordinates',t=>{
  const root=fixture(t),cases=[
-  ['automatic',{},'50% 50%'],
-  ['blank',{cover_x:'',cover_y:'  '},'50% 50%'],
-  ['partial',{cover_x:0,cover_y:''},'50% 50%'],
-  ['vertical',{cover_x:null,cover_y:100},'50% 50%'],
-  ['legacy',{cover_position:'25% 75%'},'50% 50%'],
-  ['legacy-partial',{cover_position:'25% 75%',cover_x:'',cover_y:0},'50% 50%']
+  ['automatic',{},'50% 0%'],
+  ['blank',{cover_x:'',cover_y:'  '},'50% 0%'],
+  ['partial',{cover_x:0,cover_y:''},'50% 0%'],
+  ['vertical',{cover_x:null,cover_y:100},'50% 0%'],
+  ['legacy',{cover_position:'25% 75%'},'50% 0%'],
+  ['legacy-partial',{cover_position:'25% 75%',cover_x:'',cover_y:0},'50% 0%']
  ];
  for(const [name,data] of cases){
   const source=post(root,name,{cover:'./cover.png',...data});
@@ -122,7 +122,7 @@ test('cover crop always centers home and posts, ignoring old coordinates',t=>{
  fs.writeFileSync(reference,JSON.stringify({'/automatic':{coverPosition:'0% 0%'},'/':{coverPosition:'0% 0%'}}));
  const result=loadContent(root,reference);
  for(const [name,,expected] of cases) assert.equal(result.posts.find(p=>p.title===name).coverPosition,expected);
- assert.equal(result.home.coverPosition,'50% 50%');
+ assert.equal(result.home.coverPosition,'50% 0%');
  assert.equal(result.unresolved.length,0);
 });
 
