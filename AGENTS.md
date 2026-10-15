@@ -232,3 +232,7 @@ Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 
 anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 www로301 이동한다. 기존 열린 페이지와 방문자 식별 이전을 위해 /api/는 apex에서도 유지한다. www 댓글 초기화는 apex /api/identity-migration을 credential 포함 GET으로 호출한다. 이 endpoint는 www Origin만 허용하고 기존 방문자 식별값을 HttpOnly·Secure·SameSite=Lax·Domain=anyflow.net·Path=/api의 별도 cookie로 이전한다. 기존 www cookie를 덮어쓰지 않으며 두 식별 hash의 댓글 소유권·대기 댓글·Like·작업 영수증을 함께 인식한다. Like ON은 기존 식별값 중 하나가 이미 누른 경우 중복 추가하지 않고 OFF는 자신의 이전/현재 식별값 모두 취소한다. 서명 secret·관리자 키·관리자 인증 cookie는 이전하지 않는다. apex에서만 로그인했던 관리자는 www에서 다시 로그인한다.
 
 관련 테스트44개와 XML 파싱·www URL/중복 검사·nginx syntax를 확인했다. 미리보기 sitemap은397 URL이며 draft/noindex/삭제/주소 변경은 작은 fixture의 연속 재생성으로 검증했다. 전수 콘텐츠 검증은 반복하지 않았다. Search Console의 기존 sc-domain:anyflow.net 속성에 www 사이트맵이 이미 등록되어 있어 운영 배포 후 같은 URL을 재제출한다.
+
+코드067c89b·[Actions38721591107](https://github.com/anyflow/anyflow-blog/actions/runs/38721591107)·배포 선언659d3cd의 정적·API rollout을 완료했다. 운영 sitemap.xml200·text/xml·397개 고유 www URL, robots 안내, 대표 글 canonical/OG의www 일치를 확인했다. apex 홈·글(query 포함)·sitemap의301 Location이 동일 경로/query의www를 가리킨다. 운영 identity-migration204·www CORS·Secure/HttpOnly/Domain/Path 속성과 관리자 cookie 미이전을 dummy visitor로 읽기 검증했다. 실제 댓글/Like 데이터는 변경하지 않았다.
+
+기존 Search Console sc-domain:anyflow.net 속성에 https://www.anyflow.net/sitemap.xml을 재제출했고 ‘사이트맵이 제출됨’ 접수 확인과 제출일2026-10-15를 확인했다. 마지막 읽기2026-10-14·발견397은 기존 결과이므로 새 sitemap의 Google 재수집/재색인 완료로 주장하지 않는다. 전체 전수 검증은 반복하지 않았다.
