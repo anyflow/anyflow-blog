@@ -538,3 +538,14 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 ## 2026-10-16 Notion 원본 문단 간격
 
 사용자가 지정한 Notion k8s workload 1/2 원본의 일반 텍스트 블록은 바깥 padding6px+내부 padding2px로 위아래8px, 문단 간 총16px다. 공통 .post-body p를 margin0·padding8px 2px로 맞춰 기존8px에서16px로 변경했다. 본문 line-height24px와 이미지·caption·목록의 별도 padding 규칙은 유지한다. 코드77255b4·[Actions38777535376](https://github.com/anyflow/anyflow-blog/actions/runs/38777535376)·배포 선언8676980의 정적 rollout을 완료했다. 원본 DOM 측정과 해당 글 미리보기·운영의 margin0/padding8px/line-height24px를 확인했다. 전수 검증은 반복하지 않았다.
+
+
+## 2026-10-16 Markdown·중복 이미지 정리
+
+일반 강조3020곳을 ** 문법으로 변환하고 표시 보존이 필요한 HTML 강조150곳은 유지했다. 코드/fence·HTML 블록은 건드리지 않으며 수정303글의 본문·인라인 렌더링·목록 계층을 변환 전후로 비교했다. 단순 목록 항목 사이 빈 줄2150개를 제거하고, 순서 목록은 실제 MD에서도 순차 번호를 기록한다(68글436항목 번호 수정). 복합 항목의 문단·코드·하위 목록 구분은 유지한다. 관련8개 시험과 번호 정리의 중첩/인용/코드 fixture·구조 동등성 검증을 통과했다.
+
+동일 폴더 PNG/JPEG와 Notion WebP를 그림 비율·픽셀 차이로 대조해376쌍을 확인했다. 구조도를 제외한375쌍은 WebP를 유지하고 이전 파일 참조를 교체했다. OpenAPI endpoint filter 글의 구조도 PNG/WebP와 본문·hero_image 참조를 제거했다. 작성 vault에서 총377개 파일을 ~/.Trash/anyflow blog image cleanup 20261016에 보관했다. 내용이 다른 이미지·애니메이션·불확실한 대응은 삭제하지 않는다.
+
+콘텐츠7a18a9d·80869d4와 코드4406931을 게시했다. 향후 Notion 재가져오기는 하지 않으며 import-notion/audit-import/notion-metadata 및 이관 전용 formatter·시험을 제거했다. [Actions38781387444](https://github.com/anyflow/anyflow-blog/actions/runs/38781387444) 성공과 배포 선언6cf5b2a의 정적 rollout을 확인했다. 미리보기396글·869참조 자산·미해결0, 운영 OpenAPI 구조도 제거와 Istio 번호 목록을 확인했다. 댓글 API·배포 도구 이미지는 유지했다.
+
+작성 vault HEAD/main과 origin/main은80869d4로 맞췄다. 기존 작성 중이던 OpenAPI 글의 수정은 보존했고 이번 콘텐츠 commit에는 포함하지 않았다. 게시본과 다른 MD는 이 글 하나뿐이다. Mac의 iCloud Git 객체 읽기 지연으로 게시 commit의 증분 pack을 가져와 Git 참조·index만 동기화했으며 working tree는 교체하지 않았다. 전체 콘텐츠 회귀·시각 전수 검증은 반복하지 않았다.

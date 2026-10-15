@@ -139,3 +139,8 @@ Auto Card Link Enhanced의 fenced cardlink YAML을 공통 Markdown 변환 단계
 잘못된 YAML·url·필드 타입은 해당 글 주소를 포함한 오류로 빌드를 중단한다. 제목·설명은 HTML escape하고 위험한 이미지 protocol은 제외한다. cardlink 문법을 설명하는 바깥 코드 블록은 그대로 유지한다. 관련6테스트·미리보기 빌드·격리된 localhost 시험 카드2개의 높이110px·이미지3개 로드를 확인했다. 시험 HTML은 _preview/_cardlink-review에만 만들었고 실제 글·vault·운영 게시물에는 추가하지 않았다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
 
 코드6115bbe·[Actions38724192774](https://github.com/anyflow/anyflow-blog/actions/runs/38724192774)·배포 선언4b2aab4의 정적 rollout을 완료했다. 기존 운영 북마크 페이지200과 시험 페이지의 운영404를 확인했다. 댓글 API·배포 도구 이미지는 유지했다. cardlink의 실제 표시는 격리된 로컬 미리보기에서 확인했으며 운영에 시험 게시물을 추가하지 않았다.
+
+
+## Markdown 작성 형식
+
+일반 강조는 ** 문법을 사용한다. 구두점·한글 경계 등에서 같은 표시를 보장하지 못하는 경우에는 HTML 강조를 유지한다. 단순 목록 항목 사이에는 빈 줄을 넣지 않으며 순서 목록은 실제1,2,3 순차 번호를 작성한다. 한 항목 안의 여러 문단·코드·하위 목록에 필요한 구분은 유지한다.
