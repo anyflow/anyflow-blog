@@ -93,7 +93,7 @@ test('comment backup inventory recognizes exact visible titles split by inline H
  const block='> [!abstract]- 댓<strong>글 백업</strong>\n>\n> ![](<backup.webp>)\n';
  fs.writeFileSync(path.join(root,'post.md'),'Body\n\n---\n\n'+block+'\n## Next\nKeep');const catalog={root,posts:[{id:'post1',permalink:'/post/',note:'post.md'}]},found=backupInventory(catalog);
  assert.equal(found.length,1);assert.deepEqual(found[0].images,['backup.webp']);assert.equal(fs.readFileSync(path.join(root,'post.md'),'utf8').slice(found[0].start,found[0].end),block+'\n');
- for(const label of ['<strong>댓글 백업</strong>','댓<span>글</span>&nbsp;백업','댓글백업']){fs.writeFileSync(path.join(root,'post.md'),'> [!abstract]- '+label+'\n> ![](<backup.webp>)\n');assert.equal(backupInventory(catalog).length,1);}
+ for(const label of ['<strong>댓글 백업</strong>','댓<span>글</span>&nbsp;백업','댓글백업','**댓글 백업**','**댓글 backup**','*댓글 BACKUP*','댓글backup']){fs.writeFileSync(path.join(root,'post.md'),'> [!abstract]- '+label+'\n> ![](<backup.webp>)\n');assert.equal(backupInventory(catalog).length,1);}
 });
 
 test('comment backup inventory ignores ordinary mentions and different callout titles',t=>{
