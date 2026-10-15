@@ -281,3 +281,13 @@ test('original bookmark metadata restores cards per post and preserves repaired 
  fs.writeFileSync(catalog,JSON.stringify({version:1,posts:{'bookmark-post':'invalid'}}));
  assert.throws(()=>loadContent(root,path.join(root,'missing.json')),/Invalid bookmark catalog/);
 });
+
+test('all folding callouts use disclosure arrows and preserve normal callout icons and initial state',t=>{
+ const root=fixture(t);
+ post(root,'folding',{},'> [!abstract]- Metric example\n> payload\n\n> [!info]+ Expanded example\n> payload\n\n> [!info] Information\n> ordinary info');
+ const html=loadContent(root,path.join(root,'none.json')).posts[0].html;
+ const folded=[...html.matchAll(/<details\b[\s\S]*?<\/details>/g)].map(m=>m[0]);assert.equal(folded.length,2);
+ for(const item of folded){assert.match(item,/<summary><span class="callout-icon callout-toggle" aria-hidden="true"><\/span>/);assert.doesNotMatch(item,/ℹ️/);}
+ assert.match(folded[0],/data-callout="abstract"><summary>/);assert.match(folded[1],/data-callout="info" open><summary>/);
+ assert.match(html,/<blockquote class="callout"><span class="callout-icon" aria-hidden="true">ℹ️<\/span>/);
+});
