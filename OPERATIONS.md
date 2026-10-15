@@ -556,3 +556,12 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 홈 blog.md를 kind:root로 게시하며 제목·summary·소개 문구·연락처·소개 카드 링크·본문 제목·섹션 순서·목차를 Markdown에서 읽는다. 기존 최근 포스트.csv/Blog.csv 독립 링크 위치에 동적 카드/카테고리 목록을 렌더링하며 CSV는 공개하지 않는다. 템플릿에 중복되던 홈 본문과 목차 문구는 제거했다. 소개 카드 이미지는 연결 글의 선택/자동 thumbnail 우선·없으면 cover이며 데스크톱에서 연락처 목록과 같은 높이를 유지한다. 기존 who-and-why/recent/by-category 영역의 앵커를 보존한다.
 
 코드87caefc·콘텐츠437dd4e를 게시했다. 관련6개 시험으로 제목/본문/연락처/목차 편집, 목록 순서 변경, 중복 목록 거부, root 댓글 이관 카탈로그, OG·커버·favicon을 확인했다. 미리보기396글·869참조 자산·미해결0과 소개 카드 썸네일·양쪽 높이97px를 확인했다. [Actions38823025196](https://github.com/anyflow/anyflow-blog/actions/runs/38823025196) 성공·배포 선언d49cd97의 정적 rollout 완료 후 운영 제목/목차3개·썸네일 경로·동일 높이97px를 확인했다. 댓글 API·배포 도구 이미지는 갱신하지 않았으며 전체 회귀/전수 시각 검증은 반복하지 않았다. 향후 홈 콘텐츠 변경은 blog.md commit/push 후 같은 자동 빌드/배포를 따른다.
+
+
+## 2026-10-16 댓글 백업 전수 조사·Unthinkable 복원
+
+공개396글+홈(397페이지)의 백업 inventory와 전체 작성 Markdown의 한글/영문 백업 표기, 기존 이관 이미지 경로를 대조했다. 남은 미처리 백업은 Unthinkable 1블록/1이미지였다. 기존 인식기가 한글 댓글 백업만 허용해 댓글 backup을 놓쳤고 Markdown 강조 구분자도 제거하지 않았다. English backup·대소문자·Markdown 강조·기존 inline HTML을 처리하며 일반 본문/다른 제목은 제외하도록 보완했다. 관련 제목 판별2개 시험을 통과했다.
+
+illef 원댓글(2010-08-05 13:57)과 어쨌건간에 관리자 답글(14:40)을 원본 이미지와 대조해2개 복원했다. 날짜는 원본 현지 시각/분 정밀도·timezone:null로 보존하며 추정하지 않는다. source ID로 중복을 막고 기존 댓글·Like·설정은 GitStore transaction에서 유지했다. 댓글 비공개 commit d523b5e, 원본 MD·이미지·검토 JSON·블록은 private originals/import-20261016-unthinkable에 보관했다. 작성 vault의 백업 이미지는 휴지통에 보관했고 본문 백업을 제거했다. 작성 안내의 오래된 Cassandra 백업 유지 문구도 갱신했다.
+
+현재 공개 백업 블록0, 이관된 백업 이미지51경로 중 vault에 남은 파일0이다. 미리보기396글·868참조 자산·미해결0과 댓글2/답글1을 확인했다. 코드41dd1a3·콘텐츠4213bd1을 게시했고 [Actions38824043928](https://github.com/anyflow/anyflow-blog/actions/runs/38824043928) 성공·배포 선언a2e6cfb의 정적 rollout을 완료했다. 운영에서도 본문 백업 없음·이전 이미지404·댓글2/답글1·작성자/시각/본문·답글 계층을 확인했다. 공개 source 필드는 provider 이름뿐이며 private 원본 경로/owner_hash는 노출하지 않는다. 댓글 API·배포 도구 이미지는 유지했으며 댓글 백업 외 기능의 전수 회귀 검증은 수행하지 않았다.
