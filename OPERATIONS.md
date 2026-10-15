@@ -502,3 +502,5 @@ CronJob에는 Secret 조회·수정 권한이 없다. Git 키는 읽기 전용 v
 - Git 전용 checkout은 큐에 접수 내용이 보존되어 있으므로 강제 종료로 남은 comments/likes/public/requests 작업 파일만 복구하고 replay한다. 일반 GitStore의 미저장 변경 보호는 유지한다. 운영 Secret·쿠키·댓글 저장소와 사이트 도메인·라우팅은 변경하지 않는다.
 
 최종 확인: 관련 테스트59개(큐·HTTP·UI·Git·배포 선언/폴러), Git 차단 중 즉시 접수, 연속/역순 Like·작성→수정→답글→삭제·중복·권한·version 충돌·디스크 실패·Git 장애·SIGKILL 복구·Git 성공 후 ACK 전 중단·review 분리·로그아웃 후 늦은 응답·초기 mirror refresh를 검증한다. 실제 미리보기의 작성·답글·수정·연속 Like·삭제도 확인했으며 시험 댓글은 삭제했다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
+
+코드ec12b58·[Actions38719434788](https://github.com/anyflow/anyflow-blog/actions/runs/38719434788)·배포 선언19f5aff를 게시했다. 정적·API rollout 완료, API Ready1/1·Recreate, 댓글 PVC Bound1Gi·큐0600·미완료0을 확인했다. 운영 GET200·preview=false·revision/tasks/refreshing 응답과 새 UI 코드를 읽기 검증했다. 관련59테스트 통과, Git 차단 HTTP 접수 작성26.2ms·수정21.5ms·삭제26.2ms는 격리 시험 수치이며 운영 쓰기 성능 실측이 아니다. 실제 preview 시험 댓글2개는 삭제했고 Like는 원래 상태로 복원했다. 운영 댓글·Like 쓰기 및 실제 알림 메일 재발송·전체 콘텐츠 전수 검증은 수행하지 않았다.

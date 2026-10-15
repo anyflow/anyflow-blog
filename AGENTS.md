@@ -222,3 +222,5 @@ Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 
 기존 API 프로세스의 QueueStore가 PVC에 fsync한 뒤202를 반환하고 단일 async 처리기로 Git 저장을 수행한다. 브라우저는 즉시 표시하며 별도 작업 큐를 두지 않는다. request_id 중복 방지·Like sequence·댓글 version 충돌·재시작 replay·소유자/관리자 권한·기존 PR/승인/알림을 유지한다. API는1 replica·Recreate이며 anyflow-blog-comments-state1Gi PVC를 사용한다. 최초 PVC는 관리자 bootstrap으로 만들고 CronJob 권한은 유지한다. 상세 구조·실패·rollback 절차는 OPERATIONS.md의 동일 제목을 따른다.
 
 관련59테스트와 실제 미리보기의 작성·답글·수정·연속 Like·삭제를 확인했다. 시험 댓글은 삭제했고 Git 차단 상태에서도 접수·조회가 Git 완료를 기다리지 않는다. 전체 콘텐츠 전수 검증은 반복하지 않았다.
+
+코드ec12b58·[Actions38719434788](https://github.com/anyflow/anyflow-blog/actions/runs/38719434788)·배포 선언19f5aff를 게시했다. 정적·API rollout 완료, API Ready1/1·Recreate, 댓글 PVC Bound1Gi·큐0600·미완료0을 확인했다. 운영 GET200·preview=false·revision/tasks/refreshing 응답과 새 UI 코드를 읽기 검증했다. 관련59테스트 통과, Git 차단 HTTP 접수 작성26.2ms·수정21.5ms·삭제26.2ms는 격리 시험 수치이며 운영 쓰기 성능 실측이 아니다. 실제 preview 시험 댓글2개는 삭제했고 Like는 원래 상태로 복원했다. 운영 댓글·Like 쓰기 및 실제 알림 메일 재발송·전체 콘텐츠 전수 검증은 수행하지 않았다.
