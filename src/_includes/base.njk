@@ -56,7 +56,7 @@
 </div>
 <div class="page-layout page-width">
   <main class="content {% if post %}post-content{% else %}home-content{% endif %}" id="main-content">{{ content | safe }}</main>
-  <nav class="toc" aria-label="목차">{% if post %}{% for item in post.toc %}<a href="#{{ item.id }}" class="toc-level-{{ item.level }}" title="{{ item.text | escape }}">{{ item.text | escape }}</a>{% endfor %}{% else %}<a href="#who-and-why">Who and Why am I here?</a><a href="#recent">Recent</a><a href="#by-category">By Category</a>{% endif %}</nav>
+  <nav class="toc" aria-label="목차">{% if post %}{% for item in post.toc %}<a href="#{{ item.id }}" class="toc-level-{{ item.level }}" title="{{ item.text | escape }}">{{ item.text | escape }}</a>{% endfor %}{% else %}<a href="#who-and-why">Who and Why am I here?</a><a href="#recent">Recent Posts</a><a href="#by-category">By Category</a>{% endif %}</nav>
 </div>
 <button class="back-to-top" type="button" aria-label="맨 위로">⌃ <span>TOP</span></button>
 <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title">
