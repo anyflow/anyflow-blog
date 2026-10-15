@@ -204,3 +204,7 @@ Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 
 코드c63c827의 관련 테스트2개·미리보기 빌드와 OpenTelemetry의3개 토글·90도 화살표 회전·라이트/다크 링크색·북마크색 유지·모바일390×844 커버200px·가로 넘침 없음을 확인했다. viewport와 테마를 원래대로 복원했다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
 
 [Actions38679663108](https://github.com/anyflow/anyflow-blog/actions/runs/38679663108) 성공과 배포 선언889b2e3의 정적 rollout을 완료했다. 운영 OpenTelemetry에서 커버280px·라이트 링크 rgb(74,111,143)·공통 토글3개와 펼침90도 회전을 확인했다. 댓글 API·배포 도구 이미지는 유지했다.
+
+## 2026-10-15 커버 높이30vh
+
+코드477ba49에서 PC·모바일 커버를30vh로 통일하고 고정 최소·최대 높이와 모바일200px override를 제거했다. 커버 없는 페이지 여백150px·모바일120px는 유지한다. 미리보기 빌드와 PC1280×1080의324px·모바일390×844의253.2px를 확인했다. [Actions38682149912](https://github.com/anyflow/anyflow-blog/actions/runs/38682149912) 성공·배포 선언813603d 적용 후 운영에서도 동일 높이를 확인했다. 댓글 API·배포 도구 이미지는 유지했으며 전체 콘텐츠 전수 검증은 반복하지 않았다.
