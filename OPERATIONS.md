@@ -524,3 +524,7 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 렌더링은 GitHub 제공 runner의 Chrome에서 수행하고 생성물 _site만 Docker 이미지에 패키징한다. Dockerfile 직접 실행 전에도 npm run build로 _site를 준비해야 한다. 브라우저·렌더링 의존성은 운영 nginx/댓글 API 이미지에 포함하지 않는다. renderer+vendor+입력 내용 기준으로 PNG 캐시를 재사용하며 Actions에 PNG·기존 X 썸네일 캐시를 보관한다. 공개 PNG URL은 실제 이미지 bytes hash다. 렌더 중 네트워크 요청을 차단하고 외부 SVG 입력은 HTTP(S)·크기·시간 제한으로 읽는다. 생성 실패는 기존 배포를 유지하며 잘못된 이미지로 새 배포하지 않는다.
 
 관련11테스트, 실제 PNG5개(Mermaid3·SVG2)의1200×630·본문 선택/OG 연결, YouTube(폴스타4)·X(Mike Portnoy) 이미지200/image/jpeg를 확인했다. PromLabs bookmark cover의 이전404 주소는 현재 공식 사이트의 동일 favicon /favicon.svg로2개 metadata 기록을 수정했다. 작성 vault의 다른 편집은 포함하지 않는다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
+
+코드c85e775·콘텐츠5761ab2를 게시했다. 콘텐츠 [Actions38774626061](https://github.com/anyflow/blog/actions/runs/38774626061)가 코드 [Actions38774640449](https://github.com/anyflow/anyflow-blog/actions/runs/38774640449)를 호출했고 새 runner artifact 빌드·이미지 패키징·배포 선언6bf6742의 정적 rollout이 성공했다. 댓글 API·배포 도구 이미지·라우팅·인증 정보는 유지했다. 미리보기도 같은 콘텐츠5761ab2로 동기화했고 이전 untracked bookmark catalog는 .cache/bookmarks-before-sync-*에 보관했다. 미리보기는396글·872참조 자산·미해결0이다.
+
+운영에서 Mermaid3·SVG2의 OG PNG200/image/png·1200×630, YouTube·X의 홈 카드 src와 OG URL 동일성·이미지200/image/jpeg를 확인했다. Obsidian Auto Card Link Enhanced로 실제 AI 플랫폼·폴스타4·Mike Portnoy 글 링크를 카드로 변환해 생성 PNG·YouTube·X 이미지가 들어가는 것도 확인했다(메모리 편집기 사용, 실제 글 수정 없음). 실제 캐시 재사용 확인은 PNG5개·재렌더0이며 전수 콘텐츠 검증은 반복하지 않았다. 외부 서비스의 기존 링크 미리보기 캐시는 별도 재수집 때 갱신된다.
