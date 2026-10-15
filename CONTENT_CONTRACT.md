@@ -127,3 +127,7 @@ Notion 블록 대조 범위는 변환 글 396개이며 원문 Markdown을 보존
 ## 방문 통계
 
 기존 GA4 측정 ID `G-YWPHXJFYET`를 공통 템플릿에 연결한다. `anyflow.net`·`www.anyflow.net`에서만 Google 스크립트를 로드하고 localhost·`blog.anyflow.net`의 검수 트래픽은 측정하지 않는다. 기존 gtag·GTM·UA 또는 동일 초기화가 있으면 추가 측정을 시작하지 않는다. 새 코드의 실제 수신 확인은 운영 전환 이후에 수행한다. UA 시절 통계의 별도 백업 유무는 미확인이다.
+
+## 원본 북마크
+
+_assets/bookmarks.json은 version:1과 posts:{글ID:북마크배열} 형식으로 원본 제목·설명·커버·favicon·URL을 보존한다. 원본 북마크에 해당하는 독립 Markdown 링크만 카드로 표시하며 일반 링크·문장 안 링크는 유지한다. 매칭 후에도 현재 Markdown의 제목·주소를 사용한다. 새 Notion import는 카드 HTML에 정보를 직접 보존한다. 독립 YouTube 링크는 원본 자료가 없어도 카드로 표시하며 일반 외부 링크의 metadata 자동 수집은 하지 않는다.

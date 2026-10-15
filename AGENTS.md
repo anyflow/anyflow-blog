@@ -188,3 +188,11 @@ site.url은 https://anyflow.net이다. 관리자 키는 운영 Secret에서 관�
 Notion bookmark가 일반 Markdown 링크로 변환된 YouTube 항목은 공통 obsidian-markdown 렌더러에서 썸네일·제목·YouTube 주소가 있는 북마크 카드로 표시한다. 한 문단 전체가 단일 YouTube 링크인 경우에만 적용하며 문장 안 링크·여러 링크·코드 예제·이미지 링크는 유지한다. youtube.js의 URL 검증·썸네일 추출을 재사용하고 생성 이미지도 기존 카드 대표 이미지 수집에 포함한다. 글 Markdown과 기존 영상 iframe은 변경하지 않았다. 코드f67e26a의 관련 테스트1개·미리보기 빌드와 Blade Runner 다크 화면에서 높이110px·썸네일 로드·가로 넘침 없음을 확인했다. 전수 검증은 반복하지 않는다.
 
 [Actions38677509011](https://github.com/anyflow/anyflow-blog/actions/runs/38677509011) 성공과 배포 선언c70f26a의 정적 rollout을 완료했다. 운영 www.anyflow.net/liberalart/blade-runner에서 북마크 카드 HTML·높이110px·썸네일 로드를 확인했다. 미리보기와 운영에 반영했으며 글 본문과 일반 링크는 보존했다.
+
+## 2026-10-15 원본 북마크 카드 복원
+
+원본 Notion bookmark279개·82글의 제목·설명·커버·favicon을 콘텐츠 _assets/bookmarks.json에 글 고정 ID별로 보관한다. 글 Markdown은 재작성하지 않는다. 공통 렌더러는 독립 링크의 원본 URL·제목으로 해당 글의 북마크만 매칭하며 현재 링크 주소를 유지해 기존 링크 복구를 보존한다. lib/bookmark.js가 카드 HTML을 안전하게 직렬화하며 향후 Notion importer도 같은 함수를 사용해 북마크 정보를 유지한다. favicon은 Recent 자동 대표 이미지 수집에서 제외하고 커버만 후보로 사용한다. 원본 커버·favicon URL을 사용하며 자동 외부 페이지 크롤링은 추가하지 않았다.
+
+코드f609c05·콘텐츠85a9453을 게시했다. 관련 테스트3개와 미리보기 빌드를 확인했다. 복원 범위의279카드·82글 매칭 누락0, OpenTelemetry의15카드와 대표 카드의 favicon·커버 로드를 확인했다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
+
+[Actions38678597379](https://github.com/anyflow/anyflow-blog/actions/runs/38678597379)과 배포 선언7ffe38a의 정적 rollout을 완료했다. 운영 OpenTelemetry의15개 북마크 카드·설명과 대표 카드 favicon·커버 로드를 확인했으며 raw bookmark catalog의 공개 자산 경로는404다. 정적 이미지만 갱신했고 댓글 API·배포 도구 이미지는 유지했다.
