@@ -291,3 +291,28 @@ test('all folding callouts use disclosure arrows and preserve normal callout ico
  assert.match(folded[0],/data-callout="abstract"><summary>/);assert.match(folded[1],/data-callout="info" open><summary>/);
  assert.match(html,/<blockquote class="callout"><span class="callout-icon" aria-hidden="true">ℹ️<\/span>/);
 });
+
+test('cardlink blocks render metadata safely, retain document order and feed card thumbnails',t=>{
+ const root=fixture(t);post(root,'cardlink',{},'```cardlink\nurl: https://example.com/article?q=1&x=2\ntitle: "Title <script> & text"\ndescription: |\n  First line.\n  Second line <img src=x onerror=bad>.\nimage: https://example.com/cover.webp\nfavicon: https://example.com/favicon.png\n```\n\n![Later](https://example.com/later.png)\n\n> [!info]\n> ```cardlink\n> url: https://example.com/nested\n> title: Nested\n> ```\n\n````markdown\n```cardlink\nurl: https://example.com/example-only\n```\n````');
+ const item=loadContent(root,path.join(root,'missing.json')).posts[0];
+ assert.equal((item.html.match(/class="bookmark bookmark-card"/g)||[]).length,2);
+ assert.match(item.html,/Title &lt;script&gt; &amp; text/);assert.match(item.html,/Second line &lt;img src=x onerror=bad&gt;/);assert.doesNotMatch(item.html,/<script>|<img src=x/);
+ assert.match(item.html,/href="https:\/\/example.com\/article\?q=1&amp;x=2"/);assert.match(item.html,/class="bookmark-description"/);assert.match(item.html,/class="bookmark-icon"/);
+ assert.equal(item.thumbnail,'https://example.com/cover.webp');assert.match(item.html,/language-markdown/);assert.match(item.html,/example-only/);
+});
+
+test('cardlink local image and favicon embeds become published assets; YouTube cards retain thumbnail fallback',t=>{
+ const root=fixture(t),source=post(root,'local-card',{},'```cardlink\nurl: https://example.com/\ntitle: Local\nimage: "![[cover full.webp]]"\nfavicon: "[[icon.ico]]"\n```');
+ fs.writeFileSync(path.join(path.dirname(source),'cover full.webp'),'cover');fs.writeFileSync(path.join(path.dirname(source),'icon.ico'),'favicon');
+ post(root,'youtube-card',{},'```cardlink\nurl: https://youtu.be/yonRGtMDDH8\ntitle: Video\n```');
+ const result=loadContent(root,path.join(root,'missing.json')),local=result.posts.find(p=>p.title==='local-card'),youtube=result.posts.find(p=>p.title==='youtube-card');
+ assert.equal(local.thumbnail,'/assets/local-card/cover%20full.webp');assert.match(local.html,/src="\/assets\/local-card\/icon.ico"/);assert.equal(result.assets.size,2);assert.equal(result.unresolved.length,0);
+ assert.match(youtube.html,/youtube-bookmark/);assert.equal(youtube.thumbnail,'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
+});
+
+test('malformed cardlink blocks fail clearly and unsafe image protocols never become image sources',t=>{
+ for(const content of ['url: [invalid','- url: https://example.com/','title: Missing URL','url: javascript:alert(1)','url: https://example.com/\ntitle: [not, text]','url: !!js/function "function(){}"']){
+  const root=fixture(t);post(root,'bad-card',{},'```cardlink\n'+content+'\n```');assert.throws(()=>loadContent(root,path.join(root,'missing.json')),/Invalid cardlink in \/bad-card/);
+ }
+ const root=fixture(t);post(root,'safe-card',{},'```cardlink\nurl: https://example.com/\ntitle: Safe\nimage: javascript:alert(1)\nfavicon: data:image/svg+xml,bad\n```');const item=loadContent(root,path.join(root,'missing.json')).posts[0];assert.doesNotMatch(item.html,/javascript:|data:image/);assert.equal(item.thumbnail,'');
+});

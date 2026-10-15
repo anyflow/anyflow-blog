@@ -236,3 +236,9 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 코드067c89b·[Actions38721591107](https://github.com/anyflow/anyflow-blog/actions/runs/38721591107)·배포 선언659d3cd의 정적·API rollout을 완료했다. 운영 sitemap.xml200·text/xml·397개 고유 www URL, robots 안내, 대표 글 canonical/OG의www 일치를 확인했다. apex 홈·글(query 포함)·sitemap의301 Location이 동일 경로/query의www를 가리킨다. 운영 identity-migration204·www CORS·Secure/HttpOnly/Domain/Path 속성과 관리자 cookie 미이전을 dummy visitor로 읽기 검증했다. 실제 댓글/Like 데이터는 변경하지 않았다.
 
 기존 Search Console sc-domain:anyflow.net 속성에 https://www.anyflow.net/sitemap.xml을 재제출했고 ‘사이트맵이 제출됨’ 접수 확인과 제출일2026-10-15를 확인했다. 마지막 읽기2026-10-14·발견397은 기존 결과이므로 새 sitemap의 Google 재수집/재색인 완료로 주장하지 않는다. 전체 전수 검증은 반복하지 않았다.
+
+## 2026-10-15 Obsidian cardlink 렌더링
+
+Auto Card Link Enhanced의 fenced cardlink YAML을 공통 Markdown 변환 단계에서 기존 bookmark 카드 HTML로 렌더링한다. url·title·description·image·favicon을 사용하며 본문 순서·기존 카드 UI를 유지한다. 로컬 [[이미지]]·![[이미지]]와 ICO favicon은 vault 내부 경로 검증 후 참조 자산으로 게시한다. favicon은 홈 카드 대표 이미지에서 제외하고 커버는 기존 첫 그림 자동 선택·OG에 연결한다. 이미지 없는 YouTube 카드는 기존 썸네일 대체를 사용한다. 일반 링크의 자동 변환 범위는 변경하지 않으며 빌드 시 새 메타데이터 조회는 하지 않는다.
+
+잘못된 YAML·url·필드 타입은 해당 글 주소를 포함한 오류로 빌드를 중단한다. 제목·설명은 HTML escape하고 위험한 이미지 protocol은 제외한다. cardlink 문법을 설명하는 바깥 코드 블록은 그대로 유지한다. 관련6테스트·미리보기 빌드·격리된 localhost 시험 카드2개의 높이110px·이미지3개 로드를 확인했다. 시험 HTML은 _preview/_cardlink-review에만 만들었고 실제 글·vault·운영 게시물에는 추가하지 않았다. 전체 콘텐츠 전수 검증은 반복하지 않는다.

@@ -131,3 +131,9 @@ Notion 블록 대조 범위는 변환 글 396개이며 원문 Markdown을 보존
 ## 원본 북마크
 
 _assets/bookmarks.json은 version:1과 posts:{글ID:북마크배열} 형식으로 원본 제목·설명·커버·favicon·URL을 보존한다. 원본 북마크에 해당하는 독립 Markdown 링크만 카드로 표시하며 일반 링크·문장 안 링크는 유지한다. 매칭 후에도 현재 Markdown의 제목·주소를 사용한다. 새 Notion import는 카드 HTML에 정보를 직접 보존한다. 독립 YouTube 링크는 원본 자료가 없어도 카드로 표시하며 일반 외부 링크의 metadata 자동 수집은 하지 않는다.
+
+## 2026-10-15 Obsidian cardlink 렌더링
+
+Auto Card Link Enhanced의 fenced cardlink YAML을 공통 Markdown 변환 단계에서 기존 bookmark 카드 HTML로 렌더링한다. url·title·description·image·favicon을 사용하며 본문 순서·기존 카드 UI를 유지한다. 로컬 [[이미지]]·![[이미지]]와 ICO favicon은 vault 내부 경로 검증 후 참조 자산으로 게시한다. favicon은 홈 카드 대표 이미지에서 제외하고 커버는 기존 첫 그림 자동 선택·OG에 연결한다. 이미지 없는 YouTube 카드는 기존 썸네일 대체를 사용한다. 일반 링크의 자동 변환 범위는 변경하지 않으며 빌드 시 새 메타데이터 조회는 하지 않는다.
+
+잘못된 YAML·url·필드 타입은 해당 글 주소를 포함한 오류로 빌드를 중단한다. 제목·설명은 HTML escape하고 위험한 이미지 protocol은 제외한다. cardlink 문법을 설명하는 바깥 코드 블록은 그대로 유지한다. 관련6테스트·미리보기 빌드·격리된 localhost 시험 카드2개의 높이110px·이미지3개 로드를 확인했다. 시험 HTML은 _preview/_cardlink-review에만 만들었고 실제 글·vault·운영 게시물에는 추가하지 않았다. 전체 콘텐츠 전수 검증은 반복하지 않는다.
