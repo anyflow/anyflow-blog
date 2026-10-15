@@ -175,4 +175,8 @@ GitHub Actions에서 GHCR 이미지 생성 후 deployment/deployments.yaml을 di
 
 ## 2026-10-15 추가 도메인 HTTP 라우팅
 
-사용자 요청으로 HTTPRoute anyflow-blog에 www.anyflow.net·anyflow.net을 추가하고 상위 Gateway public-gateway에 HTTP 리스너와 anyflow.net HTTPS를 연결했다. www.anyflow.net도 인증서 발급 Ready=True와 HTTPS 리스너 적용을 완료했다. 사용자가 DNS를 홈 서버로 변경했다. 인증서는 상위 certificate/anyflow-net.yaml·www-anyflow-net.yaml에서 기존 cert-manager HTTP-01 방식으로 관리하며 상위 Makefile의 블로그 생성·삭제에 포함한다. canonical은 blog.anyflow.net을 유지한다. 기존 blog.anyflow.net의 HTTPS는 유지한다.
+사용자 요청으로 HTTPRoute anyflow-blog에 www.anyflow.net·anyflow.net을 추가하고 상위 Gateway public-gateway에 HTTP 리스너와 anyflow.net HTTPS를 연결했다. www.anyflow.net도 인증서 발급 Ready=True와 HTTPS 리스너 적용을 완료했다. 사용자가 DNS를 홈 서버로 변경했다. 인증서는 상위 certificate/anyflow-net.yaml·www-anyflow-net.yaml에서 기존 cert-manager HTTP-01 방식으로 관리하며 상위 Makefile의 블로그 생성·삭제에 포함한다. 대표 URL·canonical·OG·공유 주소는 https://anyflow.net을 사용한다. 기존 blog.anyflow.net의 HTTPS는 유지한다.
+
+## 2026-10-15 대표 URL·운영 관리자 키 교체
+
+site.url은 https://anyflow.net이다. 관리자 키는 운영 Secret에서 관리하며 Git·문서에 값을 넣지 않는다. 서명 secret의 최소 32자와 관리자 키의 최소 8자 검증을 구분한다. 키 변경 시 관리자 쿠키 서명이 달라져 기존 로그인은 무효화된다. www·blog 도메인의 redirect는 이번 변경 범위에 포함하지 않는다.

@@ -12,7 +12,7 @@ test('Open Graph renders escaped article metadata, absolute URLs and image fallb
  const render=(current=post,currentHome=home,currentSite=site)=>env.render('base.njk',{post:current,home:currentHome,site:currentSite,content:''});
  const meta=(html,name)=>new RegExp('<meta property="og:'+name+'" content="([^"\n]*)"').exec(html)?.[1];
  let html=render({...post,thumbnail:'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg',cover:'/cover.webp'});
- assert.match(html,/rel="canonical" href="https:\/\/blog.anyflow.net\/%EA%B3%B5%EC%9C%A0"/);assert.equal(meta(html,'title'),'제목 &quot;인용&quot; &amp; 기호');assert.equal(meta(html,'description'),'설명 &amp; 요약');assert.equal(meta(html,'type'),'article');assert.equal(meta(html,'url'),site.url+'/%EA%B3%B5%EC%9C%A0');assert.equal(meta(html,'image'),'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
+ assert.match(html,/rel="canonical" href="https:\/\/anyflow.net\/%EA%B3%B5%EC%9C%A0"/);assert.equal(meta(html,'title'),'제목 &quot;인용&quot; &amp; 기호');assert.equal(meta(html,'description'),'설명 &amp; 요약');assert.equal(meta(html,'type'),'article');assert.equal(meta(html,'url'),site.url+'/%EA%B3%B5%EC%9C%A0');assert.equal(meta(html,'image'),'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
  assert.equal(meta(render({...post,thumbnail:'',cover:'/cover full.webp',thumbnailDiagram:'graph TD;A-->B;'}),'image'),site.url+'/cover%20full.webp');
  assert.equal(meta(render({...post,thumbnail:'',cover:''}),'image'),site.url+'/home.webp');
  html=render(null);assert.equal(meta(html,'type'),'website');assert.equal(meta(html,'url'),site.url+'/');assert.equal(meta(html,'image'),site.url+'/home.webp');

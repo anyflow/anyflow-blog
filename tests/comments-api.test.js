@@ -6,8 +6,8 @@ function memory(initial={settings:{moderation:false,legacyLikes:{}},comments:{},
   let state=structuredClone(initial),queue=Promise.resolve();const operations=[];
   return {operations,read:async()=>structuredClone(state),transaction(fn,options={}){const next=queue.then(async()=>{const draft=structuredClone(state),result=await fn(draft);state=draft;operations.push(options);return result;});queue=next.catch(()=>{});return next;}};
 }
-async function fixture(t,initial){
-  const store=memory(initial),handler=createCommentsHandler({store,catalog:[{id:'first',title:'First',url:'/first/'},{id:'second',title:'Second',url:'/second/'}],secret,adminToken,origins:[origin],adminName:'관리자'});
+async function fixture(t,initial,token=adminToken){
+  const store=memory(initial),handler=createCommentsHandler({store,catalog:[{id:'first',title:'First',url:'/first/'},{id:'second',title:'Second',url:'/second/'}],secret,adminToken:token,origins:[origin],adminName:'관리자'});
   const server=http.createServer(async(req,res)=>{if(!await handler(req,res)){res.writeHead(404);res.end();}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
   function browser(){let cookie='';return {get cookie(){return cookie;},async request(method,path,data,headers={}){
@@ -126,4 +126,16 @@ test('authenticated administrators use fixed identity and manage comments from i
  assert.equal((await adminTwo.request('DELETE','/api/comments/'+visitorId,{post_id:'first'})).status,200);
  await adminTwo.request('DELETE','/api/admin/session',{});
  assert.equal((await adminTwo.request('PATCH','/api/comments/'+reply.data.comment_id,{post_id:'first',body:'로그아웃 후'})).status,403);
+});
+
+test('administrator password accepts 11 characters and rejects old or too-short keys',async t=>{
+ const token='test-key-11';
+ const {browser}=await fixture(t,undefined,token),admin=browser();
+ assert.equal((await admin.request('POST','/api/admin/login',{token:adminToken})).status,401);
+ assert.equal((await admin.request('POST','/api/admin/login',{token})).status,200);
+ assert.equal((await admin.request('GET','/api/comments?post=first')).data.is_admin,true);
+ await admin.request('DELETE','/api/admin/session',{});
+ assert.equal((await admin.request('GET','/api/comments?post=first')).data.is_admin,false);
+ assert.throws(()=>createCommentsHandler({store:memory(),catalog:[],secret,adminToken:'short',origins:[origin]}),/secrets/);
+ assert.throws(()=>createCommentsHandler({store:memory(),catalog:[],secret:'s'.repeat(31),adminToken:token,origins:[origin]}),/secrets/);
 });
