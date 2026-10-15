@@ -574,3 +574,10 @@ HTML em/strong과 Markdown 강조·인라인 코드가 섞인102개 후보 문�
 실제 Obsidian 읽기 보기에서 Concurrency/Codebase/Build release run의 굵게+기울임, 별표 문자 미노출, stdout의 HTML strong+code 표시를 확인하고 기존 보기로 복귀했다. 콘텐츠5aa8705 commit/push, 미리보기396글·868참조 자산·미해결0, [Actions38825542967](https://github.com/anyflow/anyflow-blog/actions/runs/38825542967) 성공·배포 선언e66a8d8의 정적 rollout과 운영 Twelve Factor2의 강조/인라인 코드를 확인했다. 작성 vault는 clean이며 댓글 API/배포 도구 이미지는 유지했다. 다른 기능의 전수 회귀·시각 검증은 반복하지 않았다.
 
 멀티미디어 캡션은 제안 단계다. 이미지/Mermaid/영상/오디오/외부 임베드 뒤의 명시적 [!caption] callout만 캡션으로 연결하고 일반 문단 추측은 하지 않는 안을 제시했다. 스타일은13px·italic·테마 회색·미디어 아래4px·후속 본문과12px, Obsidian은 CSS snippet으로 같은 표시를 제공하는 안이다. 기존 캡션은 저장된 원본 정보로만 전환한다. 캡션 문법·스타일·기존 내용은 아직 변경하지 않았다.
+
+
+## 2026-10-16 외부 commit 후 Obsidian Git 패널 갱신
+
+Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주기적 polling이 아닌 vault 파일 변경 후 debounce다. 외부 터미널 commit/push의 .git 변경만으로 기존 Source Control 목록이 갱신되지 않을 수 있다. 강조 정리 후 실제 Git은 clean이고 로컬/GitHub HEAD가5aa8705로 같았지만 패널에는 이전80개 목록이 남았다. 패널 Refresh로 변경0개·staged0개를 확인했다. 이번 건은 Git index 상태 캐시 문제나 push 누락이 아니며 파일/설정을 변경하지 않았다.
+
+작성 vault를 외부 Git 명령으로 commit/push한 작업의 완료 기준에 Obsidian Git Refresh와 실제 변경 수 확인을 포함한다. 기존 사용자 미커밋 변경은 남기고 정확한 상태를 보고한다. stale Working Tree diff 탭과 실제 Git 변경 목록을 구분한다. 새 watcher나 polling 설정·서비스는 추가하지 않는다.
