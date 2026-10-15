@@ -533,3 +533,8 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 ## 2026-10-16 Mermaid 라이트 배경
 
 공통 .mermaid와 확대 SVG의 라이트 배경을 페이지와 같은 #fff로 변경했다. 다크는 기존 #202020, 그림 내부의 명시된 색상과 이미 흰색인 OG 캔버스는 유지한다. 코드7f39462·[Actions38776296573](https://github.com/anyflow/anyflow-blog/actions/runs/38776296573)·배포 선언3a1051b의 정적 rollout을 완료했다. 미리보기의 라이트/다크 전환·확대 배경과 운영 AI 플랫폼 글의 Mermaid3개 흰색 배경을 확인했다. 댓글 API·배포 도구는 갱신하지 않았고 전수 검증은 반복하지 않았다.
+
+
+## 2026-10-16 Notion 원본 문단 간격
+
+사용자가 지정한 Notion k8s workload 1/2 원본의 일반 텍스트 블록은 바깥 padding6px+내부 padding2px로 위아래8px, 문단 간 총16px다. 공통 .post-body p를 margin0·padding8px 2px로 맞춰 기존8px에서16px로 변경했다. 본문 line-height24px와 이미지·caption·목록의 별도 padding 규칙은 유지한다. 코드77255b4·[Actions38777535376](https://github.com/anyflow/anyflow-blog/actions/runs/38777535376)·배포 선언8676980의 정적 rollout을 완료했다. 원본 DOM 측정과 해당 글 미리보기·운영의 margin0/padding8px/line-height24px를 확인했다. 전수 검증은 반복하지 않았다.
