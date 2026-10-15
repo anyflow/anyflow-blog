@@ -277,3 +277,10 @@ Auto Card Link Enhanced의 fenced cardlink YAML을 공통 Markdown 변환 단계
 콘텐츠7a18a9d·80869d4와 코드4406931을 게시했다. 향후 Notion 재가져오기는 하지 않으며 import-notion/audit-import/notion-metadata 및 이관 전용 formatter·시험을 제거했다. [Actions38781387444](https://github.com/anyflow/anyflow-blog/actions/runs/38781387444) 성공과 배포 선언6cf5b2a의 정적 rollout을 확인했다. 미리보기396글·869참조 자산·미해결0, 운영 OpenAPI 구조도 제거와 Istio 번호 목록을 확인했다. 댓글 API·배포 도구 이미지는 유지했다.
 
 작성 vault HEAD/main과 origin/main은80869d4로 맞췄다. 기존 작성 중이던 OpenAPI 글의 수정은 보존했고 이번 콘텐츠 commit에는 포함하지 않았다. 게시본과 다른 MD는 이 글 하나뿐이다. Mac의 iCloud Git 객체 읽기 지연으로 게시 commit의 증분 pack을 가져와 Git 참조·index만 동기화했으며 working tree는 교체하지 않았다. 전체 콘텐츠 회귀·시각 전수 검증은 반복하지 않았다.
+
+
+## 2026-10-16 홈 Markdown 작성 원본
+
+홈 blog.md를 kind:root로 게시하며 제목·summary·소개 문구·연락처·소개 카드 링크·본문 제목·섹션 순서·목차를 Markdown에서 읽는다. 기존 최근 포스트.csv/Blog.csv 독립 링크 위치에 동적 카드/카테고리 목록을 렌더링하며 CSV는 공개하지 않는다. 템플릿에 중복되던 홈 본문과 목차 문구는 제거했다. 소개 카드 이미지는 연결 글의 선택/자동 thumbnail 우선·없으면 cover이며 데스크톱에서 연락처 목록과 같은 높이를 유지한다. 기존 who-and-why/recent/by-category 영역의 앵커를 보존한다.
+
+코드87caefc·콘텐츠437dd4e를 게시했다. 관련6개 시험으로 제목/본문/연락처/목차 편집, 목록 순서 변경, 중복 목록 거부, root 댓글 이관 카탈로그, OG·커버·favicon을 확인했다. 미리보기396글·869참조 자산·미해결0과 소개 카드 썸네일·양쪽 높이97px를 확인했다. [Actions38823025196](https://github.com/anyflow/anyflow-blog/actions/runs/38823025196) 성공·배포 선언d49cd97의 정적 rollout 완료 후 운영 제목/목차3개·썸네일 경로·동일 높이97px를 확인했다. 댓글 API·배포 도구 이미지는 갱신하지 않았으며 전체 회귀/전수 시각 검증은 반복하지 않았다. 향후 홈 콘텐츠 변경은 blog.md commit/push 후 같은 자동 빌드/배포를 따른다.
