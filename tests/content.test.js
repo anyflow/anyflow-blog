@@ -253,3 +253,14 @@ test('bare Markdown filenames stay text while explicit links and web URLs still 
  assert.match(html,/CLAUDE\.md AGENTS\.md CHANGLELOG\.md 한국어\.md/);
  for(const url of ['https://example.md','https://example.com','http://www.example.com','http://README.md'])assert.ok(html.includes('href="'+url+'"'));
 });
+
+test('standalone YouTube bookmarks render cards and supply thumbnails without converting inline links or code',t=>{
+ const root=fixture(t),url='https://youtu.be/BWRY3hiIXcY?si=test',link='[BLADE <Runner> & titles](<'+url+'>)';
+ post(root,'youtube',{},link+'\n\n'+link+' and [Other](https://example.com)\n\nInline '+link+' text.\n\n```md\n'+link+'\n```\n\n[Unknown](https://youtube.com.evil.test/watch?v=BWRY3hiIXcY)');
+ const item=loadContent(root,path.join(root,'missing.json')).posts[0];
+ assert.equal((item.html.match(/class="bookmark youtube-bookmark"/g)||[]).length,1);
+ assert.match(item.html,/BLADE &lt;Runner&gt; &amp; titles/);
+ assert.match(item.html,/href="https:\/\/youtu.be\/BWRY3hiIXcY\?si=test" target="_blank" rel="noopener noreferrer"/);
+ assert.match(item.html,/<p>Inline <a href=/);assert.match(item.html,/youtube.com.evil.test/);
+ assert.equal(item.thumbnail,'https://i.ytimg.com/vi/BWRY3hiIXcY/hqdefault.jpg');
+});
