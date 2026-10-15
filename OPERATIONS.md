@@ -565,3 +565,12 @@ anyflow.net의 공개 페이지·정적 파일은 경로와 query를 유지해 w
 illef 원댓글(2010-08-05 13:57)과 어쨌건간에 관리자 답글(14:40)을 원본 이미지와 대조해2개 복원했다. 날짜는 원본 현지 시각/분 정밀도·timezone:null로 보존하며 추정하지 않는다. source ID로 중복을 막고 기존 댓글·Like·설정은 GitStore transaction에서 유지했다. 댓글 비공개 commit d523b5e, 원본 MD·이미지·검토 JSON·블록은 private originals/import-20261016-unthinkable에 보관했다. 작성 vault의 백업 이미지는 휴지통에 보관했고 본문 백업을 제거했다. 작성 안내의 오래된 Cassandra 백업 유지 문구도 갱신했다.
 
 현재 공개 백업 블록0, 이관된 백업 이미지51경로 중 vault에 남은 파일0이다. 미리보기396글·868참조 자산·미해결0과 댓글2/답글1을 확인했다. 코드41dd1a3·콘텐츠4213bd1을 게시했고 [Actions38824043928](https://github.com/anyflow/anyflow-blog/actions/runs/38824043928) 성공·배포 선언a2e6cfb의 정적 rollout을 완료했다. 운영에서도 본문 백업 없음·이전 이미지404·댓글2/답글1·작성자/시각/본문·답글 계층을 확인했다. 공개 source 필드는 provider 이름뿐이며 private 원본 경로/owner_hash는 노출하지 않는다. 댓글 API·배포 도구 이미지는 유지했으며 댓글 백업 외 기능의 전수 회귀 검증은 수행하지 않았다.
+
+
+## 2026-10-16 Obsidian 강조 혼용 정리
+
+HTML em/strong과 Markdown 강조·인라인 코드가 섞인102개 후보 문서를 읽고80개를 정리했다. 가능한919개 강조 표시는 Markdown으로 옮기고235개 HTML 혼용은 내부까지 HTML로 렌더링해 일관되게 만들었다. 구두점/한글 경계 등에서 Markdown 결과가 달라지는 정상 HTML 강조는 유지한다. 코드 fence·코드 블록·HTML 블록·문서 속성을 보존했다. 변경 문서의 본문/강조 의미를 DOM 기반으로 대조했고 정리 후 실제 HTML 강조 안에 Markdown 강조·코드·링크 token이 남은 경우는0이다. 변환기는 .cache의 일회성 작업이며 새 영구 importer는 추가하지 않았다.
+
+실제 Obsidian 읽기 보기에서 Concurrency/Codebase/Build release run의 굵게+기울임, 별표 문자 미노출, stdout의 HTML strong+code 표시를 확인하고 기존 보기로 복귀했다. 콘텐츠5aa8705 commit/push, 미리보기396글·868참조 자산·미해결0, [Actions38825542967](https://github.com/anyflow/anyflow-blog/actions/runs/38825542967) 성공·배포 선언e66a8d8의 정적 rollout과 운영 Twelve Factor2의 강조/인라인 코드를 확인했다. 작성 vault는 clean이며 댓글 API/배포 도구 이미지는 유지했다. 다른 기능의 전수 회귀·시각 검증은 반복하지 않았다.
+
+멀티미디어 캡션은 제안 단계다. 이미지/Mermaid/영상/오디오/외부 임베드 뒤의 명시적 [!caption] callout만 캡션으로 연결하고 일반 문단 추측은 하지 않는 안을 제시했다. 스타일은13px·italic·테마 회색·미디어 아래4px·후속 본문과12px, Obsidian은 CSS snippet으로 같은 표시를 제공하는 안이다. 기존 캡션은 저장된 원본 정보로만 전환한다. 캡션 문법·스타일·기존 내용은 아직 변경하지 않았다.
