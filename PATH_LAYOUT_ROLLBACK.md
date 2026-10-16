@@ -37,8 +37,8 @@ node scripts/migrate-path-layout.js queue /data/queue/queue.json PLAN.json
 2. main·incoming 및 큐를 `--reverse`로 변환한다. 댓글 본문·답글·권한·Like actor가 전환 전 모델과 일치함을 확인한다.
 3. Obsidian vault를 닫고 콘텐츠도 `--reverse`로 변환한다. 기존 위치·필수 속성·이전 Blog 링크 플러그인·관리 대상 첨부/갤러리 경로를 복원한다. 작성 안내는 콘텐츠 전환 전 태그의 버전으로 복원한다. 다른 읽기·테마 설정은 유지한다. 미디어 참조를 대조한 후 vault를 다시 연다.
 4. 댓글 저장소의 `lib/comments` 게시 코드와 소스·배포 설정은 전환 전 태그에서 가져와 복원 commit을 만든다. 새 변환 도구는 역변환을 마칠 때까지 유지한다.
-5. 전환 전 정적·API 이미지 digest를 배포 YAML에 복원하고 rollout한다. 큐·PVC·Secret은 유지한다.
-6. 글·첨부·댓글·Like를 확인하고 API replicas1·댓글 Actions·CronJob을 재개한다. 새 ID로 열린 브라우저는 새로고침한다.
+5. 전환 전 정적 이미지를 복원하고, 쓰기 차단을 지원하는 현행 API로 역변환된 데이터의 읽기를 검증한다. 큐·PVC·Secret은 유지한다.
+6. 검증이 끝나면 전환 전 API 이미지로 교체해 쓰기를 재개하고 댓글 Actions·CronJob을 재개한다. 이전 API는 maintenance 파일을 인식하지 않으므로 마지막 단계에서만 실행한다. 새 ID로 열린 브라우저는 새로고침한다.
 
 ## 쓰기 재개 후 롤백
 
@@ -48,15 +48,15 @@ node scripts/migrate-path-layout.js queue /data/queue/queue.json PLAN.json
 2. 최신 main·incoming commit을 별도 롤백 태그로 고정한다. 최신 콘텐츠 대응표로 댓글·Like·요청·큐를 역변환한다.
 3. 전환 이후 새 글은 경로 SHA256 앞32자리의 이전 형식 ID를 사용한다. 콘텐츠 역변환 도구가 `<경로>/<파일명>.md` 위치와 permalink/post_id 속성을 생성하며 신규 미디어도 옮긴다.
 4. 최신 콘텐츠·댓글의 수·본문·시각·답글·권한·Like를 보존했는지 확인한다. 전환 후 콘텐츠가 변경되었으면 신규 글뿐 아니라 기존 글 편집·미디어 변경도 포함하여 최신 역변환본을 이전 생성기로 재빌드한다. 콘텐츠 변경이 없으면 전환 전 정적 이미지를 사용한다.
-5. 이전 API·게시 코드·배포 설정을 복원 commit으로 게시하고 데이터·이미지·카탈로그를 같이 배포한다. 읽기·쓰기 검증 후 차단 파일을 제거하고 자동 작업을 재개한다.
+5. 이전 게시 코드·배포 설정을 복원 commit으로 게시한다. 정적 이미지·카탈로그·역변환 데이터는 maintenance 차단을 지원하는 현행 API로 먼저 읽기 검증한다. 검증 후 이전 API로 교체해 쓰기를 재개하고 차단 파일을 제거한 뒤 자동 작업을 재개한다. 이전 API는 차단 파일을 인식하지 않는다.
 
 ## 검증과 중단 기준
 
 공개 URL 유지·자산 SHA·참조 누락0, 댓글/Like 데이터의 정방향→역방향 동등성, 대기 브랜치·큐 접수/순서 보존, 경로 ID의 작성·답글·수정·삭제·Like 시험을 통과해야 한다. 게시 내용 손실·미해결 참조·ID 누락·브랜치 충돌·큐 미처리가 발견되면 쓰기를 재개하지 않는다.
 
 
-## 유지보수 Pod와 공개 자산
+## 유지보수 Pod
 
 `kubectl -n service apply -f operations/path-layout-maintenance-job.json`으로 댓글 PVC·기존 Secret을 사용하는 임시 유지보수 Pod를 만든다. 이미지의 서버는 실행하지 않는다. API를0 replicas로 내린 후 작업하고 완료 후 Job만 삭제한다. PVC·Secret을 삭제하지 않는다. 자동 배포 CronJob과 댓글 게시 Actions를 재개하는 단계까지 완료해야 한다.
 
-정적 빌드는 원본 공개 첨부 URL을 새 파일에 연결하는 내부 symlink를 생성한다. 미디어 바이트를 복제하지 않고 기존 외부 공유·캐시의 이미지 주소도 유지한다. 작성 vault의 파일 구조는 새 경로 하나만 유지한다.
+정적 빌드는 새 첨부 주소만 제공한다. 이전 첨부 URL의 alias는 생성하지 않는다. 글의 공개 URL은 유지한다.

@@ -404,3 +404,8 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 공개396글의 URL·본문 링크/미디어 참조 순서·코드 내용을 대조했다. 첨부 SHA보존·참조 누락0, 기존/새 webp·SVG·HTML·MP3·PDF URL 모두200을 확인했다. 작은 이미지의 운영SHA도 일치한다. 기존 공개 자산872개는 중복 바이트 없이 새 파일로 연결되며 실제 nginx 컨테이너의 symlink872개를 확인했다. 소스 변경 관련 콘텐츠/홈/OG/sitemap39개·기존 댓글API/Git/큐33개·이관/롤백 도구/붙여넣기/자산 호환 테스트를 통과했다. 전체 화면 회귀·모든 기능 전수 검증은 반복하지 않았다.
 
 롤백은 각 저장소의 path-layout-20261017-before와 댓글 main/incoming의 cutover 태그, 콘텐츠 `_assets/_meta/path-migration.json`, 댓글 `migrations/path-layout-20261017.json`의 양방향 대응표를 사용한다. 최신 댓글·Like와 새 글·미디어를 역변환하는 도구를 시험했고 작성 플러그인·관리 경로 복원도 포함한다. PATH_LAYOUT_ROLLBACK.md와 operations/path-layout-maintenance-job.json을 따른다. 실제 운영 rollback은 실행하지 않았다. 임시 유지보수Job·검증용worktree·큐 원본 비교 사본은 정리했고 실제 PVC·Secret·Git태그는 유지했다. CronJob과 댓글 게시 Actions는 재개했다.
+
+
+## 2026-10-17 불필요한 이전 첨부 주소 호환 제거
+
+사용자 결정에 따라 이전 공개 첨부 주소 symlink 생성 코드·테스트·빌드 호출을 제거했다. 새 첨부 경로와 글 URL만 사용한다. 이전 절의 자산 alias 검증은 제거 전 이력이다. 로컬 vault의 옛 글 폴더46개는 .DS_Store만 있어 macOS 휴지통으로 옮겼다. 실제 MD·새 _assets 파일은 유지했다.
