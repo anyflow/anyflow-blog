@@ -343,3 +343,14 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 사용자 원본 https://anyflower.notion.site/k8s-workload-1-2-2cae57e23bcd80d6b445d6f3d70f1d03 의 실제 Notion 링크 span은 color:inherit·opacity:0.7이다. 실제 라이트 DOM foreground#2c2c2b, 원본 CSS .notion-dark-theme의 --c-texPri=#f0efed를 확인했다. 웹 본문·프로필 링크를 각각 rgba(44,44,43,.7)/rgba(240,239,237,.7)로 맞추고 hover의 푸른색을 제거했다. 밑줄 원본 --ca-opaLinDecCol의 light rgba(55,53,47,.4)/dark rgba(255,255,255,.282)에 opacity.7을 합성해 .28/.1974를 적용한다. 본문 기본 글자색·아이콘 색상·태그·카드 색상은 유지한다.
 
 콘텐츠9ec902c·e2abd77, 아이콘 CSS9aaaaf7과 링크 CSS931e961을 게시했다. 최종 Actions38895019405(1분23초) 성공·배포 선언a4517d3의 정적 rollout을 완료했다. 미리보기396글·872참조 자산·미해결0, 운영 홈5아이콘16x16/정상 로드와 프로필 링크의 라이트 rgba(44,44,43,.7), 운영 k8s1 글의 light/dark 링크 rgba값을 확인했다. 테마 확인 후 라이트로 복귀했다. 댓글 API·배포 도구 이미지는 변경하지 않았고 해당 표시만 확인하며 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
+
+
+## 2026-10-16 원본 링크 카드 레이아웃
+
+원본 Notion 일반 카드의 로딩 완료 상태(17px/500 제목·좌측154px 이미지·제목 위 사이트 아이콘)와 YouTube 기본 북마크(14px/400·우측 이미지)를 구분한다. 초기 로딩의14px 카드만을 원본으로 판단하지 않는다. lib/bookmark.js의 공통 원본 bookmark/cardlink 렌더링 경로를 수정하고 전체 URL·escaped metadata·기존 링크·이미지를 유지한다. YouTube는 썸네일 여부가 아닌 정상 제공 사이트 hostname으로 분류해 재생목록도 기본 형식을 사용한다. favicon은 단일 DOM 노드를 배치하고 대표 이미지 후보에서 계속 제외한다.
+
+일반 데스크톱 카드는17/22px·500 제목,13/18px 본문색 설명·보조색 URL,18px24px14px 여백,10px 모서리와 원본 테두리/hover를 사용한다. 전체 높이는 고정하지 않고 내용과154px 이미지 영역으로 결정한다. YouTube와 사이트의600px 모바일 기준은24px 제목 영역·32px 설명 영역·16px URL/아이콘을 사용해 자연 높이108px가 된다. 좁으면 이미지를 숨긴다. 홈 소개 카드는 별도 구성으로 유지하며 연락처 목록과 같은97px다. 명시적 카드 캡션4px도 유지한다. 실제 모바일 기기가 아닌390px viewport로 확인했다.
+
+관련7개 테스트로 provider/playlist 구분·전체 URL escaping·위험 protocol·원본 metadata·cardlink/local asset·대표 이미지 추출·캡션 연결을 확인했다. 미리보기 일반 이미지 카드156px, 무이미지/설명 유무 카드129.296875/121/108.296875px, YouTube108px가 원본 측정값과 일치한다. 다크 설명#f0efed·URL#ada9a3·테두리#383836, 모바일108px/14px제목/16px아이콘/이미지숨김, 홈97px, 캡션4px를 확인했다. 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
+
+소스c6dea4f·21f3069·TODO295fadd를 게시했다. Actions38899977133(1분23초) 성공·배포 선언b387e0a의 정적 rollout 후 운영 OpenTelemetry·k8s2·Blade Runner·홈에서 위 제목/좌측이미지/자연높이/전체URL/홈높이를 확인했다. 운영 다크 설명·URL·테두리도 확인하고 라이트로 복귀했다. 콘텐츠 저장소·댓글 API·배포 도구 이미지는 변경하지 않았다. 미리보기는 필요한 Eleventy 렌더와 검색 색인만 갱신했으며 전체 미디어 재생성은 하지 않았다.
