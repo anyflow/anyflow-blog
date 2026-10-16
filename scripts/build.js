@@ -10,6 +10,7 @@ const {loadContent}=require("../lib/content");
   require("../lib/validate-content").validateContent(content);
   if(!content.posts.length) throw new Error("Build requires at least one published post");
   await require("../lib/x-cache").cacheXThumbnails(content.xPosts);
+  await require("../lib/link-cache").cacheLinks(content.linkRequests,process.env.BLOG_CONTENT_DIR||".cache/blog");
   content=loadContent();
   const cardImages=await require("../lib/card-images").buildCardImages(content,staging);
   process.env.BLOG_OUTPUT_DIR=staging;

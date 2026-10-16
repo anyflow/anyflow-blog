@@ -68,6 +68,7 @@ jobs:
           path: |
             .cache/card-images
             .cache/x-thumbnails.json
+            .cache/link-previews.json
           key: card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'src/js/vendor/mermaid.min.js') }}-${{ github.run_id }}
           restore-keys: |
             card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'src/js/vendor/mermaid.min.js') }}-

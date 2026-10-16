@@ -1,0 +1,33 @@
+/* Compact Notion bookmarks, also used at the site's mobile breakpoint. */
+.bookmark.bookmark-card { display:flex; flex-flow:row wrap-reverse; position:relative; width:calc(100% - 4px); height:auto; min-height:0; margin:12px 2px; border:1px solid rgba(28,19,1,.11); border-radius:10px; color:#2c2c2b; text-decoration:none }
+.bookmark.bookmark-card:hover { background:rgba(33,27,23,.05) }
+.bookmark-card>.bookmark-content { position:relative; flex:4 1 180px; width:auto; height:auto; padding:12px 14px 14px; display:flex; flex-direction:column; justify-content:flex-start; gap:6px; min-width:0 }
+.bookmark-card .bookmark-main { display:flex; flex-direction:column; gap:2px; min-width:0 }
+.bookmark-card .bookmark-title { display:block; font-size:14px; font-weight:400; line-height:20px; min-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.bookmark-card .bookmark-description { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; height:32px; max-height:32px; overflow:hidden; font-size:12px; font-weight:400; line-height:16px; color:#7d7a75 }
+.bookmark-card .bookmark-url { display:flex; align-items:center; gap:6px; width:100%; margin:0; font-size:12px; font-weight:400; line-height:16px; color:inherit; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.bookmark-card .bookmark-url-text { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.bookmark-card .bookmark-icon { flex-shrink:0; display:inline-block; width:16px; height:16px; margin:0; vertical-align:middle; object-fit:contain; border-radius:0 }
+.bookmark-card>.bookmark-media { flex:1 1 180px; display:block; position:relative; width:auto; height:auto; min-width:0; padding:0; overflow:hidden }
+.bookmark-card .bookmark-media>img { position:absolute; inset:0; width:100%; height:100%; max-width:none; margin:0; object-fit:cover; border-radius:0 }
+.theme-dark .bookmark.bookmark-card { color:var(--text); border-color:rgba(255,255,235,.1) }
+.theme-dark .bookmark.bookmark-card:hover { background:var(--hover) }
+.theme-dark .bookmark-card .bookmark-description { color:var(--muted) }
+
+/* Body link formats; home post cards and profile cards keep their own layout. */
+.post-body .bookmark.bookmark-card,.blog-links .bookmark.bookmark-card{height:100px;box-sizing:border-box;flex-flow:row nowrap}
+.post-body .bookmark.bookmark-card>.bookmark-content,.blog-links .bookmark.bookmark-card>.bookmark-content{padding:10px 14px;gap:4px;justify-content:space-between;flex:1 1 0;min-width:0}
+.post-body .bookmark.bookmark-card .bookmark-main,.blog-links .bookmark.bookmark-card .bookmark-main{padding-top:0;gap:2px}
+.post-body .bookmark.bookmark-card .bookmark-title,.blog-links .bookmark.bookmark-card .bookmark-title{font-size:14px;line-height:20px;min-height:0;font-weight:500}
+.post-body .bookmark.bookmark-card .bookmark-description,.blog-links .bookmark.bookmark-card .bookmark-description{font-size:12px;line-height:16px;height:auto;max-height:32px;-webkit-line-clamp:2;color:var(--muted)}
+.post-body .bookmark.bookmark-card .bookmark-url,.blog-links .bookmark.bookmark-card .bookmark-url{font-size:12px;line-height:16px}
+.post-body .bookmark.bookmark-card .bookmark-icon,.blog-links .bookmark.bookmark-card .bookmark-icon{position:static;width:16px;height:16px;margin:0;border-radius:3px}
+.post-body .bookmark.bookmark-card>.bookmark-media,.blog-links .bookmark.bookmark-card>.bookmark-media{order:0;flex:0 0 150px;height:98px}
+@media(max-width:600px){.post-body .bookmark.bookmark-card>.bookmark-media,.blog-links .bookmark.bookmark-card>.bookmark-media{display:none}}
+.post-body a.github-preview,.blog-links a.github-preview{display:flex;align-items:center;gap:12px;box-sizing:border-box;height:57px;padding:8px 16px;margin:12px 0;border:1px solid var(--faint);border-radius:4px;color:var(--text);text-decoration:none}
+.github-avatar{position:relative;flex:0 0 32px;width:32px;height:32px}.github-avatar>img.bookmark-icon{position:static;max-width:none;width:32px;height:32px;object-fit:cover;border-radius:50%;margin:0}.github-avatar>img.github-brand{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:3px;background:var(--bg)}
+.github-details{min-width:0}.github-name{display:block;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.github-owner{display:block;font-size:12px;line-height:18px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.post-body a.link-mention,.blog-links a.link-mention{color:var(--text);text-decoration:none;border-bottom:0;overflow-wrap:anywhere}.link-mention .mention-icon{display:inline-block;width:1.1em;height:1.1em;max-width:none;margin:0 .3em 0 0;vertical-align:-.18em;object-fit:contain;border-radius:3px}.mention-provider{color:var(--muted);margin-right:.3em}.mention-title{text-decoration:underline;text-decoration-color:var(--link-underline);text-underline-offset:2px;font-weight:500}.issue-badge{display:inline-flex;align-items:center;background:var(--hover);border-radius:4px;padding:0 6px;line-height:18px;font-size:12px;white-space:nowrap;margin-left:4px}.issue-badge .mention-icon{width:12px;height:12px}
+.blog-links{--text:var(--text-normal);--muted:var(--text-muted);--faint:var(--background-modifier-border);--hover:var(--background-modifier-hover);--bg:var(--background-primary);--link-underline:var(--text-faint)}
+
+.blog-links .bookmark{display:flex;overflow:hidden}.blog-links .bookmark-content{display:flex;flex-direction:column}.blog-links .bookmark-main{display:flex;flex-direction:column}.blog-links .bookmark-media{position:relative;overflow:hidden}.blog-links .bookmark-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0}.blog-links .bookmark{color:var(--text);border-color:var(--faint)}
