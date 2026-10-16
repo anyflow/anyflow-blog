@@ -45,7 +45,7 @@ test('metadata completion cannot replace a URL changed by the author',async()=>{
 test('failed metadata refresh retains source information and avoids repeated requests',async()=>{
  const previous=process.cwd(),root=fs.mkdtempSync(path.join(os.tmpdir(),'link-cache-'));
  try{
-  process.chdir(root);fs.mkdirSync('_assets');fs.writeFileSync('_assets/link-previews.json',JSON.stringify({'https://example.com':{title:'Preserved'}}));
+  process.chdir(root);fs.mkdirSync('_assets/_meta',{recursive:true});fs.writeFileSync('_assets/_meta/link-previews.json',JSON.stringify({'https://example.com':{title:'Preserved'}}));
   const {cacheLinks}=require('../lib/link-cache');let calls=0;const fail=async()=>{calls++;throw new Error('offline');};
   const data=await cacheLinks(['https://example.com'],root,fail);assert.equal(data['https://example.com'].title,'Preserved');
   await cacheLinks(['https://example.com'],root,fail);assert.equal(calls,1);

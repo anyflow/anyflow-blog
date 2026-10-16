@@ -90,10 +90,14 @@ function pasteCandidate(event,editor,view){
 }
 module.exports=class BlogLinks extends Plugin{
  async onload(){
-  this.cache={};const file=this.app.vault.getAbstractFileByPath('_assets/link-previews.json');
+  const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.setConfig('attachmentFolderPath','_assets/'+file.path.replace(/\.md$/,''));};
+  this.registerEvent(this.app.workspace.on('file-open',attachments));
+  this.registerEvent(this.app.metadataCache.on('changed',attachments));
+  attachments(this.app.workspace.getActiveFile());
+  this.cache={};const file=this.app.vault.getAbstractFileByPath('_assets/_meta/link-previews.json');
   if(file){try{this.cache=JSON.parse(await this.app.vault.read(file));}catch{new Notice('링크 정보 파일을 읽지 못했습니다. 원본 파일은 유지합니다.');}}
   this.bookmarks={};this.pages={};
-  for(const [path,key]of [['_assets/bookmarks.json','bookmarks'],['_assets/visuals/manifest.json','pages']]){
+  for(const [path,key]of [['_assets/_meta/bookmarks.json','bookmarks'],['_assets/_meta/visuals.json','pages']]){
    const file=this.app.vault.getAbstractFileByPath(path);if(file){try{const data=JSON.parse(await this.app.vault.read(file));this[key]=key==='bookmarks'?data.posts:data.pages;}catch{new Notice('기존 링크 정보를 읽지 못했습니다: '+path);}}
   }
   this.registerMarkdownCodeBlockProcessor('cardlink',async(source,el,ctx)=>{
@@ -102,7 +106,7 @@ module.exports=class BlogLinks extends Plugin{
   });
   this.registerMarkdownPostProcessor((el,ctx)=>{
    const file=this.app.vault.getAbstractFileByPath(ctx.sourcePath),front=file?this.app.metadataCache.getFileCache(file)?.frontmatter||{}:{};
-   const id=String(front.post_id||this.pages?.[front.permalink]?.pageId?.replaceAll('-','')||'');
+   const id=front.kind==='root'&&ctx.sourcePath==='blog.md'?'/':'/'+ctx.sourcePath.replace(/\.md$/,'');
    for(const paragraph of el.querySelectorAll('p')){
     const anchor=paragraph.querySelector(':scope>a');if(!anchor||anchor.title==='mention'||paragraph.children.length!==1||paragraph.textContent.trim()!==anchor.textContent.trim())continue;
     const url=anchor.getAttribute('href'),saved=(this.bookmarks[id]||[]).find(b=>b.url===url);
@@ -136,9 +140,9 @@ module.exports=class BlogLinks extends Plugin{
   editor.replaceRange(before+text+after,start,end);
  }
  async saveMetadata(url,data){
-  const path='_assets/link-previews.json',file=this.app.vault.getAbstractFileByPath(path);
+  const path='_assets/_meta/link-previews.json',file=this.app.vault.getAbstractFileByPath(path);
   if(file)await this.app.vault.process(file,raw=>{const current=JSON.parse(raw);current[url]=data;this.cache=current;return JSON.stringify(current,null,2)+'\n';});
-  else{if(!this.app.vault.getAbstractFileByPath('_assets'))await this.app.vault.createFolder('_assets');this.cache[url]=data;await this.app.vault.create(path,JSON.stringify(this.cache,null,2)+'\n');}
+  else{for(const folder of ['_assets','_assets/_meta'])if(!this.app.vault.getAbstractFileByPath(folder))await this.app.vault.createFolder(folder);this.cache[url]=data;await this.app.vault.create(path,JSON.stringify(this.cache,null,2)+'\n');}
  }
 };
 module.exports.pasteCandidate=pasteCandidate;

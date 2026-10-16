@@ -27,6 +27,7 @@ async function refreshCatalog(){
 const types={'.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8','.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.ico':'image/x-icon','.woff':'font/woff','.woff2':'font/woff2','.wasm':'application/wasm','.mp3':'audio/mpeg','.mp4':'video/mp4','.pdf':'application/pdf'};
 const server=http.createServer(async(req,res)=>{
  try{
+  if(req.url.startsWith('/api/')&&req.method!=='GET'&&fs.existsSync(path.join(path.dirname(directory),'maintenance'))){res.writeHead(503,{'Content-Type':'application/json','Retry-After':'60'}).end(JSON.stringify({error:'maintenance',message:'댓글 데이터 이전 중입니다. 잠시 후 다시 시도해 주세요.'}));return;}
   if(req.url.startsWith('/api/')&&!catalogRefresh)catalogRefresh=refreshCatalog().catch(()=>console.warn('Public post catalog refresh failed.')).finally(()=>{catalogRefresh=null;});
   if(await handler(req,res))return;
   const url=new URL(req.url,'http://localhost');let decoded;

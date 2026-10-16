@@ -4,11 +4,11 @@
 
 콘텐츠 원본은 독립 Obsidian blog vault와 비공개 `anyflow/blog` 저장소다. `make sync`는 저장소 루트를 `.cache/blog/`로 동기화한다. 카테고리와 글·첨부는 vault 루트 아래에 위치한다.
 
-- 글은 `kind: post`·`draft: false`, 홈은 `kind: root`·`permalink: /`·`draft: false`인 문서를 게시한다.
+- 글은 `kind: post`·`draft: false`, 홈은 `blog.md`의 `kind: root`·`draft: false`인 문서를 게시한다.
 - frontmatter가 없는 문서와 초안은 생성 대상에서 제외한다.
-- 글 폴더에 Markdown과 참조 첨부를 함께 둔다.
-- `permalink`는 문서 위치와 독립적으로 공개 URL을 결정한다.
-- 글의 공개 주소는 끝 슬래시를 제거한다. 입력 permalink는 양쪽 형식을 허용하고 내부 링크·검색 결과·canonical·OG·댓글 카탈로그에는 슬래시 없는 주소를 사용한다. /post/ 요청은 쿼리 문자열을 보존해 /post로 301 이동한다. 홈 /와 글 ID는 유지한다.
+- 글은 `<분류>/<slug>.md`, 전용 첨부는 `_assets/<분류>/<slug>/`에 둔다. `_`로 시작하는 경로의 Markdown은 게시하지 않는다.
+- 공개 URL과 댓글 `post_id`는 vault 기준 MD 경로에서 `.md`를 제거하고 `/`를 붙여 생성한다. `blog.md`는 `/`다. MD에는 `permalink`·`post_id` 속성을 저장하지 않는다.
+- 글의 공개 주소는 끝 슬래시를 제거한다. 파일 경로에서 주소를 생성하고 내부 링크·검색 결과·canonical·OG·댓글 카탈로그에는 슬래시 없는 주소를 사용한다. /post/ 요청은 쿼리 문자열을 보존해 /post로 301 이동한다. 홈 /는 유지하며 글 ID는 공개 경로와 동일하다.
 - 일반 글의 기존 permalink를 유지하고 UUID 별도 주소·redirect는 구현하지 않는다. UUID 주소로 발행된 글은 모든 기능 구현 후 최종 전수 검증 직전에 일반 permalink로 일괄 변경한다. 내부 링크·댓글 주소 대응과 OG 메타데이터를 함께 갱신한다.
 
 ## 속성
@@ -17,9 +17,8 @@
 
 | 속성 | 의미 |
 | --- | --- |
-| `title`, `permalink`, `created`, `category` | 게시에 필요한 제목·주소·날짜·분류 |
+| `title`, `created`, `category` | 게시에 필요한 제목·날짜·분류 |
 | `kind`, `draft` | 공개 대상 선별 |
-| `id` | 댓글·Like의 고정 글 식별자. 기존 글은 Notion 페이지 ID를 유지하고 새 글 템플릿은 밀리초 시각 기반 ID를 자동 입력. permalink 변경 때 유지 |
 | `summary`, `updated`, `tags` | 요약·수정일·태그 |
 | `noindex` | 선택한 외부 검색엔진 제외 요청. boolean `true`이면 robots noindex 메타를 출력하며 공개 여부·사이트 내부 검색과 구분 |
 | `icon` | 이모지 문자 또는 이미지 상대경로. 빈 문자열은 아이콘 제거 |
@@ -31,7 +30,7 @@
 
 목록은 `created` 내림차순이며 날짜는 `YYYY/MM/DD`로 표시한다. 커버와 카드 이미지는 독립적이다. `thumbnail` 선택이 있으면 해당 사진·Mermaid·YouTube·X 이미지을 사용하고, 선택이 없거나 비어 있으면 본문 순서상 첫 사진·Mermaid·YouTube·X iframe의 이미지을 사용한다. 모두 없을 때만 텍스트 미리보기를 표시한다. 카드의 Mermaid는 전체 도형을 보이게 맞추고 숨겨진 카드는 Load more로 공개된 뒤 렌더링한다. 명시적으로 선택한 파일·Mermaid 블록이 없으면 빌드를 실패시켜 이전 결과를 유지한다.
 
-시각 자산은 콘텐츠 저장소의 `_assets/visuals/covers/`, `_assets/visuals/icons/`에 보관한다. `_assets/visuals/manifest.json`은 이모지 문자와 로컬 이미지의 대응, 원본 페이지별 시각 정보와 주소 대응을 기록하며 공개하지 않는다. 글의 `cover`·`icon`이 작성 원본이며 커버 위치는 항상 중앙이다. Pixel Banner 3.6.18의 커버 갤러리와 이모지 선택기로 편집한다. 저장 형식은 일반 경로와 `[[이미지]]`, `![[이미지]]`를 지원한다. 홈은 루트 `blog.md`의 같은 속성을 사용한다.
+시각 자산은 콘텐츠 저장소의 `_assets/_covers/`, `_assets/_icons/`에 보관한다. `_assets/_meta/visuals.json`은 이모지 문자와 로컬 이미지의 대응, 원본 페이지별 시각 정보와 주소 대응을 기록하며 공개하지 않는다. 글의 `cover`·`icon`이 작성 원본이며 커버 위치는 항상 중앙이다. Pixel Banner 3.6.18의 커버 갤러리와 이모지 선택기로 편집한다. 저장 형식은 일반 경로와 `[[이미지]]`, `![[이미지]]`를 지원한다. 홈은 루트 `blog.md`의 같은 속성을 사용한다.
 
 작은 이모지는 대응 이미지가 있으면 로컬 이미지를 사용하며, 큰 페이지 이모지는 원본 UI처럼 문자로 표시한다. 사용자 이미지 아이콘은 큰 페이지 아이콘에도 파일을 사용한다. 대응 이미지가 없는 이모지는 문자로 표시하며, `icon`을 변경하면 해당 문자에 맞는 이미지를 찾는다. 명시한 커버·아이콘 파일이 없으면 빌드를 실패시키고 이전 결과를 유지한다.
 
@@ -55,11 +54,11 @@
 
 ## 검증
 
-잘못된 게시 속성·날짜·permalink와 중복 주소는 빌드를 실패시킨다. 전체 공개 글의 참조 누락은 0개이며, 변환과 검증의 범위는 아래 본문 형식 기준을 따른다. UUID 주소로 발행된 글의 주소 일괄 변경과 댓글 보존은 후속 단계에서 처리하고 모든 구현 TODO 완료 후 최종에서 한 번만 전수 검증한다.
+잘못된 게시 속성·날짜·파일 경로와 중복 주소는 빌드를 실패시킨다. 전체 공개 글의 참조 누락은 0개이며, 변환과 검증의 범위는 아래 본문 형식 기준을 따른다. UUID 주소로 발행된 글의 주소 일괄 변경과 댓글 보존은 후속 단계에서 처리하고 모든 구현 TODO 완료 후 최종에서 한 번만 전수 검증한다.
 
 ## Obsidian 선택기
 
-blog vault에 Pixel Banner를 설치하고 커버 필드는 `cover`, 이모지 필드는 `icon`, 이미지 아이콘 필드는 `icon_image`로 연결한다. 좌표 속성은 작성 원본에 보관하지 않으며 Pixel Banner의 전역 x/y 기본값은 50이다. 커버 선택기는 `_assets/visuals/covers/`, 이미지 아이콘 선택기는 `_assets/visuals/icons/`를 기본 필터로 사용한다. 기존 글·홈의 좌표 속성을 제거하고 본문은 유지한다. 플러그인의 다른 편집기 꾸밈 속성은 공개 블로그의 고정 UI와 별개다.
+blog vault에 Pixel Banner를 설치하고 커버 필드는 `cover`, 이모지 필드는 `icon`, 이미지 아이콘 필드는 `icon_image`로 연결한다. 좌표 속성은 작성 원본에 보관하지 않으며 Pixel Banner의 전역 x/y 기본값은 50이다. 커버 선택기는 `_assets/_covers/`, 이미지 아이콘 선택기는 `_assets/_icons/`를 기본 필터로 사용한다. 기존 글·홈의 좌표 속성을 제거하고 본문은 유지한다. 플러그인의 다른 편집기 꾸밈 속성은 공개 블로그의 고정 UI와 별개다.
 
 새 글은 커버만 선택하며 좌표를 입력할 필요가 없다. 홈(root)의 웹 커버는 가로 중앙·세로 상단(`50% 0%`), 글 커버는 가로·세로 중앙(`50% 50%`)으로 자동 적용한다. Obsidian 편집 화면은 기존 `50% 50%`를 유지한다. 웹은 이전 좌표가 남아 있어도 무시한다. 커버는 `Pixel Banner: 💾 Select Banner from Vault`, 이모지는 `Pixel Banner: 📰 Set Banner Icon Text / Emoji` 명령을 사용한다. 커버 선택 후 위치 조절 창은 자동으로 열지 않으며 위치 조절 명령은 사용하지 않는다. `cover_x`·`cover_y`·`cover_position`은 작성 속성에서 제거한다. 이모지 선택기는 기존 문자열에 붙이는 방식이므로 교체할 때 입력칸을 비운 뒤 선택하고 Insert / Update를 누른다.
 
@@ -81,7 +80,7 @@ Notion 이관은 완료했다. 향후 작성 원본은 blog vault의 Markdown이
 
 이관 당시 글별 이미지 ID·순서·캡션과 알림 상자·접기·인용문·표·표 행·제목·코드·수식 수 및 빈 문단의 ID·순서를 원본과 비교했다. 394개 글, 이미지 639개, 캡션 223개, 알림 상자 102개, 접기 74개, 인용문 112개, 표 29개·243행, 제목 1,207개, 표시 코드 260개, 블록 수식 2개, 빈 문단 1,048개가 일치한다. 빈 문단은 말단 1,047개와 이미지 자식이 있는 부모 1개이며, 문단·인용문·목록·알림 상자 68개의 앞뒤·연속 줄바꿈도 보존한다. Oopy용 숨김 설정 코드 393개와 실제 내용·목적지가 없는 page link 2개는 본문에서 제외한다.
 
-원본 데이터에서 목적 블록을 찾을 수 없는 링크 8종은 해당 글 첫머리로 연결한다. 상세 목록은 콘텐츠 `_assets/notion-import.json`에 기록한다. 페이지와 본문 블록을 구분해 인라인 참조를 복원했고 블록 ID 75개를 연결했다. 대상 정보가 없는 인라인 참조 2개의 원본 기록은 manifest의 unresolvedBlockMentions에 보존한다. 작성 Markdown은 사용자 결정에 따라 OCP 연결·DNS 불명 참조 제거로 보정했다. 같은 manifest에 스냅샷 날짜, 문서·이미지 해시와 자동 대조 결과를 기록하며 공개 산출물에는 포함하지 않는다.
+원본 데이터에서 목적 블록을 찾을 수 없는 링크 8종은 해당 글 첫머리로 연결한다. 상세 목록은 콘텐츠 `_assets/_meta/notion-import.json`에 기록한다. 페이지와 본문 블록을 구분해 인라인 참조를 복원했고 블록 ID 75개를 연결했다. 대상 정보가 없는 인라인 참조 2개의 원본 기록은 manifest의 unresolvedBlockMentions에 보존한다. 작성 Markdown은 사용자 결정에 따라 OCP 연결·DNS 불명 참조 제거로 보정했다. 같은 manifest에 스냅샷 날짜, 문서·이미지 해시와 자동 대조 결과를 기록하며 공개 산출물에는 포함하지 않는다.
 
 빌드는 게시 속성·날짜·주소·frontmatter, 누락 참조, 유효하지 않은 내부 글·블록 링크, 깨진 이미지 문법, 지원하지 않는 이미지 형식을 검사한다. 실패하면 공개 결과를 교체하지 않는다. 회귀 테스트 21개와 원본 전체 대조를 함께 사용한다.
 
@@ -100,7 +99,7 @@ Notion 이관은 완료했다. 향후 작성 원본은 blog vault의 Markdown이
 
 ## 작성 템플릿과 추가 콘텐츠
 
-blog vault의 `_templates/블로그 글.md`를 Obsidian 기본 Templates에 연결했다. 제목은 YAML block scalar로 보관해 따옴표가 있는 노트 이름도 처리하고 작성일은 `{{date:YYYY-MM-DD}}`로 넣는다. 새 글은 `draft: true`이며 `category`·`permalink`를 채운 뒤 발행 상태로 전환한다. 안내는 vault의 `작성 안내.md`에 둔다. 템플릿과 안내는 공개 대상에서 제외한다.
+blog vault의 `_templates/블로그 글.md`를 Obsidian 기본 Templates에 연결했다. 제목은 YAML block scalar로 보관해 따옴표가 있는 노트 이름도 처리하고 작성일은 `{{date:YYYY-MM-DD}}`로 넣는다. 새 글은 `draft: true`이며 `category`와 안전한 파일 경로를 정한 뒤 발행 상태로 전환한다. 안내는 vault의 `작성 안내.md`에 둔다. 템플릿과 안내는 공개 대상에서 제외한다.
 
 2026-10-13에 원본의 날짜·분류·태그·주소·커버·아이콘을 대조해 누락 3편을 연결했다. 공개 글은 397개·참조 첨부 1,144개다. 원본의 분류별 글 수 13·139·73·74·98개와 일치한다. 새 이미지 6개를 파일 해시·실제 디코딩으로 검증했다. 원본에서 숨긴 빈 값·따옴표 cleanUrl의 YAML 설정과 robots noindex head 주입 코드는 본문 코드로 표시하지 않는다.
 
@@ -130,7 +129,7 @@ Notion 블록 대조 범위는 변환 글 396개이며 원문 Markdown을 보존
 
 ## 원본 북마크
 
-_assets/bookmarks.json은 version:1과 posts:{글ID:북마크배열} 형식으로 원본 제목·설명·커버·favicon·URL을 보존한다. 원본 북마크에 해당하는 독립 Markdown 링크만 카드로 표시하며 일반 링크·문장 안 링크는 유지한다. 매칭 후에도 현재 Markdown의 제목·주소를 사용한다. 새 Notion import는 카드 HTML에 정보를 직접 보존한다. 독립 YouTube 링크는 원본 자료가 없어도 카드로 표시하며 일반 외부 링크의 metadata 자동 수집은 하지 않는다.
+_assets/_meta/bookmarks.json은 version:1과 posts:{글ID:북마크배열} 형식으로 원본 제목·설명·커버·favicon·URL을 보존한다. 원본 북마크에 해당하는 독립 Markdown 링크만 카드로 표시하며 일반 링크·문장 안 링크는 유지한다. 매칭 후에도 현재 Markdown의 제목·주소를 사용한다. 새 Notion import는 카드 HTML에 정보를 직접 보존한다. 독립 YouTube 링크는 원본 자료가 없어도 카드로 표시하며 일반 외부 링크의 metadata 자동 수집은 하지 않는다.
 
 ## 2026-10-15 Obsidian cardlink 렌더링
 
@@ -167,8 +166,17 @@ URL 하나를 붙여넣으면 Blog 링크 플러그인이 일반 링크·링크 
 
 - 일반 링크는 표준 `[문구](URL)`이다. 링크 멘션은 `[문구](<URL> "mention")`으로 표현 종류를 보존한다.
 - 북마크는 fenced `cardlink`의 `url`을 사용한다. 작은 미리보기에는 `type: preview`를 추가한다. GitHub 저장소·이슈·PR·파일을 지원하고 그 외 URL은 북마크로 표시한다.
-- 제목·아이콘·사이트명·GitHub 상태 등은 `_assets/link-previews.json`에 URL별로 보존한다. Obsidian 선택 시 조회하고, 빌드 시 명시한 링크 형식의 메타데이터만 조회한다. 캐시 유효기간은 24시간이고 실패해도 기존 정보·URL을 유지한다. GitHub Actions 캐시에 빌드 조회 결과를 보관한다.
+- 제목·아이콘·사이트명·GitHub 상태 등은 `_assets/_meta/link-previews.json`에 URL별로 보존한다. Obsidian 선택 시 조회하고, 빌드 시 명시한 링크 형식의 메타데이터만 조회한다. 캐시 유효기간은 24시간이고 실패해도 기존 정보·URL을 유지한다. GitHub Actions 캐시에 빌드 조회 결과를 보관한다.
 - 본문 북마크는 100px·우측 썸네일·제목 한 줄·설명 최대 두 줄·주소 한 줄이다. 600px 이하에서는 썸네일을 숨긴다. 작은 GitHub 미리보기는 57px다. 홈 포스트 카드와 소개 카드는 이 규칙의 대상이 아니다.
 - 웹과 Obsidian 플러그인은 `lib/bookmark.js`·`lib/link-preview.js`를 공유한다. 읽기 보기와 Live Preview의 렌더 구역에 적용하며 원본 편집 모드는 Markdown을 표시한다. Blog 링크가 `cardlink`를 처리하므로 Auto Card Link Enhanced는 비활성화한다.
 - 원본에 저장된 작은 미리보기 16개와 링크 멘션을 명시적 Markdown 표현으로 보존한다. 일반 Markdown 링크를 URL 종류만으로 일괄 변환하지 않는다. 과거 북마크 catalog의 글별 독립 링크는 웹·Obsidian 모두 카드로 표시한다.
 - 배포·원본 삭제는 별도 작업이다. 2026-10-17 사용자 요청으로 소스57af669·콘텐츠f0e9e55의 운영 배포를 완료했다. 배포·확인 기록은 OPERATIONS.md에 보관한다.
+
+
+## 파일 경로와 댓글 식별자
+
+`sw-engineer/openapi-endpoint-filter.md`의 URL·댓글 ID는 `/sw-engineer/openapi-endpoint-filter`다. 파일 이름·분류 폴더 변경은 공개 주소·댓글·Like의 데이터 이동이며 단순 노트 정리로 취급하지 않는다. 제목 속성 변경은 주소와 무관하다. 공용 자산은 `_assets/_covers`, `_assets/_icons`, `_assets/_social`, 비공개 메타데이터는 `_assets/_meta`에 둔다.
+
+댓글 ID·답글 parent_id·작성 권한 hash·시각·Like actor는 유지하고 글 post_id와 글 Like 대상만 경로로 전환한다. 공개 JSON 파일명은 경로 SHA256으로 안전하게 생성한다. 기존 브라우저의 UUID 요청은 카탈로그 별칭으로 정규 경로에 연결한다. 큐 접수 기록·순서 정보도 함께 전환한다. 대기 브랜치와 GitHub 게시 코드도 같은 형식으로 처리한다.
+
+전환 도구와 롤백 절차는 PATH_LAYOUT_ROLLBACK.md를 따른다. `_assets/_meta/path-migration.json`의 양방향 대응표와 전환 전 Git 태그를 보존하며 별도 압축 백업을 만들지 않는다.

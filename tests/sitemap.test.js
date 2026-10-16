@@ -12,6 +12,6 @@ test('sitemap rebuild follows publication, deletion, draft, noindex and permalin
  write('second');assert.ok(locs(render()).includes('https://www.anyflow.net/second'));
  fs.unlinkSync(path.join(root,'first.md'));assert.ok(!locs(render()).includes('https://www.anyflow.net/first'));
  write('second',{draft:true});assert.deepEqual(locs(render()),['https://www.anyflow.net/']);
- write('second',{permalink:'/한글&a'});assert.deepEqual(locs(render()),['https://www.anyflow.net/','https://www.anyflow.net/%ED%95%9C%EA%B8%80&amp;a']);
- write('second',{noindex:true});assert.deepEqual(locs(render()),['https://www.anyflow.net/']);
+ write('한글&a');fs.unlinkSync(path.join(root,'second.md'));assert.deepEqual(locs(render()),['https://www.anyflow.net/','https://www.anyflow.net/%ED%95%9C%EA%B8%80&amp;a']);
+ write('한글&a',{noindex:true});assert.deepEqual(locs(render()),['https://www.anyflow.net/']);
 });
