@@ -35,7 +35,7 @@ node scripts/migrate-path-layout.js queue /data/queue/queue.json PLAN.json
 
 1. CronJob suspend와 댓글 게시 Actions 중지를 유지한다. 댓글 API는0 replicas로 유지하고 유지보수 Pod에서 데이터 작업을 수행한다.
 2. main·incoming 및 큐를 `--reverse`로 변환한다. 댓글 본문·답글·권한·Like actor가 전환 전 모델과 일치함을 확인한다.
-3. 콘텐츠도 `--reverse`로 변환한다. 기존 위치·필수 속성을 복원하고 미디어 참조를 대조한다.
+3. Obsidian vault를 닫고 콘텐츠도 `--reverse`로 변환한다. 기존 위치·필수 속성·이전 Blog 링크 플러그인·관리 대상 첨부/갤러리 경로를 복원한다. 다른 읽기·테마 설정은 유지한다. 미디어 참조를 대조한 후 vault를 다시 연다.
 4. 댓글 저장소의 `lib/comments` 게시 코드와 소스·배포 설정은 전환 전 태그에서 가져와 복원 commit을 만든다. 새 변환 도구는 역변환을 마칠 때까지 유지한다.
 5. 전환 전 정적·API 이미지 digest를 배포 YAML에 복원하고 rollout한다. 큐·PVC·Secret은 유지한다.
 6. 글·첨부·댓글·Like를 확인하고 API replicas1·댓글 Actions·CronJob을 재개한다. 새 ID로 열린 브라우저는 새로고침한다.
@@ -47,7 +47,7 @@ node scripts/migrate-path-layout.js queue /data/queue/queue.json PLAN.json
 1. 새 API의 `/data/maintenance` 파일로 쓰기를 차단한다. 자동 배포와 댓글 게시 Actions를 중지하고 큐가 비면 API를0 replicas로 내려 추가 접근을 막는다.
 2. 최신 main·incoming commit을 별도 롤백 태그로 고정한다. 최신 콘텐츠 대응표로 댓글·Like·요청·큐를 역변환한다.
 3. 전환 이후 새 글은 경로 SHA256 앞32자리의 이전 형식 ID를 사용한다. 콘텐츠 역변환 도구가 `<경로>/<파일명>.md` 위치와 permalink/post_id 속성을 생성하며 신규 미디어도 옮긴다.
-4. 최신 콘텐츠·댓글의 수·본문·시각·답글·권한·Like를 보존했는지 확인한다. 신규 글·미디어가 있으면 역변환한 콘텐츠를 이전 생성기로 재빌드한다. 신규 글이 없으면 전환 전 정적 이미지를 사용한다.
+4. 최신 콘텐츠·댓글의 수·본문·시각·답글·권한·Like를 보존했는지 확인한다. 전환 후 콘텐츠가 변경되었으면 신규 글뿐 아니라 기존 글 편집·미디어 변경도 포함하여 최신 역변환본을 이전 생성기로 재빌드한다. 콘텐츠 변경이 없으면 전환 전 정적 이미지를 사용한다.
 5. 이전 API·게시 코드·배포 설정을 복원 commit으로 게시하고 데이터·이미지·카탈로그를 같이 배포한다. 읽기·쓰기 검증 후 차단 파일을 제거하고 자동 작업을 재개한다.
 
 ## 검증과 중단 기준

@@ -48,3 +48,14 @@ test('empty and preview stores migrate without a requests directory',async t=>{
  const root=fixture(t);fs.writeFileSync(path.join(root,'settings.json'),JSON.stringify({moderation:false,legacyLikes:{}}));
  const result=await require('../lib/comments/path-migration').migrateRepository(root,{ids:{}});assert.equal(result.summary.comments,0);assert.equal(result.summary.posts,0);
 });
+
+test('writer rollback restores the matching plugin and managed paths without losing unrelated preferences',t=>{
+ const root=fixture(t),plugin=path.join(root,'.obsidian/plugins/blog-links');fs.mkdirSync(plugin,{recursive:true});
+ for(const name of ['main.js','manifest.json','styles.css','markdown-it.LICENSE'])fs.writeFileSync(path.join(plugin,name),'old '+name);
+ fs.writeFileSync(path.join(root,'.obsidian/app.json'),JSON.stringify({readableLineLength:true}));
+ cp.execFileSync('git',['init','-q',root]);cp.execFileSync('git',['-C',root,'add','.']);cp.execFileSync('git',['-C',root,'-c','user.name=Test','-c','user.email=test@example.com','commit','-qm','before']);
+ const sha=cp.execFileSync('git',['-C',root,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
+ fs.writeFileSync(path.join(root,'.obsidian/app.json'),JSON.stringify({readableLineLength:false,attachmentFolderPath:'_assets'}));
+ const writes=require('../lib/path-migration').writerRollback(root,{files:{},rollback:{repositories:{blog:{sha}}}});
+ const app=JSON.parse(writes.find(w=>w.file==='.obsidian/app.json').value);assert.equal(app.readableLineLength,false);assert.ok(!Object.hasOwn(app,'attachmentFolderPath'));assert.equal(writes.find(w=>w.file.endsWith('main.js')).value.toString(),'old main.js');
+});
