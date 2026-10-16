@@ -327,3 +327,10 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 화면의 태그·필터 이름과 작성 Markdown은 유지하고 base.njk의 Pagefind tag 값과 search.js의 요청 tag 값만 소문자로 통일한다. 과거 Notion 표시 태그 Istio4개와 istio22개가 같은 검색 결과26개로 연결된다. 검색 관련2개 테스트를 통과했으며 홈 Markdown 전환에 맞게 기존 검색 시험의 home.sections fixture를 갱신했다. 미리보기396글의 검색 색인을 생성하고 두 태그의26개 결과와 표시 이름 보존을 확인했다.
 
 소스85caf49·TODO1716e4f를 게시했다. Actions38840293259(1분37초) 성공·배포 선언893c779의 정적 rollout 후 운영 OpenAPI endpoint filter의 Istio와 Istio resiliency monitoring의 istio가 각각26개를 반환하는 것을 확인했다. 콘텐츠 저장소·댓글 API·배포 도구 이미지는 변경하지 않았다. 검색 관련 검증만 수행했고 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
+
+
+## 2026-10-16 웹 태그 하이픈 표시·검색 통일
+
+작성 vault의 태그는 유지하고 웹 버튼·접근성 이름·선택 필터에서 하이픈을 공백으로 표시한다. 색상 계산·내부 data-search-tag에는 원본 값을 유지한다. Pagefind 색인과 검색 요청은 하이픈·연속 공백을 한 칸 공백으로 바꾸고 양끝 공백 제거·소문자로 통일한다. 카테고리 표시는 유지한다. base.njk/tags.njk/search.js의 공통 경로를 수정하고 관련 검색2개 시험을 통과했다. 미리보기에서 service-mesh12글과 Service Mesh1글이 모두13개로 검색되고 표시에서 하이픈이 제거되는 것을 확인했다. 기존 Istio26개도 유지한다.
+
+소스b181590·TODOa231063을 게시했다. Actions38841278585(1분11초) 성공·배포 선언1f210f0의 정적 rollout 후 운영 ICA 글의 service mesh와 Istio 설치 글의 Service Mesh가 각각13개를 반환하고 필터에도 공백으로 표시되는 것을 확인했다. 미리보기 검색 색인은396글이며 콘텐츠 저장소·댓글 API·배포 도구 이미지는 변경하지 않았다. 검색·표시 관련 검증만 수행하고 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
