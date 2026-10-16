@@ -409,3 +409,5 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 ## 2026-10-17 불필요한 이전 첨부 주소 호환 제거
 
 사용자 결정에 따라 이전 공개 첨부 주소 symlink 생성 코드·테스트·빌드 호출을 제거했다. 새 첨부 경로와 글 URL만 사용한다. 이전 절의 자산 alias 검증은 제거 전 이력이다. 로컬 vault의 옛 글 폴더46개는 .DS_Store만 있어 macOS 휴지통으로 옮겼다. 실제 MD·새 _assets 파일은 유지했다.
+
+소스625392c·Actions38970262724(1분20초) 성공·배포 선언a81d985로 정적 이미지 sha256:f1b0be1a7b9939257fc5999548892bdaf59e0068de3923e8f92c33f12f722c47의 운영 rollout을 완료했다. 미리보기396글·872참조 자산·미해결0, 미리보기/운영 컨테이너의 첨부 symlink0을 확인했다. 운영 캐시 우회 조회에서 이전 첨부 주소404·새 주소200(image/webp), 대표 글200이다. 댓글 API·배포 도구 이미지는 유지했다. local blog Git clean·origin 일치와 Obsidian Git 패널 Changes0을 확인했다.
