@@ -16,13 +16,13 @@ test("home and post share one search dialog; card tags are buttons outside the p
  const env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname,"../src/_includes")));
  env.addFilter("versionedAsset",s=>s);env.addFilter("tagColor",()=>"#fff");env.addFilter("tagStyle",()=>"");env.addFilter("dateLabel",s=>s);
  env.addFilter('absoluteUrl',url=>new URL(url,require('../src/_data/site.json').url).href);
- const item={title:"Title",url:"/one/",tags:['정확한, 태그','A&B','Istio'],category:"Category",tagStyles:{},toc:[],displayDate:"2025/01/01",date:"2025-01-01"};
+ const item={title:"Title",url:"/one/",tags:['정확한, 태그','A&B','Istio','Service-Mesh',' service--mesh '],category:"Category",tagStyles:{},toc:[],displayDate:"2025/01/01",date:"2025-01-01"};
  const noindex=env.render("base.njk",{site:{title:"Blog"},home:{},post:{...item,noindex:true},content:""});assert.match(noindex,/<meta name="robots" content="noindex">/);
  for(const post of [null,item]){
   const html=env.render("base.njk",{site:{title:"Blog"},home:{},post,content:""});
   assert.equal((html.match(/class="search-button"/g)||[]).length,1);assert.equal((html.match(/<dialog /g)||[]).length,1);
   assert.match(html,/aria-labelledby="search-title"/);
-  if(post){assert.match(html,/data-pagefind-filter="tag\[content\]" content="정확한, 태그"/);assert.match(html,/data-search-tag="A&amp;B"/);assert.match(html,/data-pagefind-filter="tag\[content\]" content="istio"/);assert.doesNotMatch(html,/data-pagefind-filter="tag\[content\]" content="Istio"/);assert.match(html,/data-search-tag="Istio"/);assert.match(html,/>Istio<\/button>/);}
+  if(post){assert.match(html,/data-pagefind-filter="tag\[content\]" content="정확한, 태그"/);assert.match(html,/data-search-tag="A&amp;B"/);assert.match(html,/data-pagefind-filter="tag\[content\]" content="istio"/);assert.doesNotMatch(html,/data-pagefind-filter="tag\[content\]" content="Istio"/);assert.match(html,/data-search-tag="Istio"/);assert.match(html,/>Istio<\/button>/);assert.equal((html.match(/data-pagefind-filter="tag\[content\]" content="service mesh"/g)||[]).length,2);assert.match(html,/data-search-tag="Service-Mesh" aria-label="Service Mesh 태그로 검색"/);assert.match(html,/>Service Mesh<\/button>/);assert.doesNotMatch(html,/>Service-Mesh<\/button>/);}
  }
  const home=env.renderString(require("gray-matter")(fs.readFileSync(path.resolve(__dirname,"../src/index.njk"),"utf8")).content,{posts:[item],categories:[],home:{sections:[{className:'recent',parts:[{kind:'recent'}]}]}});
  assert.doesNotMatch(home,/Recent 검색|카테고리 검색|gallery-tools|<a\b[^>]*class="card"/);
