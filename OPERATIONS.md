@@ -592,3 +592,6 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 
 
 2026-10-16 캡션 뒤 일반 본문 간격을 웹·Obsidian에서8px로 축소했다. 이미지와 캡션 사이4px는 유지한다. 소스d73e70f·콘텐츠5273418·TODO e3e43bc를 게시했고 Actions38829943671(1분19초) 성공·배포 선언39b114a의 정적 rollout을 완료했다. 미리보기·실제 Obsidian·운영 Twelve Factor2에서 본문8px/미디어4px를 확인했다. Obsidian Git 패널 변경0개이며 CSS 간격 변경만 확인하고 전체 회귀 테스트나 미리보기 전체 재빌드는 하지 않았다.
+
+
+2026-10-16 사용자 정정 기준: 캡션 가운데 정렬·뒤 일반 본문 간격20px·미디어 아래4px. 웹 CSS와 Obsidian snippet·안내·TODO를 일치시켰다. 소스21b596a·콘텐츠3ad0b6b·TODO2a91af1을 게시했고 Actions38830433524(1분41초) 성공·배포 선언1dd0bb7의 정적 rollout을 완료했다. 미리보기와 운영 Twelve Factor2에서 center/20px/4px를 측정했으며 Obsidian에서 center·margin4px 0 20px 적용을 확인했다. Git 패널 변경0개이며 CSS 변경 부분만 확인하고 전체 회귀·미리보기 전체 재빌드는 반복하지 않았다.
