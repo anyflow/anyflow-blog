@@ -27,10 +27,8 @@ module.exports=class BlogLinks extends Plugin{
   attachments(this.app.workspace.getActiveFile());
   this.cache={};const file=this.app.vault.getAbstractFileByPath('_assets/_meta/link-previews.json');
   if(file){try{this.cache=JSON.parse(await this.app.vault.read(file));}catch{new Notice('링크 정보 파일을 읽지 못했습니다. 원본 파일은 유지합니다.');}}
-  this.bookmarks={};this.pages={};
-  for(const [path,key]of [['_assets/_meta/bookmarks.json','bookmarks'],['_assets/_meta/visuals.json','pages']]){
-   const file=this.app.vault.getAbstractFileByPath(path);if(file){try{const data=JSON.parse(await this.app.vault.read(file));this[key]=key==='bookmarks'?data.posts:data.pages;}catch{new Notice('기존 링크 정보를 읽지 못했습니다: '+path);}}
-  }
+  this.bookmarks={};const bookmarksFile=this.app.vault.getAbstractFileByPath('_assets/_meta/bookmarks.json');
+  if(bookmarksFile){try{this.bookmarks=JSON.parse(await this.app.vault.read(bookmarksFile)).posts;}catch{new Notice('기존 북마크 정보를 읽지 못했습니다.');}}
   this.registerMarkdownCodeBlockProcessor('cardlink',async(source,el,ctx)=>{
    try{const data=parseYaml(source);if(!data||typeof data.url!=='string')throw new Error('URL이 필요합니다.');const saved=this.cache[data.url]||{};el.addClass('blog-links');el.innerHTML=bookmark({...saved,...data,title:data.title||saved.title,description:data.description||saved.description,cover:data.image||saved.cover,icon:data.favicon||saved.icon},{resolveImage:raw=>{const path=String(raw).replace(/^!?\[\[|\]\]$/g,'').split('|')[0];const file=this.app.metadataCache.getFirstLinkpathDest(path,ctx.sourcePath);return file?this.app.vault.getResourcePath(file):'';}});}
    catch(error){el.setText(source);new Notice(error.message);}

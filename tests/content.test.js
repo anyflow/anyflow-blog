@@ -12,7 +12,7 @@ test('only published notes and referenced assets, correct legacy paths and dates
  post(root,'draft',{publish:false},'DO_NOT_PUBLISH');
  fs.writeFileSync(path.join(root,'unindexed.md'),'PRIVATE_NOTE');
  fs.writeFileSync(path.join(root,'.mcp.json'),'LOCAL_CONFIGURATION');
- const result=loadContent(root,path.join(root,'no-visuals.json'));
+ const result=loadContent(root);
  assert.deepEqual(result.posts.map(p=>p.title),['other','first']);
  const first=result.posts[1];
  assert.match(first.html,/src="\/assets\/image\(1\)\.png"/);
@@ -36,21 +36,21 @@ test('public paths are derived from filenames and validate unsafe names',t=>{
  const {noteUrl}=require('../lib/content-layout');for(const bad of ['../escape.md','a//b.md','a/%2e.md','a/b?.md','a/space name.md'])assert.throws(()=>noteUrl(bad),/Invalid note path/);
 });
 test('noindex is an explicit boolean setting, not a truthy string',t=>{
- const root=fixture(t);post(root,'first',{noindex:true});assert.equal(loadContent(root,path.join(root,'none')).posts[0].noindex,true);
- post(root,'first',{noindex:false});assert.equal(loadContent(root,path.join(root,'none')).posts[0].noindex,false);
+ const root=fixture(t);post(root,'first',{noindex:true});assert.equal(loadContent(root).posts[0].noindex,true);
+ post(root,'first',{noindex:false});assert.equal(loadContent(root).posts[0].noindex,false);
  for(const noindex of ['false',1,null]){post(root,'first',{noindex});assert.throws(()=>loadContent(root),/noindex must be a boolean/);}
 });
 test('author titles and summaries keep quotes, ampersands and code text after Markdown rendering',t=>{
  const root=fixture(t);post(root,'first',{title:'검증 "한글" & 기호',summary:'**요약** & `Array<T>`'});
- const current=loadContent(root,path.join(root,'none')).posts[0];assert.equal(current.title,'검증 "한글" & 기호');assert.equal(current.summary,'요약 & Array<T>');
+ const current=loadContent(root).posts[0];assert.equal(current.title,'검증 "한글" & 기호');assert.equal(current.summary,'요약 & Array<T>');
 });
 
-test('author metadata takes priority over captured reference metadata',t=>{
+test('author metadata is used without any page-specific source reference',t=>{
  const root=fixture(t), file=post(root,'first',{tags:['new'],icon:'⭐',cover:'./cover.png',cover_position:'50% 20%'});
  fs.writeFileSync(path.join(path.dirname(file),'cover.png'),'cover');
  const visuals=path.join(root,'visuals.json');
  fs.writeFileSync(visuals,JSON.stringify({'/first':{icon:'📝',cover:'/old-cover.png',properties:[{text:'test'},{text:'Old'}]}}));
- const current=loadContent(root,visuals).posts[0];
+ const current=loadContent(root).posts[0];
  assert.deepEqual(current.tags,['new']);assert.equal(current.icon,'⭐');
  assert.equal(current.cover,'/assets/cover.png');assert.equal(current.coverPosition,'50% 50%');
 });
@@ -58,7 +58,7 @@ test('attachments cannot escape the content root through a symlink',t=>{
  const root=fixture(t), outside=fixture(t), file=post(root,'first',{},'![private](./private.png)');
  fs.writeFileSync(path.join(outside,'secret.png'),'DO_NOT_COPY');
  fs.symlinkSync(path.join(outside,'secret.png'),path.join(path.dirname(file),'private.png'));
- const result=loadContent(root,path.join(root,'no-visuals.json'));
+ const result=loadContent(root);
  assert.equal(result.assets.size,0);assert.equal(result.unresolved.length,1);
  assert.doesNotMatch(result.posts[0].html,/DO_NOT_COPY/);
 });
@@ -74,7 +74,7 @@ test('local cover and icon assets, emoji catalog, home metadata and explicit cle
  const custom=post(root,'custom',{icon:'./custom.svg'});fs.writeFileSync(path.join(path.dirname(custom),'custom.svg'),'<svg/>');
  post(root,'native',{icon:'🫧'});post(root,'cleared',{icon:'',cover:''});
  const reference=path.join(root,'reference.json');fs.writeFileSync(reference,JSON.stringify({'/cleared':{icon:'📝',cover:'/old.png'}}));
- const result=loadContent(root,reference),first=result.posts.find(p=>p.title==='first');
+ const result=loadContent(root),first=result.posts.find(p=>p.title==='first');
  assert.equal(first.icon,'📌');assert.equal(first.iconImage,'/assets/_assets/_icons/pin.webp');
  assert.equal(first.cover,'/assets/cover.webp');assert.equal(first.coverPosition,'50% 50%');
  assert.equal(result.home.cover,'/assets/home.png');assert.equal(result.home.coverPosition,'50% 0%');
@@ -83,18 +83,18 @@ test('local cover and icon assets, emoji catalog, home metadata and explicit cle
  const cleared=result.posts.find(p=>p.title==='cleared');assert.equal(cleared.icon,'');assert.equal(cleared.cover,'');
  assert.equal(result.assets.size,4);assert.equal(result.posts.length,4);assert.equal(result.unresolved.length,0);
  assert.ok([...result.assets.keys()].every(p=>!p.endsWith('.json')));
- fs.unlinkSync(path.join(root,'_assets/_icons/pin.webp'));assert.throws(()=>loadContent(root,reference),/Missing icon attachment/);
- fs.writeFileSync(path.join(root,'_assets/_icons/pin.webp'),'emoji image');fs.unlinkSync(path.join(path.dirname(source),'cover.webp'));assert.throws(()=>loadContent(root,reference),/Missing cover attachment/);
+ fs.unlinkSync(path.join(root,'_assets/_icons/pin.webp'));assert.throws(()=>loadContent(root),/Missing icon attachment/);
+ fs.writeFileSync(path.join(root,'_assets/_icons/pin.webp'),'emoji image');fs.unlinkSync(path.join(path.dirname(source),'cover.webp'));assert.throws(()=>loadContent(root),/Missing cover attachment/);
 });
 
 test('Pixel Banner image links center post covers and preserve icons',t=>{
  const root=fixture(t),source=post(root,'pixel',{cover:'![[pixel/cover full.webp]]',cover_x:0,cover_y:100,cover_position:'50% 25%',icon:'⭐',icon_image:'[[pixel/pin.svg]]'});
  fs.writeFileSync(path.join(path.dirname(source),'cover full.webp'),'cover');fs.writeFileSync(path.join(path.dirname(source),'pin.svg'),'<svg/>');
- const current=loadContent(root,path.join(root,'none.json')).posts[0];
+ const current=loadContent(root).posts[0];
  assert.equal(current.cover,'/assets/cover%20full.webp');assert.equal(current.coverPosition,'50% 50%');
  assert.equal(current.iconImage,'/assets/pin.svg');assert.equal(current.iconIsImage,true);
  const registry=path.join(root,'_assets/_meta');fs.mkdirSync(registry,{recursive:true});fs.writeFileSync(path.join(registry,'visuals.json'),JSON.stringify({emojis:{},pages:{'/pixel':{}}}));
- post(root,'pixel',{});const cleared=loadContent(root,path.join(root,'none.json')).posts[0];assert.equal(cleared.icon,'');assert.equal(cleared.cover,'');
+ post(root,'pixel',{});const cleared=loadContent(root).posts[0];assert.equal(cleared.icon,'');assert.equal(cleared.cover,'');
  for(const value of [-1,101,'invalid']){
   const bad=fixture(t);post(bad,'bad',{cover_y:value});assert.equal(loadContent(bad).posts[0].coverPosition,'50% 50%');
  }
@@ -117,7 +117,7 @@ test('cover crop top-aligns home and centers posts, ignoring old coordinates',t=
  fs.writeFileSync(path.join(path.dirname(home),'cover.png'),'cover');
  const reference=path.join(root,'reference.json');
  fs.writeFileSync(reference,JSON.stringify({'/automatic':{coverPosition:'0% 0%'},'/':{coverPosition:'0% 0%'}}));
- const result=loadContent(root,reference);
+ const result=loadContent(root);
  for(const [name,,expected] of cases) assert.equal(result.posts.find(p=>p.title===name).coverPosition,expected);
  assert.equal(result.home.coverPosition,'50% 0%');
  assert.equal(result.unresolved.length,0);
@@ -126,7 +126,7 @@ test('cover crop top-aligns home and centers posts, ignoring old coordinates',t=
 test('native Obsidian callouts preserve nested quotes, folding, figures and math',t=>{
  const root=fixture(t),file=post(root,'native',{},'> [!notion]\n>\n> **Title**\n>\n> Body.\n>\n> > Nested quotation.\n\n> [!info] Custom title\n> More information.\n\n> [!warning]- Collapsed\n> Hidden details.\n\n![First paragraph. Second paragraph.|528](<image one.png>)\n\n> [!caption]\n> First paragraph.\n>\n> Second paragraph.\n\nAfter caption.\n\n$$\n\\frac{a}{b}=c\n$$\n\nInline $x^2$.\n\n^equation\n\n[Jump](#^equation)\n\n![[native/image one.png|240]]');
  fs.writeFileSync(path.join(path.dirname(file),'image one.png'),'image');
- const result=loadContent(root,path.join(root,'no.json')),html=result.posts[0].html;
+ const result=loadContent(root),html=result.posts[0].html;
  assert.match(html,/<blockquote class="callout">[\s\S]*<strong>Title<\/strong>[\s\S]*<blockquote>[\s\S]*Nested quotation/);
  assert.match(html,/<div class="callout-title">Custom title<\/div>/);
  assert.match(html,/<details class="callout" data-callout="warning">/);
@@ -139,36 +139,36 @@ test('native Obsidian callouts preserve nested quotes, folding, figures and math
 test('an unsupported image format stops publication, audio remains a media element',t=>{
  const root=fixture(t),file=post(root,'media',{},'![](voice.mp3)');
  fs.writeFileSync(path.join(path.dirname(file),'voice.mp3'),'audio');
- assert.match(loadContent(root,path.join(root,'none')).posts[0].html,/<audio controls preload="metadata" src="\/assets\/voice.mp3"/);
+ assert.match(loadContent(root).posts[0].html,/<audio controls preload="metadata" src="\/assets\/voice.mp3"/);
  fs.writeFileSync(path.join(path.dirname(file),'photo.heic'),'heic');
- post(root,'media',{},'![](photo.heic)');assert.throws(()=>loadContent(root,path.join(root,'none')),/Unsupported web image format/);
+ post(root,'media',{},'![](photo.heic)');assert.throws(()=>loadContent(root),/Unsupported web image format/);
 });
 
 
 test('malformed export syntax and frontmatter are rejected, literal examples are allowed',t=>{
  const root=fixture(t),file=post(root,'bad',{},'![caption first.\n\ncaption second.](image.png)');
  fs.writeFileSync(path.join(path.dirname(file),'image.png'),'image');
- assert.throws(()=>loadContent(root,path.join(root,'none')),/Malformed Markdown/);
- post(root,'bad',{},'\\!\\[example\\] and \x60![code example]\x60');loadContent(root,path.join(root,'none'));
+ assert.throws(()=>loadContent(root),/Malformed Markdown/);
+ post(root,'bad',{},'\\!\\[example\\] and \x60![code example]\x60');loadContent(root);
  const raw=fs.readFileSync(file,'utf8');fs.writeFileSync(file,raw.replace('\n---\n\n','\n---'));
- assert.throws(()=>loadContent(root,path.join(root,'none')),/Invalid frontmatter delimiter/);
+ assert.throws(()=>loadContent(root),/Invalid frontmatter delimiter/);
 });
 
 test('Obsidian columns retain ratios, captions and nested content',t=>{
  const root=fixture(t),file=post(root,'columns',{},'> [!columns]\n>\n> > [!column|0.25]\n> >\n> > ![First](a.png) ^photo\n> >\n> > > [!caption]\n> > > First\n>\n> > [!column|0.25]\n> >\n> > ## Middle\n> >\n> > Middle text.\n>\n> > [!column|0.5]\n> >\n> > > A quote.');
  fs.writeFileSync(path.join(path.dirname(file),'a.png'),'image');
- const result=loadContent(root,path.join(root,'none')),html=result.posts[0].html;
+ const result=loadContent(root),html=result.posts[0].html;
  assert.equal((html.match(/class="notion-columns"/g)||[]).length,1);
  assert.deepEqual([...html.matchAll(/class="notion-column" style="--column-ratio:([^"]+)"/g)].map(m=>Number(m[1])),[.25,.25,.5]);
  assert.match(html,/<figcaption class="caption">[\s\S]*First/);assert.match(html,/<h2 id="middle">Middle/);assert.match(html,/<blockquote>[\s\S]*A quote/);
  assert.match(html,/id="photo"/);assert.doesNotMatch(html,/\^photo/);
  assert.doesNotMatch(html,/\[!column|callout-icon/);
- post(root,'columns',{},'> [!column|bad]\n> Text.');assert.throws(()=>loadContent(root,path.join(root,'none')),/Invalid column ratio/);
+ post(root,'columns',{},'> [!column|bad]\n> Text.');assert.throws(()=>loadContent(root),/Invalid column ratio/);
 });
 test('the home favicon is a referenced asset declared on home and post pages',t=>{
  const root=fixture(t),file=post(root,'first'),home=post(root,'home',{kind:'root',permalink:'/',favicon:'./favicon.png'});
  fs.writeFileSync(path.join(path.dirname(home),'favicon.png'),'favicon');
- const result=loadContent(root,path.join(root,'none'));assert.equal(result.home.favicon,'/assets/favicon.png');assert.equal(result.assets.size,1);
+ const result=loadContent(root);assert.equal(result.home.favicon,'/assets/favicon.png');assert.equal(result.assets.size,1);
  const nunjucks=require('nunjucks'),env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.resolve(__dirname,'../src/_includes')));
  env.addFilter('versionedAsset',s=>s);env.addFilter('tagColor',()=>"#fff");env.addFilter('tagStyle',()=>"");
  env.addFilter('absoluteUrl',url=>new URL(url,require('../src/_data/site.json').url).href);
@@ -176,7 +176,7 @@ test('the home favicon is a referenced asset declared on home and post pages',t=
   const html=env.render('base.njk',{home:result.home,site:{title:'Blog'},post,content:''});
   assert.match(html,/<link rel="icon" href="\/assets\/favicon.png">/);assert.match(html,/<link rel="apple-touch-icon"/);
  }
- fs.unlinkSync(path.join(path.dirname(home),'favicon.png'));assert.throws(()=>loadContent(root,path.join(root,'none')),/Missing favicon attachment/);
+ fs.unlinkSync(path.join(path.dirname(home),'favicon.png'));assert.throws(()=>loadContent(root),/Missing favicon attachment/);
 });
 
 test('cards use the first image or Mermaid in body order and ignore obsolete export hints',t=>{
@@ -187,19 +187,19 @@ test('cards use the first image or Mermaid in body order and ignore obsolete exp
   ['no-picture','```html\n<img src="first.png">\n```\n\nText.',null]
  ];
  for(const [name,body] of cases){const file=post(root,name,{hero_image:'other.png'},body);fs.writeFileSync(path.join(path.dirname(file),'first.png'),'first');fs.writeFileSync(path.join(path.dirname(file),'other.png'),'other');}
- const result=loadContent(root,path.join(root,'none'));
+ const result=loadContent(root);
  for(const [name,,diagram] of cases){const current=result.posts.find(p=>p.title===name);if(diagram===true){assert.equal(current.thumbnail,'');assert.match(current.thumbnailDiagram,/A-->B/);}else if(diagram===false){assert.match(current.thumbnail,/\/first\.png$/);assert.equal(current.thumbnailDiagram,'');}else{assert.equal(current.thumbnail,'');assert.equal(current.thumbnailDiagram,'');}}
 });
 test('explicit card selection supports image links and stable Mermaid block references',t=>{
  const root=fixture(t),body='```mermaid\ngraph TD;FIRST-->X;\n```\n\n> ```mermaid\n> graph LR;CHOSEN-->Y;\n> ```\n> ^chosen-diagram\n\n![Photo](first.png)';
  const file=post(root,'selected',{thumbnail:'![[selected/second.png]]'},body);fs.writeFileSync(path.join(path.dirname(file),'first.png'),'first');fs.writeFileSync(path.join(path.dirname(file),'second.png'),'second');
- let current=loadContent(root,path.join(root,'none')).posts[0];assert.equal(current.thumbnail,'/assets/second.png');assert.equal(current.thumbnailDiagram,'');
- post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},body);current=loadContent(root,path.join(root,'none')).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);assert.doesNotMatch(current.thumbnailDiagram,/FIRST/);assert.equal(current.thumbnail,'');
- post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},'```mermaid\ngraph TD;NEW-->Z;\n```\n\n'+body);current=loadContent(root,path.join(root,'none')).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);
+ let current=loadContent(root).posts[0];assert.equal(current.thumbnail,'/assets/second.png');assert.equal(current.thumbnailDiagram,'');
+ post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},body);current=loadContent(root).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);assert.doesNotMatch(current.thumbnailDiagram,/FIRST/);assert.equal(current.thumbnail,'');
+ post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},'```mermaid\ngraph TD;NEW-->Z;\n```\n\n'+body);current=loadContent(root).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);
 });
 test('invalid explicit card selections fail rather than silently selecting another picture',t=>{
  const root=fixture(t);
- for(const thumbnail of ['missing.png','[[#^missing-diagram]]','note.md']){post(root,'bad',{thumbnail},'```mermaid\ngraph TD;A-->B;\n```');assert.throws(()=>loadContent(root,path.join(root,'none')),/thumbnail/);}
+ for(const thumbnail of ['missing.png','[[#^missing-diagram]]','note.md']){post(root,'bad',{thumbnail},'```mermaid\ngraph TD;A-->B;\n```');assert.throws(()=>loadContent(root),/thumbnail/);}
 });
 
 test('YouTube embeds participate in card source order and explicit photos still win',t=>{
@@ -207,7 +207,7 @@ test('YouTube embeds participate in card source order and explicit photos still 
  for(const [name,body,selected] of [['video',video+'\n\n'+photo],['photo',photo+'\n\n'+video],['diagram',diagram+'\n\n'+video],['chosen',video+'\n\n'+photo,'./photo.png']]){
   const source=post(root,name,selected?{thumbnail:selected}:{},body);fs.writeFileSync(path.join(path.dirname(source),'photo.png'),'photo');
  }
- const posts=loadContent(root,path.join(root,'none')).posts,find=name=>posts.find(p=>p.title===name);
+ const posts=loadContent(root).posts,find=name=>posts.find(p=>p.title===name);
  assert.equal(find('video').thumbnail,'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
  assert.equal(find('photo').thumbnail,'/assets/photo.png');
  assert.match(find('diagram').thumbnailDiagram,/A-->B/);assert.equal(find('diagram').thumbnail,'');
@@ -217,9 +217,9 @@ test('YouTube embeds participate in card source order and explicit photos still 
 test('X post images participate in card source order and explicit choices take priority',t=>{
  const root=fixture(t),id='1717179344110358638',image='https://pbs.twimg.com/media/F9SlgpVWkAAXsNw.jpg',video='<iframe src="https://embed.notion.co/api/iframe?url=https%3A%2F%2Fx.com%2Fband%2Fstatus%2F'+id+'&amp;key=test"></iframe>',photo='![Photo](photo.png)';
  for(const [name,body,selected] of [['x-first',video+'\n\n'+photo],['photo-first',photo+'\n\n'+video],['chosen-x',video+'\n\n'+photo,'./photo.png']]){const source=post(root,name,selected?{thumbnail:selected}:{},body);fs.writeFileSync(path.join(path.dirname(source),'photo.png'),'photo');}
- let result=loadContent(root,path.join(root,'none'),{[id]:image}),find=name=>result.posts.find(p=>p.title===name);
+ let result=loadContent(root,{[id]:image}),find=name=>result.posts.find(p=>p.title===name);
  assert.equal(find('x-first').thumbnail,image);assert.equal(find('photo-first').thumbnail,'/assets/photo.png');assert.equal(find('chosen-x').thumbnail,'/assets/photo.png');assert.deepEqual(result.xPosts,[id]);
- result=loadContent(root,path.join(root,'none'),{});assert.equal(find('x-first').thumbnail,'/assets/photo.png');
+ result=loadContent(root,{});assert.equal(find('x-first').thumbnail,'/assets/photo.png');
 });
 
 test('comment post IDs follow the note path and ignore authored identity properties',t=>{
@@ -230,19 +230,19 @@ test('post URLs omit trailing slashes across authored paths and internal link fo
  const root=fixture(t);
  post(root,'first',{permalink:'/first/',post_id:'stable-first-123'},'[Old](https://www.anyflow.net/other/#introduction)\n\n[Local](/other/)\n\n[MD](../other/other.md)\n\n<a href="https://blog.anyflow.net/other/?a=1&amp;b=2#introduction">HTML</a>');
  post(root,'other',{permalink:'/other/',post_id:'stable-other-123'});
- const content=loadContent(root,path.join(root,'none')),first=content.posts.find(p=>p.id==='/first');
+ const content=loadContent(root),first=content.posts.find(p=>p.id==='/first');
  assert.equal(first.url,'/first');assert.ok(first.aliases.includes('/first'));
  assert.match(first.html,/href="\/other#introduction"/);
  assert.match(first.html,/href="\/other"/);
  assert.match(first.html,/href="\/other\?a=1&amp;b=2#introduction"/);
  require('../lib/validate-content').validateContent(content);
  post(root,'first',{permalink:'/first',post_id:'stable-first-123'});
- assert.equal(loadContent(root,path.join(root,'none')).posts.find(p=>p.id==='/first').url,'/first');
+ assert.equal(loadContent(root).posts.find(p=>p.id==='/first').url,'/first');
 });
 
 test('bare Markdown filenames stay text while explicit links and web URLs still linkify',t=>{
  const root=fixture(t);post(root,'first',{},'CLAUDE.md AGENTS.md CHANGLELOG.md 한국어.md\n\nhttps://example.md https://example.com www.example.com\n\n[Manual](http://README.md)');
- const html=loadContent(root,path.join(root,'none')).posts[0].html;
+ const html=loadContent(root).posts[0].html;
  assert.doesNotMatch(html,/href="http:\/\/(?:CLAUDE|AGENTS|CHANGLELOG|한국어)\.md"/i);
  assert.match(html,/CLAUDE\.md AGENTS\.md CHANGLELOG\.md 한국어\.md/);
  for(const url of ['https://example.md','https://example.com','http://www.example.com','http://README.md'])assert.ok(html.includes('href="'+url+'"'));
@@ -251,7 +251,7 @@ test('bare Markdown filenames stay text while explicit links and web URLs still 
 test('standalone YouTube bookmarks render cards and supply thumbnails without converting inline links or code',t=>{
  const root=fixture(t),url='https://youtu.be/BWRY3hiIXcY?si=test',link='[BLADE <Runner> & titles](<'+url+'>)';
  post(root,'youtube',{},link+'\n\n'+link+' and [Other](https://example.com)\n\nInline '+link+' text.\n\n```md\n'+link+'\n```\n\n[Unknown](https://youtube.com.evil.test/watch?v=BWRY3hiIXcY)');
- const item=loadContent(root,path.join(root,'missing.json')).posts[0];
+ const item=loadContent(root).posts[0];
  assert.equal((item.html.match(/class="bookmark bookmark-card youtube-bookmark"/g)||[]).length,1);
  assert.match(item.html,/BLADE &lt;Runner&gt; &amp; titles/);
  assert.match(item.html,/href="https:\/\/youtu.be\/BWRY3hiIXcY\?si=test" target="_blank" rel="noopener noreferrer"/);
@@ -266,20 +266,20 @@ test('original bookmark metadata restores cards per post and preserves repaired 
  fs.mkdirSync(path.join(root,'_assets/_meta'),{recursive:true});
  const catalog=path.join(root,'_assets/_meta/bookmarks.json');
  fs.writeFileSync(catalog,JSON.stringify({version:1,posts:{'/bookmarks':[{url,title:'Original',description:'Description <script> & text',cover,icon}]}}));
- const posts=loadContent(root,path.join(root,'missing.json')).posts,item=posts.find(p=>p.id==='/bookmarks');
+ const posts=loadContent(root).posts,item=posts.find(p=>p.id==='/bookmarks');
  assert.equal((item.html.match(/class="bookmark bookmark-card"/g)||[]).length,2);
  assert.match(item.html,/Description &lt;script&gt; &amp; text/);assert.match(item.html,/href="https:\/\/example.com\/repaired"/);
  assert.match(item.html,/<p>Inline <a/);assert.match(item.html,/<p><a href="https:\/\/example.com\/plain"/);
  assert.equal(item.thumbnail,cover);assert.doesNotMatch(posts.find(p=>p.title==='ordinary').html,/bookmark-card/);
  assert.throws(()=>require('../lib/bookmark')({url:'javascript:alert(1)',title:'Bad'}),/Invalid bookmark/);
  fs.writeFileSync(catalog,JSON.stringify({version:1,posts:{'/bookmarks':'invalid'}}));
- assert.throws(()=>loadContent(root,path.join(root,'missing.json')),/Invalid bookmark catalog/);
+ assert.throws(()=>loadContent(root),/Invalid bookmark catalog/);
 });
 
 test('all folding callouts use disclosure arrows and preserve normal callout icons and initial state',t=>{
  const root=fixture(t);
  post(root,'folding',{},'> [!abstract]- Metric example\n> payload\n\n> [!info]+ Expanded example\n> payload\n\n> [!info] Information\n> ordinary info');
- const html=loadContent(root,path.join(root,'none.json')).posts[0].html;
+ const html=loadContent(root).posts[0].html;
  const folded=[...html.matchAll(/<details\b[\s\S]*?<\/details>/g)].map(m=>m[0]);assert.equal(folded.length,2);
  for(const item of folded){assert.match(item,/<summary><span class="callout-icon callout-toggle" aria-hidden="true"><\/span>/);assert.doesNotMatch(item,/ℹ️/);}
  assert.match(folded[0],/data-callout="abstract"><summary>/);assert.match(folded[1],/data-callout="info" open><summary>/);
@@ -288,7 +288,7 @@ test('all folding callouts use disclosure arrows and preserve normal callout ico
 
 test('cardlink blocks render metadata safely, retain document order and feed card thumbnails',t=>{
  const root=fixture(t);post(root,'cardlink',{},'```cardlink\nurl: https://example.com/article?q=1&x=2\ntitle: "Title <script> & text"\ndescription: |\n  First line.\n  Second line <img src=x onerror=bad>.\nimage: https://example.com/cover.webp\nfavicon: https://example.com/favicon.png\n```\n\n![Later](https://example.com/later.png)\n\n> [!info]\n> ```cardlink\n> url: https://example.com/nested\n> title: Nested\n> ```\n\n````markdown\n```cardlink\nurl: https://example.com/example-only\n```\n````');
- const item=loadContent(root,path.join(root,'missing.json')).posts[0];
+ const item=loadContent(root).posts[0];
  assert.equal((item.html.match(/class="bookmark bookmark-card"/g)||[]).length,2);
  assert.match(item.html,/Title &lt;script&gt; &amp; text/);assert.match(item.html,/Second line &lt;img src=x onerror=bad&gt;/);assert.doesNotMatch(item.html,/<script>|<img src=x/);
  assert.match(item.html,/href="https:\/\/example.com\/article\?q=1&amp;x=2"/);assert.match(item.html,/class="bookmark-description"/);assert.match(item.html,/class="bookmark-icon"/);
@@ -299,23 +299,23 @@ test('cardlink local image and favicon embeds become published assets; YouTube c
  const root=fixture(t),source=post(root,'local-card',{},'```cardlink\nurl: https://example.com/\ntitle: Local\nimage: "![[cover full.webp]]"\nfavicon: "[[icon.ico]]"\n```');
  fs.writeFileSync(path.join(path.dirname(source),'cover full.webp'),'cover');fs.writeFileSync(path.join(path.dirname(source),'icon.ico'),'favicon');
  post(root,'youtube-card',{},'```cardlink\nurl: https://youtu.be/yonRGtMDDH8\ntitle: Video\n```');
- const result=loadContent(root,path.join(root,'missing.json')),local=result.posts.find(p=>p.title==='local-card'),youtube=result.posts.find(p=>p.title==='youtube-card');
+ const result=loadContent(root),local=result.posts.find(p=>p.title==='local-card'),youtube=result.posts.find(p=>p.title==='youtube-card');
  assert.equal(local.thumbnail,'/assets/cover%20full.webp');assert.match(local.html,/src="\/assets\/icon.ico"/);assert.equal(result.assets.size,2);assert.equal(result.unresolved.length,0);
  assert.match(youtube.html,/youtube-bookmark/);assert.equal(youtube.thumbnail,'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
 });
 
 test('malformed cardlink blocks fail clearly and unsafe image protocols never become image sources',t=>{
  for(const content of ['url: [invalid','- url: https://example.com/','title: Missing URL','url: javascript:alert(1)','url: https://example.com/\ntitle: [not, text]','url: !!js/function "function(){}"']){
-  const root=fixture(t);post(root,'bad-card',{},'```cardlink\n'+content+'\n```');assert.throws(()=>loadContent(root,path.join(root,'missing.json')),/Invalid cardlink in \/bad-card/);
+  const root=fixture(t);post(root,'bad-card',{},'```cardlink\n'+content+'\n```');assert.throws(()=>loadContent(root),/Invalid cardlink in \/bad-card/);
  }
- const root=fixture(t);post(root,'safe-card',{},'```cardlink\nurl: https://example.com/\ntitle: Safe\nimage: javascript:alert(1)\nfavicon: data:image/svg+xml,bad\n```');const item=loadContent(root,path.join(root,'missing.json')).posts[0];assert.doesNotMatch(item.html,/javascript:|data:image/);assert.equal(item.thumbnail,'');
+ const root=fixture(t);post(root,'safe-card',{},'```cardlink\nurl: https://example.com/\ntitle: Safe\nimage: javascript:alert(1)\nfavicon: data:image/svg+xml,bad\n```');const item=loadContent(root).posts[0];assert.doesNotMatch(item.html,/javascript:|data:image/);assert.equal(item.thumbnail,'');
 });
 
 
 test('selected Mermaid thumbnail keeps the same diagram for home and maps its generated PNG to OG',t=>{
  const root=fixture(t);post(root,'og-diagram',{thumbnail:'[[#^selected]]'},'```mermaid\ngraph TD; A-->B;\n```\n\n```mermaid\ngraph TD; C-->D;\n```\n^selected');
- const first=loadContent(root,path.join(root,'missing.json'),{},{}).posts[0],{key}=require('../lib/card-images');assert.match(first.thumbnailDiagram,/C-->D/);
- const mapped=loadContent(root,path.join(root,'missing.json'),{},{[key(first)]:'/images/cards/diagram.png'}).posts[0];assert.equal(mapped.ogImage,'/images/cards/diagram.png');assert.equal(mapped.thumbnailDiagram,first.thumbnailDiagram);assert.equal(mapped.thumbnail,'');
+ const first=loadContent(root,{},{}).posts[0],{key}=require('../lib/card-images');assert.match(first.thumbnailDiagram,/C-->D/);
+ const mapped=loadContent(root,{},{[key(first)]:'/images/cards/diagram.png'}).posts[0];assert.equal(mapped.ogImage,'/images/cards/diagram.png');assert.equal(mapped.thumbnailDiagram,first.thumbnailDiagram);assert.equal(mapped.thumbnail,'');
 });
 
 test('publication and comment catalog use paths and explicit draft flag without kind',t=>{
@@ -330,4 +330,10 @@ test('publish requires a boolean true and never falls back to obsolete draft',t=
  const root=fixture(t),file=post(root,'one');let raw=fs.readFileSync(file,'utf8');
  fs.writeFileSync(file,raw.replace('publish: true','draft: false'));assert.equal(loadContent(root).posts.length,0);
  for(const value of ['"true"','"false"','null','1']){fs.writeFileSync(file,raw.replace('publish: true','publish: '+value));assert.throws(()=>loadContent(root),/publish must be a boolean/);}
+});
+
+test('legacy visual metadata supplies emoji assets and aliases, never authored tags or cover',t=>{
+ const root=fixture(t);post(root,'one',{tags:['my-tag'],icon:'⭐'});fs.mkdirSync(path.join(root,'_assets/_meta'),{recursive:true});fs.mkdirSync(path.join(root,'_assets/_icons'),{recursive:true});fs.writeFileSync(path.join(root,'_assets/_icons/star.webp'),'star');
+ fs.writeFileSync(path.join(root,'_assets/_meta/visuals.json'),JSON.stringify({emojis:{'⭐':'_icons/star.webp'},pages:{'/one':{pageId:'abcdefab-cdef-abcd-efab-cdefabcdefab',source:'https://old.example/one',icon:'X',cover:'bad.png',properties:[{text:'Test'},{text:'Old tag'}],sourceTags:['my-tag']}}}));
+ const p=loadContent(root).posts[0];assert.deepEqual(p.tags,['my-tag']);assert.equal(p.icon,'⭐');assert.equal(p.cover,'');assert.equal(p.iconImage,'/assets/_assets/_icons/star.webp');assert.ok(p.aliases.includes('abcdefabcdefabcdefabcdefabcdefab'));assert.ok(p.aliases.includes('https://old.example/one'));
 });
