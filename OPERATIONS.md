@@ -595,3 +595,6 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 
 
 2026-10-16 사용자 정정 기준: 캡션 가운데 정렬·뒤 일반 본문 간격20px·미디어 아래4px. 웹 CSS와 Obsidian snippet·안내·TODO를 일치시켰다. 소스21b596a·콘텐츠3ad0b6b·TODO2a91af1을 게시했고 Actions38830433524(1분41초) 성공·배포 선언1dd0bb7의 정적 rollout을 완료했다. 미리보기와 운영 Twelve Factor2에서 center/20px/4px를 측정했으며 Obsidian에서 center·margin4px 0 20px 적용을 확인했다. Git 패널 변경0개이며 CSS 변경 부분만 확인하고 전체 회귀·미리보기 전체 재빌드는 반복하지 않았다.
+
+
+2026-10-16 캡션을 왼쪽 정렬로 변경했다. 본문 간격20px·미디어 간격4px는 유지한다. 웹·Obsidian snippet·안내·TODO를 일치시키고 소스6f074bb·콘텐츠7982e2e·TODO9ada161을 게시했다. Actions38831238865(1분26초) 성공·배포 선언58447ec의 정적 rollout과 운영 Twelve Factor2의 left/20px를 확인했다. Obsidian에서 left·margin4px 0 20px, Git 패널 변경0개를 확인했다. 정렬 변경만 확인했으며 전체 회귀나 미리보기 전체 재빌드는 반복하지 않았다.
