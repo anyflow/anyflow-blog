@@ -301,7 +301,7 @@ HTML em/strong과 Markdown 강조·인라인 코드가 섞인102개 후보 문�
 
 실제 Obsidian 읽기 보기에서 Concurrency/Codebase/Build release run의 굵게+기울임, 별표 문자 미노출, stdout의 HTML strong+code 표시를 확인하고 기존 보기로 복귀했다. 콘텐츠5aa8705 commit/push, 미리보기396글·868참조 자산·미해결0, [Actions38825542967](https://github.com/anyflow/anyflow-blog/actions/runs/38825542967) 성공·배포 선언e66a8d8의 정적 rollout과 운영 Twelve Factor2의 강조/인라인 코드를 확인했다. 작성 vault는 clean이며 댓글 API/배포 도구 이미지는 유지했다. 다른 기능의 전수 회귀·시각 검증은 반복하지 않았다.
 
-멀티미디어 캡션은 제안 단계다. 이미지/Mermaid/영상/오디오/외부 임베드 뒤의 명시적 [!caption] callout만 캡션으로 연결하고 일반 문단 추측은 하지 않는 안을 제시했다. 스타일은13px·italic·테마 회색·미디어 아래4px·후속 본문과12px, Obsidian은 CSS snippet으로 같은 표시를 제공하는 안이다. 기존 캡션은 저장된 원본 정보로만 전환한다. 캡션 문법·스타일·기존 내용은 아직 변경하지 않았다.
+멀티미디어 캡션은 명시적 [!caption] callout을 사용한다. 바로 앞 이미지·Mermaid·영상·오디오·PDF·임베드·북마크에 소속되며 앞에 멀티미디어가 없으면 오류 없이 독립 캡션으로 표시한다. 일반 문단 추정은 하지 않는다. 웹·Obsidian에서13px·italic·테마 회색·미디어 아래4px·후속 본문과12px를 적용한다. 기존 캡션은 저장된 원본 정보로 확인해 전환한다.
 
 
 ## 2026-10-16 외부 commit 후 Obsidian Git 패널 갱신

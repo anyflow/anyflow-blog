@@ -5,7 +5,7 @@ function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'anyflow-blo
 function post(root,name,overrides={},body='## Introduction\n\nText.'){const dir=path.join(root,name);fs.mkdirSync(dir,{recursive:true});const values={title:name,permalink:'/'+name,created:'2025-01-01',category:'test',kind:'post',draft:false,...overrides};const file=path.join(dir,name+'.md');fs.writeFileSync(file,'---\n'+Object.entries(values).map(([k,v])=>k+': '+JSON.stringify(v)).join('\n')+'\n---\n\n'+body);return file;}
 test('only published notes and referenced assets, correct legacy paths and dates',t=>{
  const root=fixture(t);
- const source=post(root,'first',{},'## Introduction\n\n![Photo](obsolete folder/image(1).png)\n\nPhoto\n\n[Other](../other/other.md)\n\n[other](../other/other.md)\n\n## Introduction\n\n```html\n<img src="do-not-touch.png">\n```\n\n```mermaid\ngraph TD; A-->B;\n```\n\n> 💡 Callout text.');
+ const source=post(root,'first',{},'## Introduction\n\n![Photo](obsolete folder/image(1).png)\n\n> [!caption]\n> Photo\n\n[Other](../other/other.md)\n\n[other](../other/other.md)\n\n## Introduction\n\n```html\n<img src="do-not-touch.png">\n```\n\n```mermaid\ngraph TD; A-->B;\n```\n\n> 💡 Callout text.');
  fs.writeFileSync(path.join(path.dirname(source),'image(1).png'),'image');
  fs.writeFileSync(path.join(path.dirname(source),'unused.png'),'unused');
  post(root,'other',{created:'2026-01-01'});
@@ -127,14 +127,14 @@ test('cover crop top-aligns home and centers posts, ignoring old coordinates',t=
 });
 
 test('native Obsidian callouts preserve nested quotes, folding, figures and math',t=>{
- const root=fixture(t),file=post(root,'native',{},'> [!notion]\n>\n> **Title**\n>\n> Body.\n>\n> > Nested quotation.\n\n> [!info] Custom title\n> More information.\n\n> [!warning]- Collapsed\n> Hidden details.\n\n![First paragraph. Second paragraph.|528](<image one.png>)\n\nFirst paragraph.\n\nSecond paragraph.\n\nAfter caption.\n\n$$\n\\frac{a}{b}=c\n$$\n\nInline $x^2$.\n\n^equation\n\n[Jump](#^equation)\n\n![[native/image one.png|240]]');
+ const root=fixture(t),file=post(root,'native',{},'> [!notion]\n>\n> **Title**\n>\n> Body.\n>\n> > Nested quotation.\n\n> [!info] Custom title\n> More information.\n\n> [!warning]- Collapsed\n> Hidden details.\n\n![First paragraph. Second paragraph.|528](<image one.png>)\n\n> [!caption]\n> First paragraph.\n>\n> Second paragraph.\n\nAfter caption.\n\n$$\n\\frac{a}{b}=c\n$$\n\nInline $x^2$.\n\n^equation\n\n[Jump](#^equation)\n\n![[native/image one.png|240]]');
  fs.writeFileSync(path.join(path.dirname(file),'image one.png'),'image');
  const result=loadContent(root,path.join(root,'no.json')),html=result.posts[0].html;
  assert.match(html,/<blockquote class="callout">[\s\S]*<strong>Title<\/strong>[\s\S]*<blockquote>[\s\S]*Nested quotation/);
  assert.match(html,/<div class="callout-title">Custom title<\/div>/);
  assert.match(html,/<details class="callout" data-callout="warning">/);
  assert.doesNotMatch(html,/\[!|\^\w+<\/p>/);
- assert.match(html,/<figure style="width:528px;max-width:100%">[\s\S]*<figcaption>[\s\S]*<p class="caption">First paragraph\.<\/p>[\s\S]*Second paragraph\.<\/p><\/figcaption><\/figure>\s*<p>After caption/);
+ assert.match(html,/<figure style="width:528px;max-width:100%">[\s\S]*<figcaption class="caption">[\s\S]*<p>First paragraph\.<\/p>[\s\S]*Second paragraph\.<\/p>\s*<\/figcaption><\/figure>\s*<p>After caption/);
  assert.match(html,/class="katex-display"/);
  assert.match(html,/id="equation"/);assert.match(html,/href="#equation"/);
  assert.equal(result.unresolved.length,0);
@@ -158,12 +158,12 @@ test('malformed export syntax and frontmatter are rejected, literal examples are
 });
 
 test('Obsidian columns retain ratios, captions and nested content',t=>{
- const root=fixture(t),file=post(root,'columns',{},'> [!columns]\n>\n> > [!column|0.25]\n> >\n> > ![First](a.png) ^photo\n> >\n> > First\n>\n> > [!column|0.25]\n> >\n> > ## Middle\n> >\n> > Middle text.\n>\n> > [!column|0.5]\n> >\n> > > A quote.');
+ const root=fixture(t),file=post(root,'columns',{},'> [!columns]\n>\n> > [!column|0.25]\n> >\n> > ![First](a.png) ^photo\n> >\n> > > [!caption]\n> > > First\n>\n> > [!column|0.25]\n> >\n> > ## Middle\n> >\n> > Middle text.\n>\n> > [!column|0.5]\n> >\n> > > A quote.');
  fs.writeFileSync(path.join(path.dirname(file),'a.png'),'image');
  const result=loadContent(root,path.join(root,'none')),html=result.posts[0].html;
  assert.equal((html.match(/class="notion-columns"/g)||[]).length,1);
  assert.deepEqual([...html.matchAll(/class="notion-column" style="--column-ratio:([^"]+)"/g)].map(m=>Number(m[1])),[.25,.25,.5]);
- assert.match(html,/<figcaption>[\s\S]*First/);assert.match(html,/<h2 id="middle">Middle/);assert.match(html,/<blockquote>[\s\S]*A quote/);
+ assert.match(html,/<figcaption class="caption">[\s\S]*First/);assert.match(html,/<h2 id="middle">Middle/);assert.match(html,/<blockquote>[\s\S]*A quote/);
  assert.match(html,/id="photo"/);assert.doesNotMatch(html,/\^photo/);
  assert.doesNotMatch(html,/\[!column|callout-icon/);
  post(root,'columns',{},'> [!column|bad]\n> Text.');assert.throws(()=>loadContent(root,path.join(root,'none')),/Invalid column ratio/);

@@ -121,7 +121,13 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .code-language { position:absolute; right:12px; bottom:6px; font-size:12px; color:var(--muted)}
 .post-body img { max-width:100%; height:auto; display:block; margin:auto; border-radius:1px}
 .post-body p:has(>img) { margin:16px 0 4px; padding:0}
-.post-body .caption { font-size:14px; color:var(--muted); margin:4px 0 16px; padding:2px}
+.post-body .caption { font-size:13px; font-style:italic; color:var(--muted); line-height:1.5; margin:4px 0 12px; padding:0 2px }
+.post-body .caption > p { font-size:inherit; line-height:inherit; margin:0; padding:0 }
+.post-body .caption > p + p { margin-top:8px }
+.post-body figure:has(>figcaption) { margin-bottom:12px }
+.post-body figure > .caption { margin-bottom:0 }
+.post-body :is(figure:has(>figcaption),.caption) + p { padding-top:0 }
+.post-body figure > :has(+figcaption) { margin-bottom:0; padding-bottom:0 }
 .post-body blockquote,.post-body aside { margin:8px 0; padding:16px; background:var(--soft); border-radius:3px}
 .post-body blockquote { border-left:3px solid var(--text); background:none; padding:4px 14px}
 .post-body table { display:block; max-width:100%; overflow:auto; border-collapse:collapse; margin:12px 0}
@@ -242,10 +248,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 
 /* Native Obsidian figures, nested callouts and equations. */
 .post-body figure { margin:16px auto; padding:0; max-width:100% }
-.post-body figure img { width:100%; margin:0 auto }
-.post-body figcaption { font-size:14px; color:var(--muted); padding:4px 2px 0 }
-.post-body figcaption .caption { margin:0; padding:0; line-height:1.5 }
-.post-body figcaption .caption + .caption { margin-top:1em }
+.post-body figure > img { width:100%; margin:0 auto }
 .post-body .callout-content > * + * { margin-top:12px }
 .post-body .callout-content > blockquote { padding:4px 14px }
 .post-body .callout-title { font-weight:600; margin-bottom:8px }
@@ -261,8 +264,6 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-body .notion-columns { display:flex; gap:46px; align-items:flex-start; padding:12px 0 }
 .post-body .notion-column { flex:var(--column-ratio,1) 1 0; min-width:0 }
 .post-body .notion-column > figure { margin:4px auto }
-.post-body .notion-column figcaption { padding:6px 0 6px 2px }
-.post-body .notion-column figcaption .caption { line-height:1.4 }
 .post-body .notion-column > :first-child { margin-top:4px }
 .post-body .notion-column > :last-child:not(figure) { margin-bottom:0 }
 @media(max-width:600px) {
