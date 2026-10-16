@@ -59,3 +59,10 @@ test('writer rollback restores the matching plugin and managed paths without los
  const writes=require('../lib/path-migration').writerRollback(root,{files:{},rollback:{repositories:{blog:{sha}}}});
  const app=JSON.parse(writes.find(w=>w.file==='.obsidian/app.json').value);assert.equal(app.readableLineLength,false);assert.ok(!Object.hasOwn(app,'attachmentFolderPath'));assert.equal(writes.find(w=>w.file.endsWith('main.js')).value.toString(),'old main.js');
 });
+
+test('inline code and JSON media remain opaque during file relocation',t=>{
+ const root=fixture(t);fs.mkdirSync(path.join(root,'cat/post'),{recursive:true});fs.mkdirSync(path.join(root,'_assets/visuals'),{recursive:true});fs.writeFileSync(path.join(root,'_assets/visuals/manifest.json'),'{}');
+ const raw='---\ntitle: Post\npermalink: /cat/post\nkind: post\ndraft: false\n---\n\n`<img src="a.png"> ![[a.png]]`\n';fs.writeFileSync(path.join(root,'cat/post/post.md'),raw);fs.writeFileSync(path.join(root,'cat/post/a.png'),'image');const json='{"file":"cat/post/post.md","old-id":"unchanged"}';fs.writeFileSync(path.join(root,'cat/post/input.json'),json);
+ cp.execFileSync('git',['init','-q',root]);cp.execFileSync('git',['-C',root,'add','.']);const plan=makePlan(root);applyContent(root,plan);
+ assert.ok(fs.readFileSync(path.join(root,'cat/post.md'),'utf8').includes('`<img src="a.png"> ![[a.png]]`'));assert.equal(fs.readFileSync(path.join(root,'_assets/cat/post/input.json'),'utf8'),json);
+});
