@@ -589,3 +589,6 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 원본 캡션 metadata와 현재 미디어를 대조해103글286캡션을 전환했다. 이미지223개와 이전 변환에서 빠졌던 bookmark42·video2·code19개의 캡션을 보존/복원했다. code19개 중 Mermaid5개는 그림과 연결하고 일반 코드14개는 독립 캡션이다. 원본 이미지가 Mermaid로 바뀐 글도 현재 캡션 내용과 인접 그림을 대조했다. 별도 자전거 초안1개의 기존 캡션도 전환했으며 draft:true를 유지했다. 전체104문서287캡션이다. 변경 문서의 본문·목록 구조·코드/Mermaid 원문 보존 대조와 관련5개 테스트를 통과했다. 안내·템플릿·CONTENT_CONTRACT와 개인 TODO를 갱신했다. 새 영구 변환기나 의존성을 추가하지 않았다.
 
 소스e3c1770·콘텐츠ec1b769·개인 TODO66c4aff를 게시했다. [Actions38828348844](https://github.com/anyflow/anyflow-blog/actions/runs/38828348844)가1분14초에 성공했고 배포 선언92d29a3의 정적 rollout을 완료했다. 미리보기396글·868참조 자산·미해결0, 공개 캡션272개 연결/일반 코드14개 독립 표시를 확인했다. 운영 AI 플랫폼의 Mermaid 캡션3개·13px/italic, 폴스타4 영상 캡션과 Karma Police 북마크 캡션을 확인했다. 실제 Obsidian 읽기 보기에서 사진·Mermaid의13px/italic·4px 간격과 일반 후속 문단12px를 확인하고 원래 보기로 복귀했다. 작성 vault Git clean·Source Control 변경0개를 확인했다. 댓글 API·배포 도구 이미지는 유지했고 전체 기능 회귀·전수 시각 검증은 반복하지 않았다.
+
+
+2026-10-16 캡션 뒤 일반 본문 간격을 웹·Obsidian에서8px로 축소했다. 이미지와 캡션 사이4px는 유지한다. 소스d73e70f·콘텐츠5273418·TODO e3e43bc를 게시했고 Actions38829943671(1분19초) 성공·배포 선언39b114a의 정적 rollout을 완료했다. 미리보기·실제 Obsidian·운영 Twelve Factor2에서 본문8px/미디어4px를 확인했다. Obsidian Git 패널 변경0개이며 CSS 간격 변경만 확인하고 전체 회귀 테스트나 미리보기 전체 재빌드는 하지 않았다.
