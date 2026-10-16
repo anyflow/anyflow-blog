@@ -90,7 +90,8 @@ function pasteCandidate(event,editor,view){
 }
 module.exports=class BlogLinks extends Plugin{
  async onload(){
-  const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.setConfig('attachmentFolderPath','_assets/'+file.path.replace(/\.md$/,''));};
+  const initialAttachments=this.app.vault.config.attachmentFolderPath;this.register(()=>{this.app.vault.config.attachmentFolderPath=initialAttachments;});
+  const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.config.attachmentFolderPath='_assets/'+file.path.replace(/\.md$/,'');};
   this.registerEvent(this.app.workspace.on('file-open',attachments));
   this.registerEvent(this.app.metadataCache.on('changed',attachments));
   attachments(this.app.workspace.getActiveFile());
