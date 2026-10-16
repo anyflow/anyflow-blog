@@ -418,3 +418,5 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 Blog 링크1.2.0은 category 속성 옆 선택 버튼과 분류 선택 명령을 제공한다. 기존 일반 글의 category를 중복 없이 모으며 현재 노트의 값에 체크 표시한다. 선택은 대상 노트의 category만 Obsidian processFrontMatter로 저장하며 여러 탭 전환 시 현재 버튼이 속한 노트를 확인한다. 별도 플러그인·분류 목록 설정을 추가하지 않는다.
 
 발행은 publish의 boolean true만 허용하며 false·속성 없음은 미발행이다. kind·draft는 작성 속성에서 제거했다. blog.md는 홈 /, 나머지 일반 경로는 글이며 _로 시작하는 경로는 게시하지 않는다. 콘텐츠400개에서 발행 상태397개(글396·홈1)와 미발행3개를 보존했다. 작성 안내·템플릿·댓글 가져오기 카탈로그·롤백 도구를 같은 기준으로 맞췄다. 생성 모델의 본문·URL·분류·미디어·홈은 변환 전과 동일하고 첨부872·미해결0이다. 관련 테스트와 미리보기 검증만 수행하며 전체 화면 회귀는 반복하지 않는다. 롤백 도구는 publish를 draft로 반전하고 kind를 복원해 이전 생성기를 지원한다.
+
+운영 반영: 코드a4ced99·콘텐츠20be25de·Actions38978704125(1분8초) 성공·배포 선언90684ee. 정적 이미지 sha256:e6e4950752318823032831c0ad1a08a2dd627c8fb5d205bf6cd84f4b9bd34b46의 rollout 및 웹/API Ready1/1을 확인했다. 운영 catalog397개 ID는 전환 전과 일치하며 홈·대표 글·sitemap200, 미발행 초안404다. 댓글 API·배포 도구 이미지는 유지했다. 관련53개 테스트(기존 묶음52개와 추가 롤백1개), 미리보기396글·872자산·미해결0, Obsidian 분류 메뉴5개·publish checkbox·오류0·로컬 Git clean을 확인했다. 전체 회귀 검증은 반복하지 않았다.
