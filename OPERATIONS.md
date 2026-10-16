@@ -657,3 +657,18 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 소스57af669·콘텐츠f0e9e55를 Actions38924165724로 운영에 게시했다. https://github.com/anyflow/anyflow-blog/actions/runs/38924165724 는1분21초에 성공했다. 배포 선언810cd33의 정적 이미지 sha256:eea14871822bc3b30cc408998f7a49397a951cac3e711b1bded19492f1d5a229 를1분 주기 CronJob이 적용했고 Deployment rollout 성공·새Pod Ready1/1·재시작0을 확인했다.
 
 운영 OpenTelemetry overview의 본문 북마크15개100px·GitHub 미리보기3개57px, OpenAPI endpoint filter의 GitHub 카드57px·링크 멘션10개·이슈2개 Closed 배지와 아이콘 표시를 확인했다. 댓글 API·배포 도구 이미지는 유지했다. 전체 콘텐츠·기능 회귀를 반복하지 않고 변경된 대표 표시만 검사했다. Obsidian 붙여넣기 메뉴·읽기 보기 검증은 직전 로컬 작업에서 완료했다.
+
+
+## 2026-10-17 파일 구조·댓글 post_id 전환 완료
+
+작성 vault와 anyflow/blog를 `<분류>/<slug>.md`, 전용 첨부를 `_assets/<분류>/<slug>/`, 공용 자산을 `_assets/_covers`·`_icons`·`_social`, 메타데이터를 `_assets/_meta`로 전환했다. 글·홈·안내·템플릿400개 MD의 permalink/post_id 속성을 제거했다. 공개396글 URL은 유지하고 댓글 글 ID는 공개 경로, 홈은 /다. 초안1개는 발행하지 않았다. 작성 템플릿·안내·선택기·본문 링크·임베드·아이콘/커버·카탈로그·검색·OG·sitemap을 같은 경로 기준으로 연결했다.
+
+콘텐츠33403bc를 게시했고 작성 환경 설정만 바꾼 후속bc620c9도 push했다. 두 revision 사이 공개 입력 변경은 없고 .obsidian3파일만 다르다. Blog 링크1.1.1은 첨부 위치를 노트별로 메모리에서 설정하며 매 노트 전환 때 app.json을 쓰지 않는다. 실제 Obsidian의 평탄한 파일 열기·읽기 보기·첨부 경로와 오류0을 확인했다. 원격/로컬 Git의 동일 객체를 SHA검증해 Mac Git 객체 읽기 지연을 우회하고 동일 commit을 홈 서버에서 push했다. 별도 콘텐츠 압축 백업은 만들지 않았다.
+
+소스98e0ff7/Actions38964692820(1분35초)로 최초 이미지, 재시도 수신의 원래 comment_id를 유지하는f3d6429/Actions38965394110으로 API 보완 이미지, 기존 공개 첨부 주소872개를 symlink로 유지하는8526cb5/Actions38966028484로 최종 정적 이미지를 게시했다. 운영 정적 sha256:a01f2d5b795af4ce09f66cc2459f0e973da1a36d28e55bb289d50b1b518144d5, API sha256:d71bc79513032503af825cd7883fb0aaeb74cbab68f0aa9798a987a5f52d3fb6의 rollout·Ready1/1을 확인했다. 배포 도구 이미지는 유지했다. 후속 소스는 writer 설정·롤백 도구·문서 변경이다.
+
+댓글 main c1ff03f와 incoming4브랜치, PVC 큐의 글 ID·글 Like 대상·접수/순서 기록을 전환했다. 각 브랜치의 댓글·답글·소유권·시각·Like는 왕복 변환으로 동일함을 확인했다. 운영66글 API를 전환 전 모델과 대조해 공개225·삭제6 레코드와 Like가 일치했고 실패0이다. 승인 대기2건은 비공개로 유지했다. 큐 jobs0·완료 접수4·순서3개를 보존했다. 쓰기 차단 시험은503이며 접수하지 않았다. 명령 기록 기준 KST05:50:45에 API전환을 시작했고06:00:08에 쓰기를 재개했다. 실제 HTTP장애 시작/종료 시각을 별도로 계측한 기록은 아니다.
+
+공개396글의 URL·본문 링크/미디어 참조 순서·코드 내용을 대조했다. 첨부 SHA보존·참조 누락0, 기존/새 webp·SVG·HTML·MP3·PDF URL 모두200을 확인했다. 작은 이미지의 운영SHA도 일치한다. 기존 공개 자산872개는 중복 바이트 없이 새 파일로 연결되며 실제 nginx 컨테이너의 symlink872개를 확인했다. 소스 변경 관련 콘텐츠/홈/OG/sitemap39개·기존 댓글API/Git/큐33개·이관/롤백 도구/붙여넣기/자산 호환 테스트를 통과했다. 전체 화면 회귀·모든 기능 전수 검증은 반복하지 않았다.
+
+롤백은 각 저장소의 path-layout-20261017-before와 댓글 main/incoming의 cutover 태그, 콘텐츠 `_assets/_meta/path-migration.json`, 댓글 `migrations/path-layout-20261017.json`의 양방향 대응표를 사용한다. 최신 댓글·Like와 새 글·미디어를 역변환하는 도구를 시험했고 작성 플러그인·관리 경로 복원도 포함한다. PATH_LAYOUT_ROLLBACK.md와 operations/path-layout-maintenance-job.json을 따른다. 실제 운영 rollback은 실행하지 않았다. 임시 유지보수Job·검증용worktree·큐 원본 비교 사본은 정리했고 실제 PVC·Secret·Git태그는 유지했다. CronJob과 댓글 게시 Actions는 재개했다.
