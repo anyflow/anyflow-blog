@@ -319,4 +319,4 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 소스e3c1770·콘텐츠ec1b769·개인 TODO66c4aff를 게시했다. [Actions38828348844](https://github.com/anyflow/anyflow-blog/actions/runs/38828348844)가1분14초에 성공했고 배포 선언92d29a3의 정적 rollout을 완료했다. 미리보기396글·868참조 자산·미해결0, 공개 캡션272개 연결/일반 코드14개 독립 표시를 확인했다. 운영 AI 플랫폼의 Mermaid 캡션3개·13px/italic, 폴스타4 영상 캡션과 Karma Police 북마크 캡션을 확인했다. 실제 Obsidian 읽기 보기에서 사진·Mermaid의13px/italic·4px 간격과 일반 후속 문단12px를 확인하고 원래 보기로 복귀했다. 작성 vault Git clean·Source Control 변경0개를 확인했다. 댓글 API·배포 도구 이미지는 유지했고 전체 기능 회귀·전수 시각 검증은 반복하지 않았다.
 
 
-2026-10-16 사용자 요청으로 캡션 뒤 일반 본문 간격을12px에서8px로 좁힌다. 미디어와 캡션 사이4px·13px/italic/테마 회색은 유지하며 웹과 Obsidian에 함께 적용한다.
+2026-10-16 사용자가 정정한 기준으로 캡션은 가운데 정렬하고 뒤 일반 본문 간격은20px로 늘린다. 미디어와 캡션 사이4px·13px/italic/테마 회색은 유지하며 웹과 Obsidian에 함께 적용한다.
