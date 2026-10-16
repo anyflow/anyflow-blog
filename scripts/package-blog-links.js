@@ -10,3 +10,5 @@ const base=css.slice(css.indexOf('/* Compact Notion bookmarks'),css.indexOf('@me
 fs.writeFileSync(path.join(root,'styles.css'),base.replaceAll('[data-theme=dark]','.theme-dark')+'\n'+fs.readFileSync(path.join(__dirname,'../src/css/link-previews.css'),'utf8')+'\n.blog-links .bookmark{display:flex;overflow:hidden}.blog-links .bookmark-content{display:flex;flex-direction:column}.blog-links .bookmark-main{display:flex;flex-direction:column}.blog-links .bookmark-media{position:relative;overflow:hidden}.blog-links .bookmark-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0}.blog-links .bookmark{color:var(--text);border-color:var(--faint)}');
 
 fs.copyFileSync(path.join(__dirname,'../integrations/obsidian-card-image/vendor/markdown-it.LICENSE'),path.join(root,'markdown-it.LICENSE'));
+
+fs.appendFileSync(path.join(root,"styles.css"),"\n.blog-category-picker{flex-shrink:0;margin-left:4px;padding:4px;border:0;background:transparent;box-shadow:none}.blog-category-picker svg{width:16px;height:16px}\n");

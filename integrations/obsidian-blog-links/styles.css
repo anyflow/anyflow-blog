@@ -31,3 +31,4 @@
 .blog-links{--text:var(--text-normal);--muted:var(--text-muted);--faint:var(--background-modifier-border);--hover:var(--background-modifier-hover);--bg:var(--background-primary);--link-underline:var(--text-faint)}
 
 .blog-links .bookmark{display:flex;overflow:hidden}.blog-links .bookmark-content{display:flex;flex-direction:column}.blog-links .bookmark-main{display:flex;flex-direction:column}.blog-links .bookmark-media{position:relative;overflow:hidden}.blog-links .bookmark-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0}.blog-links .bookmark{color:var(--text);border-color:var(--faint)}
+.blog-category-picker{flex-shrink:0;margin-left:4px;padding:4px;border:0;background:transparent;box-shadow:none}.blog-category-picker svg{width:16px;height:16px}

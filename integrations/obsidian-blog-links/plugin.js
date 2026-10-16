@@ -1,4 +1,4 @@
-const {Plugin,Menu,Notice,parseYaml,requestUrl}=require('obsidian');
+const {Plugin,Menu,Notice,parseYaml,requestUrl,setIcon}=require('obsidian');
 const bookmark=require('./bookmark');
 const {mention,metadata,webUrl}=require('./link-preview');
 function pasteCandidate(event,editor,view){
@@ -12,6 +12,14 @@ function pasteCandidate(event,editor,view){
 }
 module.exports=class BlogLinks extends Plugin{
  async onload(){
+  this.addCommand({id:'select-category',name:'분류 선택',checkCallback:checking=>{
+   const file=this.app.workspace.getActiveFile();if(!file||file.extension!=='md'||file.path==='blog.md'||file.path.split('/').some(p=>p.startsWith('_')))return false;
+   if(!checking)this.categoryMenu(file,{x:window.innerWidth/2,y:window.innerHeight/3});return true;
+  }});
+  const container=this.app.workspace.containerEl,observer=new MutationObserver(()=>this.mountCategoryButtons());
+  observer.observe(container,{childList:true,subtree:true});
+  this.register(()=>{observer.disconnect();container.querySelectorAll('.blog-category-picker').forEach(el=>el.remove());});
+  this.mountCategoryButtons();
   const initialAttachments=this.app.vault.config.attachmentFolderPath;this.register(()=>{this.app.vault.config.attachmentFolderPath=initialAttachments;});
   const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.config.attachmentFolderPath='_assets/'+file.path.replace(/\.md$/,'');};
   this.registerEvent(this.app.workspace.on('file-open',attachments));
@@ -28,8 +36,7 @@ module.exports=class BlogLinks extends Plugin{
    catch(error){el.setText(source);new Notice(error.message);}
   });
   this.registerMarkdownPostProcessor((el,ctx)=>{
-   const file=this.app.vault.getAbstractFileByPath(ctx.sourcePath),front=file?this.app.metadataCache.getFileCache(file)?.frontmatter||{}:{};
-   const id=front.kind==='root'&&ctx.sourcePath==='blog.md'?'/':'/'+ctx.sourcePath.replace(/\.md$/,'');
+   const id=ctx.sourcePath==='blog.md'?'/':'/'+ctx.sourcePath.replace(/\.md$/,'');
    for(const paragraph of el.querySelectorAll('p')){
     const anchor=paragraph.querySelector(':scope>a');if(!anchor||anchor.title==='mention'||paragraph.children.length!==1||paragraph.textContent.trim()!==anchor.textContent.trim())continue;
     const url=anchor.getAttribute('href'),saved=(this.bookmarks[id]||[]).find(b=>b.url===url);
@@ -47,6 +54,30 @@ module.exports=class BlogLinks extends Plugin{
    const menu=new Menu();for(const [type,label]of [['url','일반 링크'],['mention','링크 멘션'],['preview','작은 미리보기'],['bookmark','북마크 카드']])menu.addItem(item=>item.setTitle(label).onClick(()=>this.choose(type,url,editor,start,end,file)));
    const coords=editor.cm?.coordsAtPos(editor.posToOffset(start));menu.showAtPosition({x:coords?.left||event.clientX||100,y:coords?.bottom||event.clientY||100});
   }));
+ }
+ mountCategoryButtons(){
+  for(const button of this.app.workspace.containerEl.querySelectorAll('.blog-category-picker'))if(button.closest('.metadata-property')?.dataset.propertyKey!=='category')button.remove();
+  for(const row of this.app.workspace.containerEl.querySelectorAll('.metadata-property[data-property-key="category"]')){
+   if(row.querySelector('.blog-category-picker'))continue;
+   const file=this.app.workspace.getLeavesOfType('markdown').find(leaf=>leaf.view.containerEl.contains(row))?.view.file;
+   if(!file||file.path==='blog.md'||file.path.split('/').some(p=>p.startsWith('_')))continue;
+   const button=row.createEl('button',{cls:'clickable-icon blog-category-picker',attr:{type:'button','aria-label':'분류 선택',title:'분류 선택'}});setIcon(button,'chevrons-up-down');
+   button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();const rect=button.getBoundingClientRect();const target=this.app.workspace.getLeavesOfType('markdown').find(leaf=>leaf.view.containerEl.contains(row))?.view.file;if(target&&target.path!=='blog.md'&&!target.path.split('/').some(p=>p.startsWith('_')))this.categoryMenu(target,{x:rect.left,y:rect.bottom});});
+  }
+ }
+ categoryMenu(file,position){
+  const values=new Set();
+  for(const note of this.app.vault.getMarkdownFiles()){
+   if(note.path==='blog.md'||note.path.split('/').some(p=>p.startsWith('_')))continue;
+   const value=this.app.metadataCache.getFileCache(note)?.frontmatter?.category;if(typeof value==='string'&&value.trim())values.add(value.trim());
+  }
+  if(!values.size){new Notice('분류가 지정된 글이 없습니다.');return;}
+  const current=this.app.metadataCache.getFileCache(file)?.frontmatter?.category,menu=new Menu();
+  for(const value of [...values].sort((a,b)=>a.localeCompare(b,'ko')))menu.addItem(item=>item.setTitle(value).setChecked(value===current).onClick(async()=>{
+   try{if(this.app.vault.getAbstractFileByPath(file.path)!==file)throw new Error('글 파일을 찾을 수 없습니다.');await this.app.fileManager.processFrontMatter(file,front=>{front.category=value;});}
+   catch(error){new Notice('분류 저장 실패: '+error.message);}
+  }));
+  menu.showAtPosition(position);
  }
  async choose(type,url,editor,start,end,file){
   if(type==='url')return;

@@ -2,14 +2,14 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {loadContent}=require('../lib/content');
 function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'anyflow-blog-test-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));return root;}
-function post(root,name,overrides={},body='## Introduction\n\nText.'){const dir=root;const values={title:name,permalink:'/'+name,created:'2025-01-01',category:'test',kind:'post',draft:false,...overrides};const file=path.join(dir,overrides.kind==='root'?'blog.md':name+'.md');fs.writeFileSync(file,'---\n'+Object.entries(values).map(([k,v])=>k+': '+JSON.stringify(v)).join('\n')+'\n---\n\n'+body);return file;}
+function post(root,name,overrides={},body='## Introduction\n\nText.'){const dir=root;const values={title:name,permalink:'/'+name,created:'2025-01-01',category:'test',publish:true,...overrides};delete values.kind;const file=path.join(dir,overrides.kind==='root'?'blog.md':name+'.md');fs.writeFileSync(file,'---\n'+Object.entries(values).map(([k,v])=>k+': '+JSON.stringify(v)).join('\n')+'\n---\n\n'+body);return file;}
 test('only published notes and referenced assets, correct legacy paths and dates',t=>{
  const root=fixture(t);
  const source=post(root,'first',{},'## Introduction\n\n![Photo](obsolete folder/image(1).png)\n\n> [!caption]\n> Photo\n\n[Other](../other/other.md)\n\n[other](../other/other.md)\n\n## Introduction\n\n```html\n<img src="do-not-touch.png">\n```\n\n```mermaid\ngraph TD; A-->B;\n```\n\n> 💡 Callout text.');
  fs.writeFileSync(path.join(path.dirname(source),'image(1).png'),'image');
  fs.writeFileSync(path.join(path.dirname(source),'unused.png'),'unused');
  post(root,'other',{created:'2026-01-01'});
- post(root,'draft',{draft:true},'DO_NOT_PUBLISH');
+ post(root,'draft',{publish:false},'DO_NOT_PUBLISH');
  fs.writeFileSync(path.join(root,'unindexed.md'),'PRIVATE_NOTE');
  fs.writeFileSync(path.join(root,'.mcp.json'),'LOCAL_CONFIGURATION');
  const result=loadContent(root,path.join(root,'no-visuals.json'));
@@ -316,4 +316,18 @@ test('selected Mermaid thumbnail keeps the same diagram for home and maps its ge
  const root=fixture(t);post(root,'og-diagram',{thumbnail:'[[#^selected]]'},'```mermaid\ngraph TD; A-->B;\n```\n\n```mermaid\ngraph TD; C-->D;\n```\n^selected');
  const first=loadContent(root,path.join(root,'missing.json'),{},{}).posts[0],{key}=require('../lib/card-images');assert.match(first.thumbnailDiagram,/C-->D/);
  const mapped=loadContent(root,path.join(root,'missing.json'),{},{[key(first)]:'/images/cards/diagram.png'}).posts[0];assert.equal(mapped.ogImage,'/images/cards/diagram.png');assert.equal(mapped.thumbnailDiagram,first.thumbnailDiagram);assert.equal(mapped.thumbnail,'');
+});
+
+test('publication and comment catalog use paths and explicit draft flag without kind',t=>{
+ const root=fixture(t);post(root,'article');post(root,'home',{kind:'root'});post(root,'draft',{publish:false});
+ fs.mkdirSync(path.join(root,'_templates'));fs.writeFileSync(path.join(root,'_templates/private.md'),'---\ntitle: Template\npublish: true\n---\nPrivate');
+ const content=loadContent(root);assert.equal(content.posts.length,1);assert.equal(content.home.id,'/');
+ assert.deepEqual(require('../lib/comments/import').postCatalog(root).posts.map(p=>p.id).sort(),['/','/article']);
+ assert.equal(require('../lib/content-layout').noteUrl('blog.md'),'/');
+});
+
+test('publish requires a boolean true and never falls back to obsolete draft',t=>{
+ const root=fixture(t),file=post(root,'one');let raw=fs.readFileSync(file,'utf8');
+ fs.writeFileSync(file,raw.replace('publish: true','draft: false'));assert.equal(loadContent(root).posts.length,0);
+ for(const value of ['"true"','"false"','null','1']){fs.writeFileSync(file,raw.replace('publish: true','publish: '+value));assert.throws(()=>loadContent(root),/publish must be a boolean/);}
 });

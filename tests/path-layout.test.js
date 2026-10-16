@@ -8,9 +8,9 @@ test('flat notes and per-post media migrate both ways, including later posts and
  cp.execFileSync('git',['init','-q',root]);cp.execFileSync('git',['-C',root,'add','.']);
  const plan=makePlan(root);applyContent(root,plan);
  let content=fs.readFileSync(path.join(root,'cat/slug.md'),'utf8');assert.doesNotMatch(content,/^permalink:/m);assert.match(content,/\.\.\/_assets\/cat\/slug\/a.png/);assert.match(content,/```md\n!\[Example\]\(a.png\)/);assert.equal(fs.readFileSync(path.join(root,'_assets/cat/slug/a.png'),'utf8'),'bytes');
- fs.writeFileSync(path.join(root,'cat/new.md'),'---\ntitle: New\nkind: post\ndraft: false\n---\n\n![Later](../_assets/cat/new/later.png)');fs.mkdirSync(path.join(root,'_assets/cat/new'),{recursive:true});fs.writeFileSync(path.join(root,'_assets/cat/new/later.png'),'later');
+ fs.writeFileSync(path.join(root,'cat/new.md'),'---\ntitle: New\ncategory: Test\ncreated: 2026-01-01\npublish: true\n---\n\n![Later](../_assets/cat/new/later.png)');fs.mkdirSync(path.join(root,'_assets/cat/new'),{recursive:true});fs.writeFileSync(path.join(root,'_assets/cat/new/later.png'),'later');
  applyContent(root,plan,true);content=fs.readFileSync(path.join(root,'cat/slug/slug.md'),'utf8');assert.match(content,/permalink: \/cat\/slug/);assert.equal(fs.readFileSync(path.join(root,'cat/slug/a.png'),'utf8'),'bytes');
- assert.match(fs.readFileSync(path.join(root,'cat/new/new.md'),'utf8'),/^post_id: "[a-f0-9]{32}"$/m);assert.equal(fs.readFileSync(path.join(root,'cat/new/later.png'),'utf8'),'later');
+ assert.match(fs.readFileSync(path.join(root,'cat/new/new.md'),'utf8'),/^post_id: "[a-f0-9]{32}"$/m);assert.equal(fs.readFileSync(path.join(root,'cat/new/later.png'),'utf8'),'later');assert.match(fs.readFileSync(path.join(root,'cat/new/new.md'),'utf8'),/^kind: post$/m);assert.match(fs.readFileSync(path.join(root,'cat/new/new.md'),'utf8'),/^draft: false$/m);
 });
 test('comment identity conversion preserves ownership, relationships, likes and queue replay state',()=>{
  const plan={ids:{old:'/cat/slug'}},state={comments:{c:{id:'c',post_id:'old',parent_id:null,owner_hash:'owner',body:'Body'}},likes:{'post:old':{actor:true},'comment:c':{actor:true}},settings:{legacyLikes:{'post:old':7,'comment:c':3},moderation:true}};
@@ -65,4 +65,11 @@ test('inline code and JSON media remain opaque during file relocation',t=>{
  const raw='---\ntitle: Post\npermalink: /cat/post\nkind: post\ndraft: false\n---\n\n`<img src="a.png"> ![[a.png]]`\n';fs.writeFileSync(path.join(root,'cat/post/post.md'),raw);fs.writeFileSync(path.join(root,'cat/post/a.png'),'image');const json='{"file":"cat/post/post.md","old-id":"unchanged"}';fs.writeFileSync(path.join(root,'cat/post/input.json'),json);
  cp.execFileSync('git',['init','-q',root]);cp.execFileSync('git',['-C',root,'add','.']);const plan=makePlan(root);applyContent(root,plan);
  assert.ok(fs.readFileSync(path.join(root,'cat/post.md'),'utf8').includes('`<img src="a.png"> ![[a.png]]`'));assert.equal(fs.readFileSync(path.join(root,'_assets/cat/post/input.json'),'utf8'),json);
+});
+
+test('rollback restores root kind and draft from publish without changing its body',t=>{
+ const root=fixture(t);fs.mkdirSync(path.join(root,'_assets/visuals'),{recursive:true});fs.writeFileSync(path.join(root,'_assets/visuals/manifest.json'),JSON.stringify({pages:{}}));
+ const file=path.join(root,'blog.md');fs.writeFileSync(file,'---\ntitle: Home\nkind: root\ndraft: false\npermalink: /\n---\n\nHome body.');cp.execFileSync('git',['init','-q',root]);cp.execFileSync('git',['-C',root,'add','.']);
+ const plan=makePlan(root);applyContent(root,plan);fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace('kind: root\ndraft: false','publish: true'));applyContent(root,plan,true);
+ const raw=fs.readFileSync(file,'utf8');assert.match(raw,/^kind: root$/m);assert.match(raw,/^draft: false$/m);assert.doesNotMatch(raw,/^publish:/m);assert.ok(raw.endsWith('Home body.'));
 });

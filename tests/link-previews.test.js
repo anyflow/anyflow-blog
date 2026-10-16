@@ -53,9 +53,20 @@ test('failed metadata refresh retains source information and avoids repeated req
 });
 
 test('per-note attachment folders do not write tracked application settings on every file switch',async()=>{
- const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{}}:n==='./bookmark'?bookmark:links});
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,MutationObserver:class{observe(){} disconnect(){}},require:n=>n==='obsidian'?{Plugin:class{}}:n==='./bookmark'?bookmark:links});
  const p=new module.exports(),events={},config={attachmentFolderPath:'_assets'};let active={extension:'md',path:'cat/one.md'},writes=0;
- p.register=p.registerEvent=p.registerMarkdownCodeBlockProcessor=p.registerMarkdownPostProcessor=()=>{};
- p.app={vault:{config,getAbstractFileByPath:()=>null,setConfig:()=>writes++},workspace:{getActiveFile:()=>active,on:(n,f)=>events[n]=f},metadataCache:{on:(n,f)=>events[n]=f}};
+ p.addCommand=p.register=p.registerEvent=p.registerMarkdownCodeBlockProcessor=p.registerMarkdownPostProcessor=()=>{};
+ p.app={vault:{config,getAbstractFileByPath:()=>null,setConfig:()=>writes++},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>active,on:(n,f)=>events[n]=f},metadataCache:{on:(n,f)=>events[n]=f}};
  await p.onload();assert.equal(config.attachmentFolderPath,'_assets/cat/one');active={extension:'md',path:'cat/two.md'};events['file-open'](active);assert.equal(config.attachmentFolderPath,'_assets/cat/two');assert.equal(writes,0);
+});
+
+test('category selection reads current notes and saves only the chosen note category',async()=>{
+ const options=[],notices=[];class Menu{addItem(fn){const item={setTitle(v){this.title=v;return this;},setChecked(v){this.checked=v;return this;},onClick(fn){this.choose=fn;return this;}};fn(item);options.push(item);}showAtPosition(){}}
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Menu,Notice:class{constructor(s){notices.push(s);}}}:n==='./bookmark'?bookmark:links});
+ const file={path:'cat/one.md'},other={path:'cat/two.md'},template={path:'_templates/template.md'},current={category:'One',title:'Preserve',draft:true},second={category:'Two'};
+ const notes=new Map([[file,current],[other,second],[template,{category:'Private'}]]);let saved;
+ const p=new module.exports();p.app={vault:{getMarkdownFiles:()=>[...notes.keys()],getAbstractFileByPath:()=>file},metadataCache:{getFileCache:f=>({frontmatter:notes.get(f)})},fileManager:{processFrontMatter:async(f,fn)=>{saved=f;fn(notes.get(f));}}};
+ p.categoryMenu(file,{x:0,y:0});assert.deepEqual(options.map(x=>x.title).sort(),['One','Two']);assert.ok(options.find(x=>x.title==='One').checked);
+ await options.find(x=>x.title==='Two').choose();assert.equal(saved,file);assert.deepEqual(current,{category:'Two',title:'Preserve',draft:true});assert.deepEqual(second,{category:'Two'});assert.equal(notices.length,0);
+ options.length=0;second.category='New';p.categoryMenu(file,{x:0,y:0});assert.ok(options.some(x=>x.title==='New'));
 });

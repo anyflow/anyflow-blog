@@ -1,9 +1,9 @@
 {
   "id": "blog-links",
   "name": "Blog 링크",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "minAppVersion": "1.6.0",
-  "description": "URL 붙여넣기 형식 선택과 블로그 북마크·GitHub 미리보기·링크 멘션",
+  "description": "블로그 분류 선택·URL 붙여넣기 형식 선택·북마크와 링크 멘션",
   "author": "anyflow",
   "isDesktopOnly": false
 }

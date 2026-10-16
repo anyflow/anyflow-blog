@@ -4,7 +4,7 @@ const nunjucks=require('nunjucks'),site=require('../src/_data/site.json');
 test('Open Graph renders escaped article metadata, absolute URLs and image fallbacks',t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'blog-metadata-')),previous=process.env.BLOG_CONTENT_DIR;
  t.after(()=>{if(previous===undefined)delete process.env.BLOG_CONTENT_DIR;else process.env.BLOG_CONTENT_DIR=previous;fs.rmSync(root,{recursive:true,force:true});});
- fs.writeFileSync(path.join(root,'test.md'),'---\ntitle: Test\npermalink: /test\ncreated: 2025-01-01\ncategory: test\nkind: post\ndraft: false\n---\n\nBody.');process.env.BLOG_CONTENT_DIR=root;
+ fs.writeFileSync(path.join(root,'test.md'),'---\ntitle: Test\npermalink: /test\ncreated: 2025-01-01\ncategory: test\npublish: true\n---\n\nBody.');process.env.BLOG_CONTENT_DIR=root;
  const env=new nunjucks.Environment(new nunjucks.FileSystemLoader(path.join(__dirname,'../src/_includes'))),data={};
  require('../.eleventy.js')({addFilter:(name,fn)=>env.addFilter(name,fn),addGlobalData:(name,value)=>data[name]=value,addPassthroughCopy:()=>{}});
  assert.equal(data.posts[0].url,'/test');

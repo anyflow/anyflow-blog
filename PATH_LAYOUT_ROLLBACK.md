@@ -29,7 +29,7 @@ node scripts/migrate-path-layout.js comments COMMENTS_CHECKOUT PLAN.json
 node scripts/migrate-path-layout.js queue /data/queue/queue.json PLAN.json
 ```
 
-역변환은 동일 명령의 마지막에 `--reverse`를 붙인다. 큐는 API와 worker를 정지한 뒤 변환한다. 미처리 jobs가 남으면 변환 도구가 실패한다. 수신을 중지하고 QueueStore로 남은 작업을 Git에 반영한 후 다시 확인한다. 완료된 접수 기록·재시도 식별·Like 순서 기록은 유지하며 글 ID만 전환한다.
+역변환은 동일 명령의 마지막에 `--reverse`를 붙인다. 현재의 `publish`는 이전 생성기에 맞게 `draft`로 반전하고 파일 역할에 맞는 `kind`를 복원한다. 큐는 API와 worker를 정지한 뒤 변환한다. 미처리 jobs가 남으면 변환 도구가 실패한다. 수신을 중지하고 QueueStore로 남은 작업을 Git에 반영한 후 다시 확인한다. 완료된 접수 기록·재시도 식별·Like 순서 기록은 유지하며 글 ID만 전환한다.
 
 ## 쓰기 재개 전 롤백
 

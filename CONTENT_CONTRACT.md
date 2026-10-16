@@ -4,7 +4,7 @@
 
 콘텐츠 원본은 독립 Obsidian blog vault와 비공개 `anyflow/blog` 저장소다. `make sync`는 저장소 루트를 `.cache/blog/`로 동기화한다. 카테고리와 글·첨부는 vault 루트 아래에 위치한다.
 
-- 글은 `kind: post`·`draft: false`, 홈은 `blog.md`의 `kind: root`·`draft: false`인 문서를 게시한다.
+- `_`로 시작하지 않는 경로의 `publish: true` 문서를 게시한다. `blog.md`는 홈 `/`, 나머지는 글이다. `kind`·`draft` 속성은 사용하지 않는다. `category`는 Obsidian 속성 옆 선택 버튼이나 Blog 링크의 분류 선택 명령으로 기존 글의 분류 목록에서 선택한다.
 - frontmatter가 없는 문서와 초안은 생성 대상에서 제외한다.
 - 글은 `<분류>/<slug>.md`, 전용 첨부는 `_assets/<분류>/<slug>/`에 둔다. `_`로 시작하는 경로의 Markdown은 게시하지 않는다.
 - 공개 URL과 댓글 `post_id`는 vault 기준 MD 경로에서 `.md`를 제거하고 `/`를 붙여 생성한다. `blog.md`는 `/`다. MD에는 `permalink`·`post_id` 속성을 저장하지 않는다.
@@ -18,7 +18,7 @@
 | 속성 | 의미 |
 | --- | --- |
 | `title`, `created`, `category` | 게시에 필요한 제목·날짜·분류 |
-| `kind`, `draft` | 공개 대상 선별 |
+| `publish` | boolean true만 발행. false 또는 속성 없음은 미발행 |
 | `summary`, `updated`, `tags` | 요약·수정일·태그 |
 | `noindex` | 선택한 외부 검색엔진 제외 요청. boolean `true`이면 robots noindex 메타를 출력하며 공개 여부·사이트 내부 검색과 구분 |
 | `icon` | 이모지 문자 또는 이미지 상대경로. 빈 문자열은 아이콘 제거 |
@@ -99,7 +99,7 @@ Notion 이관은 완료했다. 향후 작성 원본은 blog vault의 Markdown이
 
 ## 작성 템플릿과 추가 콘텐츠
 
-blog vault의 `_templates/블로그 글.md`를 Obsidian 기본 Templates에 연결했다. 제목은 YAML block scalar로 보관해 따옴표가 있는 노트 이름도 처리하고 작성일은 `{{date:YYYY-MM-DD}}`로 넣는다. 새 글은 `draft: true`이며 `category`와 안전한 파일 경로를 정한 뒤 발행 상태로 전환한다. 안내는 vault의 `작성 안내.md`에 둔다. 템플릿과 안내는 공개 대상에서 제외한다.
+blog vault의 `_templates/블로그 글.md`를 Obsidian 기본 Templates에 연결했다. 제목은 YAML block scalar로 보관해 따옴표가 있는 노트 이름도 처리하고 작성일은 `{{date:YYYY-MM-DD}}`로 넣는다. 새 글은 `publish: false`이며 `category`와 안전한 파일 경로를 정한 뒤 발행 상태로 전환한다. 안내는 vault의 `작성 안내.md`에 둔다. 템플릿과 안내는 공개 대상에서 제외한다.
 
 2026-10-13에 원본의 날짜·분류·태그·주소·커버·아이콘을 대조해 누락 3편을 연결했다. 공개 글은 397개·참조 첨부 1,144개다. 원본의 분류별 글 수 13·139·73·74·98개와 일치한다. 새 이미지 6개를 파일 해시·실제 디코딩으로 검증했다. 원본에서 숨긴 빈 값·따옴표 cleanUrl의 YAML 설정과 robots noindex head 주입 코드는 본문 코드로 표시하지 않는다.
 
@@ -112,7 +112,7 @@ Notion 블록 대조 범위는 변환 글 396개이며 원문 Markdown을 보존
 
 ## OG 메타데이터
 
-공통 템플릿에서 글의 제목·summary·공개 주소를 `og:title`·`og:description`·`og:url`로 제공한다. 주소는 `src/_data/site.json`의 `url`을 기준으로 절대 URL을 사용하며 현재는 `https://www.anyflow.net`이다. `og:image`는 카드 사진·YouTube·X 이미지, 글 커버, 홈 커버 순으로 선택한다. 홈 카드에 선택된 Mermaid·SVG·ICO·AVIF는 빌드에서1200×630 PNG로 생성하여 OG에 사용한다. 홈·본문의 Mermaid SVG와 테마 전환은 유지한다. 생성 이미지는 내용과 렌더러 기준으로 캐시하며 이미지 내용이 바뀌면 새 URL을 사용한다. YouTube·X 이미지는 서비스의 공개 이미지 URL을 사용한다. X는 첨부 사진·동영상 포스터를 사용하고 조회 결과를 빌드 캐시에 보관한다. 이미지가 없거나 조회에 실패하면 다음 그림을 사용한다. 텍스트 X 게시물의 별도 이미지 생성은 하지 않는다. RSS는 추가하지 않는다. sitemap.xml은 매 빌드에서 홈과 공개 글의 현재 URL로 생성하며 draft·noindex 글은 제외한다. 글 삭제·발행 취소·주소 변경도 같은 배포에서 반영한다. robots.txt는 www 사이트맵을 안내한다.
+공통 템플릿에서 글의 제목·summary·공개 주소를 `og:title`·`og:description`·`og:url`로 제공한다. 주소는 `src/_data/site.json`의 `url`을 기준으로 절대 URL을 사용하며 현재는 `https://www.anyflow.net`이다. `og:image`는 카드 사진·YouTube·X 이미지, 글 커버, 홈 커버 순으로 선택한다. 홈 카드에 선택된 Mermaid·SVG·ICO·AVIF는 빌드에서1200×630 PNG로 생성하여 OG에 사용한다. 홈·본문의 Mermaid SVG와 테마 전환은 유지한다. 생성 이미지는 내용과 렌더러 기준으로 캐시하며 이미지 내용이 바뀌면 새 URL을 사용한다. YouTube·X 이미지는 서비스의 공개 이미지 URL을 사용한다. X는 첨부 사진·동영상 포스터를 사용하고 조회 결과를 빌드 캐시에 보관한다. 이미지가 없거나 조회에 실패하면 다음 그림을 사용한다. 텍스트 X 게시물의 별도 이미지 생성은 하지 않는다. RSS는 추가하지 않는다. sitemap.xml은 매 빌드에서 홈과 공개 글의 현재 URL로 생성하며 미발행·noindex 글은 제외한다. 글 삭제·발행 취소·주소 변경도 같은 배포에서 반영한다. robots.txt는 www 사이트맵을 안내한다.
 
 ## 댓글·Like와 공개 경계
 
