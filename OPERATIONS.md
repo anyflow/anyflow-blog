@@ -581,3 +581,11 @@ HTML em/strong과 Markdown 강조·인라인 코드가 섞인102개 후보 문�
 Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주기적 polling이 아닌 vault 파일 변경 후 debounce다. 외부 터미널 commit/push의 .git 변경만으로 기존 Source Control 목록이 갱신되지 않을 수 있다. 강조 정리 후 실제 Git은 clean이고 로컬/GitHub HEAD가5aa8705로 같았지만 패널에는 이전80개 목록이 남았다. 패널 Refresh로 변경0개·staged0개를 확인했다. 이번 건은 Git index 상태 캐시 문제나 push 누락이 아니며 파일/설정을 변경하지 않았다.
 
 작성 vault를 외부 Git 명령으로 commit/push한 작업의 완료 기준에 Obsidian Git Refresh와 실제 변경 수 확인을 포함한다. 기존 사용자 미커밋 변경은 남기고 정확한 상태를 보고한다. stale Working Tree diff 탭과 실제 Git 변경 목록을 구분한다. 새 watcher나 polling 설정·서비스는 추가하지 않는다.
+
+## 2026-10-16 명시적 멀티미디어 캡션
+
+캡션은 `> [!caption]` callout으로 작성한다. 바로 앞 이미지·Mermaid·영상·오디오·PDF·외부 임베드·북마크와 figure/figcaption으로 연결하고, 앞에 멀티미디어가 없으면 오류 없이 독립 캡션으로 표시한다. alt와 다음 문단 일치에 의한 추정을 제거했다. 웹과 blog vault의 notion-import snippet에서13px·italic·테마 회색·미디어 아래4px·일반 후속 본문과12px를 적용한다. 제목의 별도 여백은 유지한다.
+
+원본 캡션 metadata와 현재 미디어를 대조해103글286캡션을 전환했다. 이미지223개와 이전 변환에서 빠졌던 bookmark42·video2·code19개의 캡션을 보존/복원했다. code19개 중 Mermaid5개는 그림과 연결하고 일반 코드14개는 독립 캡션이다. 원본 이미지가 Mermaid로 바뀐 글도 현재 캡션 내용과 인접 그림을 대조했다. 별도 자전거 초안1개의 기존 캡션도 전환했으며 draft:true를 유지했다. 전체104문서287캡션이다. 변경 문서의 본문·목록 구조·코드/Mermaid 원문 보존 대조와 관련5개 테스트를 통과했다. 안내·템플릿·CONTENT_CONTRACT와 개인 TODO를 갱신했다. 새 영구 변환기나 의존성을 추가하지 않았다.
+
+소스e3c1770·콘텐츠ec1b769·개인 TODO66c4aff를 게시했다. [Actions38828348844](https://github.com/anyflow/anyflow-blog/actions/runs/38828348844)가1분14초에 성공했고 배포 선언92d29a3의 정적 rollout을 완료했다. 미리보기396글·868참조 자산·미해결0, 공개 캡션272개 연결/일반 코드14개 독립 표시를 확인했다. 운영 AI 플랫폼의 Mermaid 캡션3개·13px/italic, 폴스타4 영상 캡션과 Karma Police 북마크 캡션을 확인했다. 실제 Obsidian 읽기 보기에서 사진·Mermaid의13px/italic·4px 간격과 일반 후속 문단12px를 확인하고 원래 보기로 복귀했다. 작성 vault Git clean·Source Control 변경0개를 확인했다. 댓글 API·배포 도구 이미지는 유지했고 전체 기능 회귀·전수 시각 검증은 반복하지 않았다.
