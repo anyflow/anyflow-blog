@@ -354,3 +354,13 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 관련7개 테스트로 provider/playlist 구분·전체 URL escaping·위험 protocol·원본 metadata·cardlink/local asset·대표 이미지 추출·캡션 연결을 확인했다. 미리보기 일반 이미지 카드156px, 무이미지/설명 유무 카드129.296875/121/108.296875px, YouTube108px가 원본 측정값과 일치한다. 다크 설명#f0efed·URL#ada9a3·테두리#383836, 모바일108px/14px제목/16px아이콘/이미지숨김, 홈97px, 캡션4px를 확인했다. 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
 
 소스c6dea4f·21f3069·TODO295fadd를 게시했다. Actions38899977133(1분23초) 성공·배포 선언b387e0a의 정적 rollout 후 운영 OpenTelemetry·k8s2·Blade Runner·홈에서 위 제목/좌측이미지/자연높이/전체URL/홈높이를 확인했다. 운영 다크 설명·URL·테두리도 확인하고 라이트로 복귀했다. 콘텐츠 저장소·댓글 API·배포 도구 이미지는 변경하지 않았다. 미리보기는 필요한 Eleventy 렌더와 검색 색인만 갱신했으며 전체 미디어 재생성은 하지 않았다.
+
+## 2026-10-16 홈·일반 글 공통 Notion 스타일 정렬
+
+카드에 한정하지 않고 홈·k8s workload·OpenTelemetry·에세이·여행 글의 원본 비교에서 확인한 공통 차이를 src/css/style.css에서 수정했다. 라이트 본문#2c2c2b·보조색#7d7a75·테두리#e6e5e3, 데스크톱 제목 위 여백9px/수직 padding0, 커버30vh/최대280px를 사용한다. 원본 Notion과 여행 글 제목의 top308px/높이96px가 일치한다. 모바일 제목 크기와 위 여백은 기존 반응형 설정을 유지한다.
+
+표14px/20px·셀7px9px·헤더500, 본문 소제목 위 여백30/26/22px·아래6px, 인용문 text inset과 코드36px22px/모서리10px를 맞췄다. 코드 배경은 원본 rgba(66,35,3,.03), 다크 rgba(252,252,252,.03)이며 기존 highlight.js에 Notion 구문 강조 팔레트를 적용하고 YAML key는 light#07a/dark#66a2cc다. 원본 Prism과 highlight.js의 토큰 분류 차이는 남으며 엔진/의존성을 교체하지 않았다.
+
+접기는 배경 없는 삼각 화살표 행으로 바꾸고 native details의 초기 상태·키보드 동작을 유지한다. 콜아웃은 모서리10px·padding12px·light#f9f8f7/dark#202020다. 홈 Recent 카드 제목15px·By Category 제목14px로 조정했다. 기존 문단16px 간격, 캡션13px italic/왼쪽/뒤20px, 사진 열 비율, 링크 카드, 댓글 UI·검색 동작은 유지한다.
+
+관련 렌더 테스트2개 통과, Eleventy 미리보기 갱신과 홈97px 소개 카드/목록 글자 크기·여행 글 제목/캡션·k8s 표·OpenTelemetry 접기/코드/콜아웃의 표시를 확인했다. 다크 팔레트와 YAML key,390px viewport의 가로 넘침 없음과 표14px/폭342px,1000px 세로 viewport의 커버280px 제한을 확인하고 라이트/기본 viewport로 복귀했다. 실제 모바일 기기와 전체 콘텐츠·기능 전수 검증은 반복하지 않았다. 콘텐츠 저장소는 변경하지 않았으며 이번 범위는 commit·push·미리보기까지다. 운영 배포는 실행하지 않는다.
