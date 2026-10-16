@@ -10,7 +10,7 @@ test('flat notes and per-post media migrate both ways, including later posts and
  let content=fs.readFileSync(path.join(root,'cat/slug.md'),'utf8');assert.doesNotMatch(content,/^permalink:/m);assert.match(content,/\.\.\/_assets\/cat\/slug\/a.png/);assert.match(content,/```md\n!\[Example\]\(a.png\)/);assert.equal(fs.readFileSync(path.join(root,'_assets/cat/slug/a.png'),'utf8'),'bytes');
  fs.writeFileSync(path.join(root,'cat/new.md'),'---\ntitle: New\nkind: post\ndraft: false\n---\n\n![Later](../_assets/cat/new/later.png)');fs.mkdirSync(path.join(root,'_assets/cat/new'),{recursive:true});fs.writeFileSync(path.join(root,'_assets/cat/new/later.png'),'later');
  applyContent(root,plan,true);content=fs.readFileSync(path.join(root,'cat/slug/slug.md'),'utf8');assert.match(content,/permalink: \/cat\/slug/);assert.equal(fs.readFileSync(path.join(root,'cat/slug/a.png'),'utf8'),'bytes');
- assert.match(fs.readFileSync(path.join(root,'cat/new/new.md'),'utf8'),/^post_id: [a-f0-9]{32}$/m);assert.equal(fs.readFileSync(path.join(root,'cat/new/later.png'),'utf8'),'later');
+ assert.match(fs.readFileSync(path.join(root,'cat/new/new.md'),'utf8'),/^post_id: "[a-f0-9]{32}"$/m);assert.equal(fs.readFileSync(path.join(root,'cat/new/later.png'),'utf8'),'later');
 });
 test('comment identity conversion preserves ownership, relationships, likes and queue replay state',()=>{
  const plan={ids:{old:'/cat/slug'}},state={comments:{c:{id:'c',post_id:'old',parent_id:null,owner_hash:'owner',body:'Body'}},likes:{'post:old':{actor:true},'comment:c':{actor:true}},settings:{legacyLikes:{'post:old':7,'comment:c':3},moderation:true}};

@@ -5,7 +5,7 @@ metadata:
   namespace: service
 spec:
   schedule: "* * * * *"
-  suspend: true
+  suspend: false
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 60
   successfulJobsHistoryLimit: 1

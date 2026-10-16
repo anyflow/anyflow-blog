@@ -1,0 +1,123 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "Job",
+  "metadata": {
+    "name": "anyflow-blog-path-migration",
+    "namespace": "service"
+  },
+  "spec": {
+    "backoffLimit": 0,
+    "activeDeadlineSeconds": 1800,
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "anyflow-blog-path-migration"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "COMMENTS_PREVIEW",
+                "value": "false"
+              },
+              {
+                "name": "COMMENTS_DATA_DIR",
+                "value": "/data/repository"
+              },
+              {
+                "name": "COMMENTS_QUEUE_DIR",
+                "value": "/data/queue"
+              },
+              {
+                "name": "COMMENTS_GIT_REMOTE",
+                "value": "git@github.com:anyflow/blog-comments.git"
+              },
+              {
+                "name": "COMMENTS_CONFIG",
+                "value": "/etc/comments/config.json"
+              },
+              {
+                "name": "COMMENTS_CATALOG_URL",
+                "value": "http://anyflow-blog/comments/catalog.json"
+              },
+              {
+                "name": "GIT_SSH_COMMAND",
+                "value": "ssh -i /etc/comments/github-comment-deploy -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/comments/known_hosts -o HostName=github.com -o HostKeyAlias=github.com -p22 -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
+              }
+            ],
+            "image": "ghcr.io/anyflow/anyflow-blog-comments@sha256:d71bc79513032503af825cd7883fb0aaeb74cbab68f0aa9798a987a5f52d3fb6",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "migration",
+            "resources": {
+              "limits": {
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "64Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/data",
+                "name": "data"
+              },
+              {
+                "mountPath": "/etc/comments",
+                "name": "credentials",
+                "readOnly": true
+              }
+            ],
+            "command": [
+              "node",
+              "-e",
+              "setInterval(()=>{},60000)"
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "imagePullSecrets": [
+          {
+            "name": "anyflow-blog-registry"
+          }
+        ],
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 1000,
+          "runAsGroup": 1000,
+          "runAsNonRoot": true,
+          "runAsUser": 1000
+        },
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "name": "data",
+            "persistentVolumeClaim": {
+              "claimName": "anyflow-blog-comments-state"
+            }
+          },
+          {
+            "name": "credentials",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "anyflow-blog-comments"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
