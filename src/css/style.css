@@ -96,12 +96,8 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .category-section>h2 { margin-top:40px; margin-bottom:16px}
 .category-group { margin-bottom:22px}
 .category-group summary { font-size:14px; line-height:28px; cursor:pointer; user-select:none; list-style:none; display:flex; gap:8px; align-items:center}
-.category-label { padding:0 6px; border-radius:3px; line-height:1.2; background:var(--category-bg); color:var(--category-text)}
-.category-group[data-category="as 음악인"] { --category-bg:rgb(227,242,251); --category-text:rgb(24,51,71)}
-.category-group[data-category="as S/W 엔지니어"] { --category-bg:rgb(231,243,230); --category-text:rgb(28,56,41)}
-.category-group[data-category="예술/인문 소감"] { --category-bg:rgb(255,232,231); --category-text:rgb(93,23,21)}
-.category-group[data-category="自省(Introspection) / 세상살이"] { --category-bg:rgb(246,237,251); --category-text:rgb(65,36,84)}
-.category-group[data-category="프로젝트s"] { --category-bg:rgb(241,240,239); --category-text:rgb(50,48,44)}
+.category-label { padding:0 6px; border-radius:3px; line-height:1.2; background:var(--tag-bg); color:var(--tag-fg)}
+[data-theme=dark] .category-label { background:var(--tag-dark-bg); color:var(--tag-dark-fg)}
 .category-count { font-size:12px; color:var(--muted)}
 .category-row { display:flex; gap:8px; align-items:center; min-height:30px; padding:3px 4px; border-radius:3px; font-size:14px; line-height:1.5}
 .row-title { font-weight:500; min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}

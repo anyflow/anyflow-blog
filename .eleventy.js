@@ -7,11 +7,11 @@ module.exports = function(config) {
   const content=loadContent();
   config.addGlobalData("posts",content.posts);
   config.addGlobalData("home",{id:"home",...site,coverPosition:"50% 50%",...content.home});
-  const names=site.categories.map(c=>c.name);
+  const names=[...new Set(content.posts.map(post=>post.category))].sort((a,b)=>a.localeCompare(b,"ko"));
   config.addGlobalData("categories",names.map(name=>({name,posts:content.posts.filter(p=>p.category===name)})));
-  config.addFilter("tagColor",(name,category=false)=>{const palette=["#f1f0ef","#e7f3e6","#e3f2fb","#ffe8f3","#fef5e6","#f9eee2","#f6edfa","#ffe8e7"];const fixed={"as S/W 엔지니어":"#e7f3e6","프로젝트s":"#ebebec","as 음악인":"#f1f0ef","예술/인문 소감":"#fef5e6","自省(Introspection) / 세상살이":"#e3f2fb"};return (category&&Object.hasOwn(fixed,name)?fixed[name]:null)||palette[Array.from(String(name)).reduce((n,c)=>n+c.codePointAt(0),0)%palette.length];});
+  config.addFilter("tagColor",name=>{const palette=["#f1f0ef","#e7f3e6","#e3f2fb","#ffe8f3","#fef5e6","#f9eee2","#f6edfa","#ffe8e7"];return palette[Array.from(String(name)).reduce((n,c)=>n+c.codePointAt(0),0)%palette.length];});
   config.addFilter("tagStyle",bg=>{
-    const themes={"#f1f0ef":["#32302c","rgba(71,76,80,.7)","rgba(255,255,255,.88)"],"#ebebec":["#32302c","#3e4245","#eaebeb"],"#e7f3e6":["#1c3829","#344f40","#b5d2ac"],"#e3f2fb":["#183347","#2b4d67","#a3cbea"],"#ffe8f3":["#4c2337","#633856","#f8aacb"],"#fef5e6":["#402c1b","#66543b","#fad5a1"],"#f9eee2":["#442a1e","#5b4739","#f0c295"],"#ffe8e7":["#5d1715","#69363f","#feaca5"],"#f6edfa":["#412454","#574263","#dbb5ef"]};
+    const themes={"#f1f0ef":["#32302c","rgba(71,76,80,.7)","rgba(255,255,255,.88)"],"#e7f3e6":["#1c3829","#344f40","#b5d2ac"],"#e3f2fb":["#183347","#2b4d67","#a3cbea"],"#ffe8f3":["#4c2337","#633856","#f8aacb"],"#fef5e6":["#402c1b","#66543b","#fad5a1"],"#f9eee2":["#442a1e","#5b4739","#f0c295"],"#ffe8e7":["#5d1715","#69363f","#feaca5"],"#f6edfa":["#412454","#574263","#dbb5ef"]};
     const [fg,darkBg,darkFg]=themes[bg]||themes["#f1f0ef"];
     return `--tag-bg:${bg};--tag-fg:${fg};--tag-dark-bg:${darkBg};--tag-dark-fg:${darkFg}`;
   });
