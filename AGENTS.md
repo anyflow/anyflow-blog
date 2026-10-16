@@ -371,3 +371,14 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 사용자 운영 배포 요청으로 소스98a9088·콘텐츠e2abd77을 게시 Actions38902745201로 배포했다. https://github.com/anyflow/anyflow-blog/actions/runs/38902745201 은1분15초에 성공했고 배포 선언1eca8ae의 정적 이미지 sha256:ecc05abe5e647e30dc4dfcb7fbe5cb349dc6403c7c33da5d7d219d7731e26de0 을1분 주기 Kubernetes 배포 작업이 적용했다. Deployment rollout 성공과 신규 Pod Ready1/1·재시작0을 확인했다.
 
 운영 www.anyflow.net 홈의 본문rgb(44,44,43)·Recent15px·By Category14px·제목top308px, OpenTelemetry의 투명 접기/펼침·콜아웃#f9f8f7/10px·코드36px22px/YAML key#07a, k8s1의 표14px/20px·제목top308px를 브라우저에서 확인했다. 댓글 API·배포 도구 이미지는 교체하지 않았다. 관련 대표 표시만 확인했고 콘텐츠·기능 전수 검증은 반복하지 않았다.
+
+
+## 2026-10-16 Notion 블로그 원본 삭제 전 검증·복원 완료
+
+사용자의 원본 삭제 전 요청으로 현재 Notion 블로그 루트와 하위 Blog DB를 하위 페이지·모든 콘텐츠·댓글 포함 HTML로 내보내어 검증했다. 원본 ZIP449361197bytes/1044entries/CRC오류0, 공개396글·초안1·홈1 전부 대응, HTML첨부3 별도, MP3/PPTX/PDF/HEIC10개 원본 SHA일치, vault raster1098/SVG6 오류0을 확인했다. 운영 정적1788파일 SHA·이미지874·내부참조14939건, 댓글233건/답글119관계/과거198ID/원본이미지50개와 운영66대상 GET 일치를 확인했다. 이는 사용자 명시 요청의 삭제 전 데이터 전수검증이며 기능별 반복 회귀검사를 추가하지 않는다.
+
+네 글의 누락 참고 링크5개와 AI engineering의 미닫힘 강조1개를 복원해 콘텐츠f63e152로 commit·push했다. 링크는 Istio issues51434/17118, VictoriaMetrics issue4038, semantic-release와 opentelemetry-operator 저장소의 정확한 원본 주소다. 미리보기와 운영 변경5글 HTTP200·링크5/5·강조1/1을 확인했다. 게시 Actions38918027975 첫 실행의 한글 폰트61.2MB 다운로드가 지연되어 취소하고 같은 작업을 새GitHub runner에서 재시도했다. 두 번째 실행1분16초 성공·선언55e0728·정적 sha256:0a671ef351a1c12159b8cab385122b48c01263769662af6a8885459de31b704c rollout과 신규 PodReady1/1·재시작0을 확인했다. 댓글 API·배포 도구 이미지는 유지했다.
+
+최종 게시본의 비설정 추적1525파일 중 변경5개만 다르고 나머지1520개가 전수검사 기준과 동일하다. Mac /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/Notion 삭제 전 검증/에 상세 보고서·원본ZIP·게시본archive·댓글전체Gitbundle을 보관한다. 서버의 영속 백업은 /home/anyflow/backups/anyflow-blog/notion-20261016/이다. 원본ZIP·댓글bundle과 게시본blog-content-published-f63e152.tar.gz의 양쪽 SHA일치를 확인했으며 게시본SHA는 a5f55a9d3b691a139953eb365c3651a587bbc4549c34d68fa1dceec153d17131 이다.
+
+판정: 검증한 Notion 블로그 루트와 하위 Blog DB는 독립 백업을 유지하며 삭제해도 데이터 보존에 문제가 없는 수준이다. Notion 실제 삭제, 다른 개인 페이지와 계정 전체 삭제, 버전이력·권한 복제, 실제 Notion재가져오기 복구시험은 수행하지 않았다. 최초 전수검증 후에는 복원 범위만 재검사했다.
