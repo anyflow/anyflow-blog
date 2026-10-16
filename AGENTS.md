@@ -382,3 +382,10 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 최종 게시본의 비설정 추적1525파일 중 변경5개만 다르고 나머지1520개가 전수검사 기준과 동일하다. Mac /Users/anyflow/Documents/Codex/2026-10-12/any/outputs/Notion 삭제 전 검증/에 상세 보고서·원본ZIP·게시본archive·댓글전체Gitbundle을 보관한다. 서버의 영속 백업은 /home/anyflow/backups/anyflow-blog/notion-20261016/이다. 원본ZIP·댓글bundle과 게시본blog-content-published-f63e152.tar.gz의 양쪽 SHA일치를 확인했으며 게시본SHA는 a5f55a9d3b691a139953eb365c3651a587bbc4549c34d68fa1dceec153d17131 이다.
 
 판정: 검증한 Notion 블로그 루트와 하위 Blog DB는 독립 백업을 유지하며 삭제해도 데이터 보존에 문제가 없는 수준이다. Notion 실제 삭제, 다른 개인 페이지와 계정 전체 삭제, 버전이력·권한 복제, 실제 Notion재가져오기 복구시험은 수행하지 않았다. 최초 전수검증 후에는 복원 범위만 재검사했다.
+
+
+## 2026-10-17 링크 표현·본문 카드 운영 반영
+
+소스57af669·콘텐츠f0e9e55를 Actions38924165724로 운영에 게시했다. https://github.com/anyflow/anyflow-blog/actions/runs/38924165724 는1분21초에 성공했다. 배포 선언810cd33의 정적 이미지 sha256:eea14871822bc3b30cc408998f7a49397a951cac3e711b1bded19492f1d5a229 를1분 주기 CronJob이 적용했고 Deployment rollout 성공·새Pod Ready1/1·재시작0을 확인했다.
+
+운영 OpenTelemetry overview의 본문 북마크15개100px·GitHub 미리보기3개57px, OpenAPI endpoint filter의 GitHub 카드57px·링크 멘션10개·이슈2개 Closed 배지와 아이콘 표시를 확인했다. 댓글 API·배포 도구 이미지는 유지했다. 전체 콘텐츠·기능 회귀를 반복하지 않고 변경된 대표 표시만 검사했다. Obsidian 붙여넣기 메뉴·읽기 보기 검증은 직전 로컬 작업에서 완료했다.
