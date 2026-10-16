@@ -27,7 +27,7 @@
   if(!query&&tag===null){status.textContent="검색어를 입력하세요.";return;}
   status.textContent="검색 중…";list.setAttribute("aria-busy","true");
   try {
-   const pagefind=await engine(),found=await pagefind.search(query||null,{filters:tag===null?{}:{tag}});
+   const pagefind=await engine(),found=await pagefind.search(query||null,{filters:tag===null?{}:{tag:tag.toLowerCase()}});
    if(version!==request||!dialog.open)return;
    const label=query?'“'+query+'” 검색 결과':"검색 결과";
    results=found.results;status.textContent=results.length?label+" "+results.length+"개":label+"가 없습니다.";
