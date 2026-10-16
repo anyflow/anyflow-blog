@@ -1,8 +1,9 @@
 * { box-sizing:border-box}
 html { scroll-behavior:smooth; scroll-padding-top:100px}
 body { margin:0; background:var(--bg); color:var(--text); font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol"; font-size:16px; line-height:1.5}
- :root { --bg:#fff; --text:rgb(55,53,47); --muted:rgb(120,119,116); --faint:rgba(55,53,47,.09); --soft:#f7f6f3; --hover:rgba(55,53,47,.06); --padding:96px; --link:#4A6F8F; --link-hover:#355A78}
-[data-theme=dark] { color-scheme:dark; --bg:#191919; --text:#f0efed; --muted:#ada9a3; --faint:#383836; --soft:#202020; --hover:rgba(255,255,255,.055); --popup:#252525; --card:rgba(255,255,255,.055); --link:#8FB3D0; --link-hover:#B2CCE0; }
+/* Notion links use 70% opacity; underline alpha includes that opacity. */
+ :root { --bg:#fff; --text:rgb(55,53,47); --muted:rgb(120,119,116); --faint:rgba(55,53,47,.09); --soft:#f7f6f3; --hover:rgba(55,53,47,.06); --padding:96px; --link:rgba(44,44,43,.7); --link-hover:var(--link); --link-underline:rgba(55,53,47,.28)}
+[data-theme=dark] { color-scheme:dark; --bg:#191919; --text:#f0efed; --muted:#ada9a3; --faint:#383836; --soft:#202020; --hover:rgba(255,255,255,.055); --popup:#252525; --card:rgba(255,255,255,.055); --link:rgba(240,239,237,.7); --link-hover:var(--link); --link-underline:rgba(255,255,255,.1974); }
 a { color:inherit; text-decoration:none}
 button { font:inherit; color:inherit; cursor:pointer}
 button:focus-visible,a:focus-visible,summary:focus-visible,.post-body [role=button]:focus-visible { outline:2px solid #2eaadc; outline-offset:3px}
@@ -61,7 +62,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .profile-links { width:37.5%; flex-shrink:0; margin:0; padding:0 0 0 28px}
 .profile-links li { padding:4px 0; line-height:24px}
 .profile-links a,.post-body a { border-bottom:1px solid rgba(55,53,47,.2)}
-.profile-links a { color:var(--muted)}
+.profile-links a { color:var(--link); border-bottom-color:var(--link-underline)}
 .profile-links img { display:inline-block; width:16px; height:16px; vertical-align:-2px; object-fit:contain }
 .profile-links code { font-size:14px; white-space:nowrap; color:#eb5757; background:var(--soft); padding:2px 5px; border-radius:3px}
 .bookmark { display:flex; flex:1; border:1px solid var(--faint); height:auto; min-width:0; align-self:stretch; border-radius:3px; overflow:hidden}
@@ -310,7 +311,8 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 [data-theme=dark] .code-block pre { background:rgba(252,252,252,.03) }
 [data-theme=dark] .profile-links code,[data-theme=dark] .post-body :not(pre)>code { background:rgba(255,255,255,.055) }
 [data-theme=dark] .search-dialog { background:var(--popup) }
-[data-theme=dark] .profile-links a,[data-theme=dark] .post-body a { border-bottom-color:var(--faint) }
+[data-theme=dark] .profile-links a { border-bottom-color:var(--link-underline) }
+[data-theme=dark] .post-body a { border-bottom-color:var(--faint) }
 [data-theme=dark] .crumb-divider { color:var(--muted) }
 
 .post-body img[role=button],.post-body .mermaid[role=button] { cursor:zoom-in }
@@ -338,7 +340,7 @@ html:has(.image-viewer[open]) { overflow:hidden }
 .post-body .bookmark-card .bookmark-description { font-size:12px; line-height:16px; max-height:32px; margin-top:4px; color:var(--muted); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical }
 .post-body .bookmark-card .bookmark-icon { display:inline-block; width:14px; height:14px; margin:0 6px 0 0; vertical-align:middle; object-fit:contain; border-radius:0 }
 
-.post-body a:not(.bookmark):not(.tag) { color:var(--link); border-bottom-color:currentColor }
+.post-body a:not(.bookmark):not(.tag) { color:var(--link); border-bottom-color:var(--link-underline) }
 .post-body a:not(.bookmark):not(.tag):hover { color:var(--link-hover) }
 .post-body details.callout>summary { list-style:none }
 .post-body details.callout>summary::-webkit-details-marker { display:none }
