@@ -334,3 +334,12 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 작성 vault의 태그는 유지하고 웹 버튼·접근성 이름·선택 필터에서 하이픈을 공백으로 표시한다. 색상 계산·내부 data-search-tag에는 원본 값을 유지한다. Pagefind 색인과 검색 요청은 하이픈·연속 공백을 한 칸 공백으로 바꾸고 양끝 공백 제거·소문자로 통일한다. 카테고리 표시는 유지한다. base.njk/tags.njk/search.js의 공통 경로를 수정하고 관련 검색2개 시험을 통과했다. 미리보기에서 service-mesh12글과 Service Mesh1글이 모두13개로 검색되고 표시에서 하이픈이 제거되는 것을 확인했다. 기존 Istio26개도 유지한다.
 
 소스b181590·TODOa231063을 게시했다. Actions38841278585(1분11초) 성공·배포 선언1f210f0의 정적 rollout 후 운영 ICA 글의 service mesh와 Istio 설치 글의 Service Mesh가 각각13개를 반환하고 필터에도 공백으로 표시되는 것을 확인했다. 미리보기 검색 색인은396글이며 콘텐츠 저장소·댓글 API·배포 도구 이미지는 변경하지 않았다. 검색·표시 관련 검증만 수행하고 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
+
+
+## 2026-10-16 홈 연락처 아이콘·원본 링크 회색
+
+작성 원본 blog.md의 Linkedin/Github/Youtube/Strava 앞에 로컬 SVG를 추가하고 이메일 코드 앞에 봉투를 추가했다. Font Awesome Free6.7.2(CC BY4.0)의 원본 attribution comment와 _assets/social/NOTICE.txt를 보관하고16x16·색상 변경을 표시했다. LinkedIn #0a66c2, YouTube #ff0000, Strava #fc4c02, GitHub #787774, 이메일 #eb5757을 사용한다. 링크·표시 문구·이메일 난독화는 유지하고 .profile-links img의 인라인 배치만 추가했다. 실제 Obsidian 읽기 보기의5개 이미지 로드/16x16과 Git 패널 변경0개를 확인하고 원래 문서·보기로 복귀했다.
+
+사용자 원본 https://anyflower.notion.site/k8s-workload-1-2-2cae57e23bcd80d6b445d6f3d70f1d03 의 실제 Notion 링크 span은 color:inherit·opacity:0.7이다. 실제 라이트 DOM foreground#2c2c2b, 원본 CSS .notion-dark-theme의 --c-texPri=#f0efed를 확인했다. 웹 본문·프로필 링크를 각각 rgba(44,44,43,.7)/rgba(240,239,237,.7)로 맞추고 hover의 푸른색을 제거했다. 밑줄 원본 --ca-opaLinDecCol의 light rgba(55,53,47,.4)/dark rgba(255,255,255,.282)에 opacity.7을 합성해 .28/.1974를 적용한다. 본문 기본 글자색·아이콘 색상·태그·카드 색상은 유지한다.
+
+콘텐츠9ec902c·e2abd77, 아이콘 CSS9aaaaf7과 링크 CSS931e961을 게시했다. 최종 Actions38895019405(1분23초) 성공·배포 선언a4517d3의 정적 rollout을 완료했다. 미리보기396글·872참조 자산·미해결0, 운영 홈5아이콘16x16/정상 로드와 프로필 링크의 라이트 rgba(44,44,43,.7), 운영 k8s1 글의 light/dark 링크 rgba값을 확인했다. 테마 확인 후 라이트로 복귀했다. 댓글 API·배포 도구 이미지는 변경하지 않았고 해당 표시만 확인하며 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
