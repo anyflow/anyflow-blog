@@ -34,3 +34,12 @@ test('path IDs support actual API create, reply, Like, edit and delete with lega
  const legacy=await request('/api/comments?post=old');assert.equal(legacy.comments[0].post_id,post_id);
  const deleted=await request('/api/comments/'+id,'DELETE',{post_id,request_id:randomUUID()});assert.equal(deleted.comments.find(c=>c.id===id).status,'deleted');
 });
+
+test('a queued creation replay returns its original comment ID across post ID migration',async t=>{
+ const existing={id:'original-comment',post_id:'/cat/slug',parent_id:null,author:{name:'Writer',link:'',is_admin:false},body:'Saved',status:'published',created_at:'2026-01-01T00:00:00Z'};
+ const store={preview:true,read:async()=>({comments:{[existing.id]:existing},likes:{},settings:{legacyLikes:{}}}),enqueue:async()=>({task_id:'old-task',comment_id:existing.id})};
+ const handler=require('../lib/comments/api').createCommentsHandler({store,catalog:[{id:'/cat/slug',aliases:['old']}],secret:'s'.repeat(32),adminToken:'test-admin-key',origins:['http://localhost']});
+ const server=http.createServer(handler);await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+ const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/comments',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({post_id:'old',request_id:randomUUID(),name:'Writer',body:'Saved'})});
+ const data=await response.json();assert.equal(data.comment_id,existing.id);assert.equal(data.pending,false);assert.equal(data.comments.length,1);
+});
