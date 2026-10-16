@@ -171,4 +171,4 @@ URL 하나를 붙여넣으면 Blog 링크 플러그인이 일반 링크·링크 
 - 본문 북마크는 100px·우측 썸네일·제목 한 줄·설명 최대 두 줄·주소 한 줄이다. 600px 이하에서는 썸네일을 숨긴다. 작은 GitHub 미리보기는 57px다. 홈 포스트 카드와 소개 카드는 이 규칙의 대상이 아니다.
 - 웹과 Obsidian 플러그인은 `lib/bookmark.js`·`lib/link-preview.js`를 공유한다. 읽기 보기와 Live Preview의 렌더 구역에 적용하며 원본 편집 모드는 Markdown을 표시한다. Blog 링크가 `cardlink`를 처리하므로 Auto Card Link Enhanced는 비활성화한다.
 - 원본에 저장된 작은 미리보기 16개와 링크 멘션을 명시적 Markdown 표현으로 보존한다. 일반 Markdown 링크를 URL 종류만으로 일괄 변환하지 않는다. 과거 북마크 catalog의 글별 독립 링크는 웹·Obsidian 모두 카드로 표시한다.
-- 배포·원본 삭제는 별도 작업이다. 이번 변경은 commit·push·미리보기까지 적용하며 `[skip ci]`로 자동 운영 배포를 실행하지 않는다.
+- 배포·원본 삭제는 별도 작업이다. 2026-10-17 사용자 요청으로 소스57af669·콘텐츠f0e9e55의 운영 배포를 완료했다. 배포·확인 기록은 OPERATIONS.md에 보관한다.
