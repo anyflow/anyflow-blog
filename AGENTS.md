@@ -364,3 +364,10 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 접기는 배경 없는 삼각 화살표 행으로 바꾸고 native details의 초기 상태·키보드 동작을 유지한다. 콜아웃은 모서리10px·padding12px·light#f9f8f7/dark#202020다. 홈 Recent 카드 제목15px·By Category 제목14px로 조정했다. 기존 문단16px 간격, 캡션13px italic/왼쪽/뒤20px, 사진 열 비율, 링크 카드, 댓글 UI·검색 동작은 유지한다.
 
 관련 렌더 테스트2개 통과, Eleventy 미리보기 갱신과 홈97px 소개 카드/목록 글자 크기·여행 글 제목/캡션·k8s 표·OpenTelemetry 접기/코드/콜아웃의 표시를 확인했다. 다크 팔레트와 YAML key,390px viewport의 가로 넘침 없음과 표14px/폭342px,1000px 세로 viewport의 커버280px 제한을 확인하고 라이트/기본 viewport로 복귀했다. 실제 모바일 기기와 전체 콘텐츠·기능 전수 검증은 반복하지 않았다. 콘텐츠 저장소는 변경하지 않았으며 이번 범위는 commit·push·미리보기까지다. 운영 배포는 실행하지 않는다.
+
+
+## 2026-10-16 공통 Notion 스타일 운영 반영 완료
+
+사용자 운영 배포 요청으로 소스98a9088·콘텐츠e2abd77을 게시 Actions38902745201로 배포했다. https://github.com/anyflow/anyflow-blog/actions/runs/38902745201 은1분15초에 성공했고 배포 선언1eca8ae의 정적 이미지 sha256:ecc05abe5e647e30dc4dfcb7fbe5cb349dc6403c7c33da5d7d219d7731e26de0 을1분 주기 Kubernetes 배포 작업이 적용했다. Deployment rollout 성공과 신규 Pod Ready1/1·재시작0을 확인했다.
+
+운영 www.anyflow.net 홈의 본문rgb(44,44,43)·Recent15px·By Category14px·제목top308px, OpenTelemetry의 투명 접기/펼침·콜아웃#f9f8f7/10px·코드36px22px/YAML key#07a, k8s1의 표14px/20px·제목top308px를 브라우저에서 확인했다. 댓글 API·배포 도구 이미지는 교체하지 않았다. 관련 대표 표시만 확인했고 콘텐츠·기능 전수 검증은 반복하지 않았다.

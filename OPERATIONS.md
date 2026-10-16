@@ -632,3 +632,10 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 관련7개 테스트로 provider/playlist 구분·전체 URL escaping·위험 protocol·원본 metadata·cardlink/local asset·대표 이미지 추출·캡션 연결을 확인했다. 미리보기 일반 이미지 카드156px, 무이미지/설명 유무 카드129.296875/121/108.296875px, YouTube108px가 원본 측정값과 일치한다. 다크 설명#f0efed·URL#ada9a3·테두리#383836, 모바일108px/14px제목/16px아이콘/이미지숨김, 홈97px, 캡션4px를 확인했다. 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
 
 소스c6dea4f·21f3069·TODO295fadd를 게시했다. Actions38899977133(1분23초) 성공·배포 선언b387e0a의 정적 rollout 후 운영 OpenTelemetry·k8s2·Blade Runner·홈에서 위 제목/좌측이미지/자연높이/전체URL/홈높이를 확인했다. 운영 다크 설명·URL·테두리도 확인하고 라이트로 복귀했다. 콘텐츠 저장소·댓글 API·배포 도구 이미지는 변경하지 않았다. 미리보기는 필요한 Eleventy 렌더와 검색 색인만 갱신했으며 전체 미디어 재생성은 하지 않았다.
+
+
+## 2026-10-16 공통 Notion 스타일 운영 반영 완료
+
+사용자 운영 배포 요청으로 소스98a9088·콘텐츠e2abd77을 게시 Actions38902745201로 배포했다. https://github.com/anyflow/anyflow-blog/actions/runs/38902745201 은1분15초에 성공했고 배포 선언1eca8ae의 정적 이미지 sha256:ecc05abe5e647e30dc4dfcb7fbe5cb349dc6403c7c33da5d7d219d7731e26de0 을1분 주기 Kubernetes 배포 작업이 적용했다. Deployment rollout 성공과 신규 Pod Ready1/1·재시작0을 확인했다.
+
+운영 www.anyflow.net 홈의 본문rgb(44,44,43)·Recent15px·By Category14px·제목top308px, OpenTelemetry의 투명 접기/펼침·콜아웃#f9f8f7/10px·코드36px22px/YAML key#07a, k8s1의 표14px/20px·제목top308px를 브라우저에서 확인했다. 댓글 API·배포 도구 이미지는 교체하지 않았다. 관련 대표 표시만 확인했고 콘텐츠·기능 전수 검증은 반복하지 않았다.
