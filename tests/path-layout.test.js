@@ -43,3 +43,8 @@ test('a queued creation replay returns its original comment ID across post ID mi
  const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/comments',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({post_id:'old',request_id:randomUUID(),name:'Writer',body:'Saved'})});
  const data=await response.json();assert.equal(data.comment_id,existing.id);assert.equal(data.pending,false);assert.equal(data.comments.length,1);
 });
+
+test('empty and preview stores migrate without a requests directory',async t=>{
+ const root=fixture(t);fs.writeFileSync(path.join(root,'settings.json'),JSON.stringify({moderation:false,legacyLikes:{}}));
+ const result=await require('../lib/comments/path-migration').migrateRepository(root,{ids:{}});assert.equal(result.summary.comments,0);assert.equal(result.summary.posts,0);
+});

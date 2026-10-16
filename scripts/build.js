@@ -22,6 +22,8 @@ const {loadContent}=require("../lib/content");
     const destination=path.join(staging,decodeURIComponent(url));
     fs.mkdirSync(path.dirname(destination),{recursive:true});fs.copyFileSync(source,destination);
   }
+  const aliases=require("../lib/asset-aliases").preserveAssetUrls(process.env.BLOG_CONTENT_DIR||".cache/blog",content,staging);
+  console.log(`Preserved legacy asset URLs: ${aliases}`);
   fs.mkdirSync(path.join(staging,"comments"),{recursive:true});
   fs.writeFileSync(path.join(staging,"comments/catalog.json"),JSON.stringify([...content.posts.map(({id,title,url,aliases})=>({id,title,url,aliases})),{id:content.home?.id||"home",title:content.home?.title||require("../src/_data/site.json").title,url:"/",aliases:content.home?.aliases||["/"]}]));
   await require("../lib/search-index").buildSearchIndex(staging,content.posts);
