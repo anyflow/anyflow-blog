@@ -598,3 +598,10 @@ Obsidian Git의 refreshSourceControl=true·refreshSourceControlTimer=7000은 주
 
 
 2026-10-16 캡션을 왼쪽 정렬로 변경했다. 본문 간격20px·미디어 간격4px는 유지한다. 웹·Obsidian snippet·안내·TODO를 일치시키고 소스6f074bb·콘텐츠7982e2e·TODO9ada161을 게시했다. Actions38831238865(1분26초) 성공·배포 선언58447ec의 정적 rollout과 운영 Twelve Factor2의 left/20px를 확인했다. Obsidian에서 left·margin4px 0 20px, Git 패널 변경0개를 확인했다. 정렬 변경만 확인했으며 전체 회귀나 미리보기 전체 재빌드는 반복하지 않았다.
+
+
+## 2026-10-16 태그 검색 대소문자 통일
+
+화면의 태그·필터 이름과 작성 Markdown은 유지하고 base.njk의 Pagefind tag 값과 search.js의 요청 tag 값만 소문자로 통일한다. 과거 Notion 표시 태그 Istio4개와 istio22개가 같은 검색 결과26개로 연결된다. 검색 관련2개 테스트를 통과했으며 홈 Markdown 전환에 맞게 기존 검색 시험의 home.sections fixture를 갱신했다. 미리보기396글의 검색 색인을 생성하고 두 태그의26개 결과와 표시 이름 보존을 확인했다.
+
+소스85caf49·TODO1716e4f를 게시했다. Actions38840293259(1분37초) 성공·배포 선언893c779의 정적 rollout 후 운영 OpenAPI endpoint filter의 Istio와 Istio resiliency monitoring의 istio가 각각26개를 반환하는 것을 확인했다. 콘텐츠 저장소·댓글 API·배포 도구 이미지는 변경하지 않았다. 검색 관련 검증만 수행했고 전체 콘텐츠·기능 전수 검증은 반복하지 않았다.
