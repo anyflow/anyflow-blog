@@ -2,7 +2,6 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os');
 const {promisify} = require('node:util'), exec = promisify(require('node:child_process').execFile);
-const yaml = require('js-yaml');
 const script = path.resolve(__dirname, '../scripts/poll-deploy.sh');
 function setup(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'poll-deploy-'));
@@ -51,11 +50,11 @@ test('independent executions do not share checkout files',async t=>{
  assert.equal(calls().filter(x=>x==='make-deploy').length,2);
 });
 test('CronJob uses emptyDir with Forbid and only comments keep a PVC',()=>{
- const cron=yaml.load(fs.readFileSync('deployment/cronjob.yaml','utf8'));
- assert.equal(cron.spec.concurrencyPolicy,'Forbid');
- const pod=cron.spec.jobTemplate.spec.template.spec,workspace=pod.volumes.find(v=>v.name==='workspace');
- assert.deepEqual(workspace.emptyDir,{});assert.ok(!pod.volumes.some(v=>v.persistentVolumeClaim));
- assert.ok(pod.containers[0].volumeMounts.some(v=>v.name==='workspace'&&v.mountPath==='/data'));
- const claims=yaml.loadAll(fs.readFileSync('deployment/persistentvolumeclaims.yaml','utf8'));
- assert.deepEqual(claims.map(c=>c.metadata.name),['anyflow-blog-comments-state']);
+ const cron=fs.readFileSync('deployment/cronjob.yaml','utf8');
+ assert.match(cron,/concurrencyPolicy: Forbid/);
+ assert.match(cron,/name: workspace\n\s+emptyDir: \{\}/);
+ assert.match(cron,/name: workspace\n\s+mountPath: \/data/);
+ assert.doesNotMatch(cron,/persistentVolumeClaim|anyflow-blog-deploy-state/);
+ const claims=fs.readFileSync('deployment/persistentvolumeclaims.yaml','utf8');
+ assert.deepEqual([...claims.matchAll(/^  name: (.+)$/gm)].map(m=>m[1]),['anyflow-blog-comments-state']);
 });
