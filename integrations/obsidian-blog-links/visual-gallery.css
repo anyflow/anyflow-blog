@@ -4,3 +4,5 @@
 .pixel-banner .markdown-preview-view,.pixel-banner .markdown-source-view{isolation:isolate}
 
 .metadata-container .metadata-add-button{display:none}
+
+.cm-lang-cardlink .blog-list-card .bookmark{margin-inline:0;width:100%}

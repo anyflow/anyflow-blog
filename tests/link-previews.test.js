@@ -70,3 +70,30 @@ test('category selection reads current notes and saves only the chosen note cate
  await options.find(x=>x.title==='Two').choose();assert.equal(saved,file);assert.deepEqual(current,{category:'Two',title:'Preserve',draft:true});assert.deepEqual(second,{category:'Two'});assert.equal(notices.length,0);
  options.length=0;second.category='New';p.categoryMenu(file,{x:0,y:0});assert.ok(options.some(x=>x.title==='New'));
 });
+
+test('cardlink data removes only its common container indent and preserves nested YAML',()=>{
+ const yaml=require('js-yaml'),module={exports:{}};
+ vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
+ const source='url: "https://github.com/anyflow/my-cluster"\ndescription: |-\n  first\n  second\n',expected=yaml.load(source),normalize=module.exports.cardlinkSource;
+ for(const indent of ['','\t','\t\t','   ']){
+  const indented=source.split('\n').map(line=>line?indent+line:line).join('\n');assert.deepEqual(yaml.load(normalize(indented)),expected);assert.equal(normalize(indented),source);
+ }
+ assert.equal(normalize('\n\turl: https://example.com\n\n'),'\nurl: https://example.com\n\n');assert.equal(normalize(''), '');
+});
+test('Obsidian card processor renders tab-indented list cards without changing their source',async()=>{
+ const notices=[],module={exports:{}};let process;
+ vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,MutationObserver:class{observe(){}disconnect(){}},require:n=>n==='obsidian'?{Plugin:class{},Modal:class{},parseYaml:require('js-yaml').load,Notice:class{constructor(message){notices.push(message);}}}:n==='./bookmark'?bookmark:links});
+ const plugin=new module.exports();plugin.addCommand=plugin.register=plugin.registerEvent=plugin.registerDomEvent=plugin.registerMarkdownPostProcessor=()=>{};plugin.registerMarkdownCodeBlockProcessor=(name,callback)=>{if(name==='cardlink')process=callback;};
+ plugin.app={vault:{config:{},getAbstractFileByPath:()=>null},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>null,on:()=>{}},metadataCache:{on:()=>{}}};await plugin.onload();
+ const el={addClass(name){assert.equal(name,'blog-links');},setText(text){this.innerHTML=text;}},source='\turl: "https://github.com/anyflow/my-cluster"';await process(source,el,{sourcePath:'blog-construction/season4.md'});assert.match(el.innerHTML,/class="bookmark bookmark-card"/);assert.match(el.innerHTML,/href="https:\/\/github.com\/anyflow\/my-cluster"/);assert.equal(source[0],'\t');assert.equal(notices.length,0);
+});
+
+test('Live Preview list cards inherit the actual list text edge and clear indentation outside lists',()=>{
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
+ let target=128,nested=true,marked=false;
+ const text={getBoundingClientRect:()=>({left:target})},line={classList:{contains:cls=>['cm-line','HyperMD-list-line'].includes(cls)},textContent:'List text',querySelector:()=>text};
+ const begin={classList:{contains:()=>nested},previousElementSibling:line},widget={previousElementSibling:begin,getBoundingClientRect:()=>({left:100})};
+ const el={closest:()=>widget,classList:{toggle:(cls,value)=>{assert.equal(cls,'blog-list-card');marked=value;}},style:{}};
+ const plugin=new module.exports();plugin.app={workspace:{containerEl:{querySelectorAll:()=>[el]}}};plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'28px');assert.equal(marked,true);
+ target=156;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'56px');nested=false;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'');assert.equal(marked,false);
+});

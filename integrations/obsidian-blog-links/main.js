@@ -134,6 +134,11 @@ const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment,stri
 const bookmark=bundledRequire('./bookmark');
 const {VisualGallery}=bundledRequire('./visual-gallery');
 const {mention,metadata,webUrl}=bundledRequire('./link-preview');
+function cardlinkSource(source){
+ const lines=source.split('\n');let prefix;
+ for(const line of lines){if(!line.trim())continue;const indent=/^[\t ]*/.exec(line)[0];if(prefix===undefined)prefix=indent;while(!indent.startsWith(prefix))prefix=prefix.slice(0,-1);}
+ return prefix?lines.map(line=>line.startsWith(prefix)?line.slice(prefix.length):line).join('\n'):source;
+}
 function pasteCandidate(event,editor,view){
  const url=event.clipboardData?.getData('text/plain')?.trim();if(event.defaultPrevented||!webUrl(url)||/\s/.test(url)||editor.somethingSelected())return '';
  const position=editor.getCursor(),cache=view.app.metadataCache.getFileCache(view.file);
@@ -174,10 +179,10 @@ module.exports=class BlogLinks extends Plugin{
    const file=this.app.workspace.getActiveFile();if(!file||file.extension!=='md'||file.path==='blog.md'||file.path.split('/').some(p=>p.startsWith('_')))return false;
    if(!checking)this.categoryMenu(file,{x:window.innerWidth/2,y:window.innerHeight/3});return true;
   }});
-  const container=this.app.workspace.containerEl,observer=new MutationObserver(()=>this.mountCategoryButtons());
+  const container=this.app.workspace.containerEl,observer=new MutationObserver(()=>{this.mountCategoryButtons();this.mountCardIndents();});
   observer.observe(container,{childList:true,subtree:true});
   this.register(()=>{observer.disconnect();container.querySelectorAll('.blog-category-picker').forEach(el=>el.remove());});
-  this.mountCategoryButtons();
+  this.mountCategoryButtons();this.mountCardIndents();
   const openVisual=event=>{
    const target=event.target.closest?.('.metadata-property-value');if(!target)return;
    const row=target.closest('.metadata-property'),key=row?.dataset.propertyKey;if(!['cover','icon'].includes(key))return;
@@ -200,7 +205,7 @@ module.exports=class BlogLinks extends Plugin{
   this.bookmarks={};const bookmarksFile=this.app.vault.getAbstractFileByPath('_assets/_meta/bookmarks.json');
   if(bookmarksFile){try{this.bookmarks=JSON.parse(await this.app.vault.read(bookmarksFile)).posts;}catch{new Notice('기존 북마크 정보를 읽지 못했습니다.');}}
   this.registerMarkdownCodeBlockProcessor('cardlink',async(source,el,ctx)=>{
-   try{const data=parseYaml(source);if(!data||typeof data.url!=='string')throw new Error('URL이 필요합니다.');const saved=this.cache[data.url]||{};el.addClass('blog-links');el.innerHTML=bookmark({...saved,...data,title:data.title||saved.title,description:data.description||saved.description,cover:data.image||saved.cover,icon:data.favicon||saved.icon},{resolveImage:raw=>{const path=String(raw).replace(/^!?\[\[|\]\]$/g,'').split('|')[0];const file=this.app.metadataCache.getFirstLinkpathDest(path,ctx.sourcePath);return file?this.app.vault.getResourcePath(file):'';}});}
+   try{const data=parseYaml(cardlinkSource(source));if(!data||typeof data.url!=='string')throw new Error('URL이 필요합니다.');const saved=this.cache[data.url]||{};el.addClass('blog-links');el.innerHTML=bookmark({...saved,...data,title:data.title||saved.title,description:data.description||saved.description,cover:data.image||saved.cover,icon:data.favicon||saved.icon},{resolveImage:raw=>{const path=String(raw).replace(/^!?\[\[|\]\]$/g,'').split('|')[0];const file=this.app.metadataCache.getFirstLinkpathDest(path,ctx.sourcePath);return file?this.app.vault.getResourcePath(file):'';}});}
    catch(error){el.setText(source);new Notice(error.message);}
   });
   this.registerMarkdownPostProcessor((el,ctx)=>{
@@ -230,6 +235,16 @@ module.exports=class BlogLinks extends Plugin{
   const folders=path.split('/').slice(0,-1);let parent='';
   for(const part of folders){parent+=(parent?'/':'')+part;const folder=this.app.vault.getAbstractFileByPath(parent);if(folder&&!Array.isArray(folder.children))throw new Error('폴더 경로에 파일이 있습니다: '+parent);if(!folder)await this.app.vault.createFolder(parent);}
   const file=await this.app.vault.create(path,content);await this.app.workspace.getLeaf(false).openFile(file);return file;
+ }
+ mountCardIndents(){
+  for(const el of this.app.workspace.containerEl.querySelectorAll('.cm-lang-cardlink .block-language-cardlink')){
+   const widget=el.closest('.cm-lang-cardlink');let line=widget?.previousElementSibling;
+   const nested=line?.classList.contains('HyperMD-list-line');
+   if(nested){do{line=line.previousElementSibling;}while(line&&(!line.classList.contains('cm-line')||line.classList.contains('HyperMD-codeblock')||!line.textContent.trim()));}
+   const text=nested&&line?.classList.contains('HyperMD-list-line')?line.querySelector('[class*="cm-list-"]:not(.cm-formatting)'):null;
+   el.classList.toggle('blog-list-card',Boolean(text));
+   el.style.marginInlineStart=text?Math.max(0,text.getBoundingClientRect().left-widget.getBoundingClientRect().left)+'px':'';
+  }
  }
  mountCategoryButtons(){
   for(const button of this.app.workspace.containerEl.querySelectorAll('.blog-category-picker'))if(button.closest('.metadata-property')?.dataset.propertyKey!=='category')button.remove();
@@ -278,3 +293,5 @@ module.exports=class BlogLinks extends Plugin{
 module.exports.pasteCandidate=pasteCandidate;
 
 module.exports.newPostPath=newPostPath;
+
+module.exports.cardlinkSource=cardlinkSource;
