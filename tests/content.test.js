@@ -88,7 +88,7 @@ test('local cover and icon assets, emoji catalog, home metadata and explicit cle
 });
 
 test('Pixel Banner image links center post covers and preserve icons',t=>{
- const root=fixture(t),source=post(root,'pixel',{cover:'![[pixel/cover full.webp]]',cover_x:0,cover_y:100,cover_position:'50% 25%',icon:'⭐',icon_image:'[[pixel/pin.svg]]'});
+ const root=fixture(t),source=post(root,'pixel',{cover:'![[pixel/cover full.webp]]',cover_x:0,cover_y:100,cover_position:'50% 25%',icon:'[[pixel/pin.svg]]'});
  fs.writeFileSync(path.join(path.dirname(source),'cover full.webp'),'cover');fs.writeFileSync(path.join(path.dirname(source),'pin.svg'),'<svg/>');
  const current=loadContent(root).posts[0];
  assert.equal(current.cover,'/assets/cover%20full.webp');assert.equal(current.coverPosition,'50% 50%');
@@ -190,19 +190,10 @@ test('cards use the first image or Mermaid in body order and ignore obsolete exp
  const result=loadContent(root);
  for(const [name,,diagram] of cases){const current=result.posts.find(p=>p.title===name);if(diagram===true){assert.equal(current.thumbnail,'');assert.match(current.thumbnailDiagram,/A-->B/);}else if(diagram===false){assert.match(current.thumbnail,/\/first\.png$/);assert.equal(current.thumbnailDiagram,'');}else{assert.equal(current.thumbnail,'');assert.equal(current.thumbnailDiagram,'');}}
 });
-test('explicit card selection supports image links and stable Mermaid block references',t=>{
- const root=fixture(t),body='```mermaid\ngraph TD;FIRST-->X;\n```\n\n> ```mermaid\n> graph LR;CHOSEN-->Y;\n> ```\n> ^chosen-diagram\n\n![Photo](first.png)';
- const file=post(root,'selected',{thumbnail:'![[selected/second.png]]'},body);fs.writeFileSync(path.join(path.dirname(file),'first.png'),'first');fs.writeFileSync(path.join(path.dirname(file),'second.png'),'second');
- let current=loadContent(root).posts[0];assert.equal(current.thumbnail,'/assets/second.png');assert.equal(current.thumbnailDiagram,'');
- post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},body);current=loadContent(root).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);assert.doesNotMatch(current.thumbnailDiagram,/FIRST/);assert.equal(current.thumbnail,'');
- post(root,'selected',{thumbnail:'[[#^chosen-diagram]]'},'```mermaid\ngraph TD;NEW-->Z;\n```\n\n'+body);current=loadContent(root).posts[0];assert.match(current.thumbnailDiagram,/CHOSEN-->Y/);
+test('obsolete visual fields cannot override automatic cards or the unified icon',t=>{
+ const root=fixture(t);post(root,'one',{thumbnail:'missing.png',hero_image:'missing.png',icon_image:'missing.png',icon:'🌼'},'![First](first.png)');fs.writeFileSync(path.join(root,'first.png'),'first');const item=loadContent(root).posts[0];assert.equal(item.thumbnail,'/assets/first.png');assert.equal(item.icon,'🌼');assert.equal(item.iconIsImage,false);
 });
-test('invalid explicit card selections fail rather than silently selecting another picture',t=>{
- const root=fixture(t);
- for(const thumbnail of ['missing.png','[[#^missing-diagram]]','note.md']){post(root,'bad',{thumbnail},'```mermaid\ngraph TD;A-->B;\n```');assert.throws(()=>loadContent(root),/thumbnail/);}
-});
-
-test('YouTube embeds participate in card source order and explicit photos still win',t=>{
+test('YouTube embeds participate in card source order and obsolete choices are ignored',t=>{
  const root=fixture(t),video='<iframe src="https://www.youtube.com/embed/yonRGtMDDH8?rel=0" title="video"></iframe>',photo='![Photo](photo.png)',diagram='```mermaid\ngraph TD;A-->B;\n```';
  for(const [name,body,selected] of [['video',video+'\n\n'+photo],['photo',photo+'\n\n'+video],['diagram',diagram+'\n\n'+video],['chosen',video+'\n\n'+photo,'./photo.png']]){
   const source=post(root,name,selected?{thumbnail:selected}:{},body);fs.writeFileSync(path.join(path.dirname(source),'photo.png'),'photo');
@@ -211,14 +202,14 @@ test('YouTube embeds participate in card source order and explicit photos still 
  assert.equal(find('video').thumbnail,'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
  assert.equal(find('photo').thumbnail,'/assets/photo.png');
  assert.match(find('diagram').thumbnailDiagram,/A-->B/);assert.equal(find('diagram').thumbnail,'');
- assert.equal(find('chosen').thumbnail,'/assets/photo.png');
+ assert.equal(find('chosen').thumbnail,'https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg');
 });
 
-test('X post images participate in card source order and explicit choices take priority',t=>{
+test('X post images participate in card source order and obsolete choices are ignored',t=>{
  const root=fixture(t),id='1717179344110358638',image='https://pbs.twimg.com/media/F9SlgpVWkAAXsNw.jpg',video='<iframe src="https://embed.notion.co/api/iframe?url=https%3A%2F%2Fx.com%2Fband%2Fstatus%2F'+id+'&amp;key=test"></iframe>',photo='![Photo](photo.png)';
  for(const [name,body,selected] of [['x-first',video+'\n\n'+photo],['photo-first',photo+'\n\n'+video],['chosen-x',video+'\n\n'+photo,'./photo.png']]){const source=post(root,name,selected?{thumbnail:selected}:{},body);fs.writeFileSync(path.join(path.dirname(source),'photo.png'),'photo');}
  let result=loadContent(root,{[id]:image}),find=name=>result.posts.find(p=>p.title===name);
- assert.equal(find('x-first').thumbnail,image);assert.equal(find('photo-first').thumbnail,'/assets/photo.png');assert.equal(find('chosen-x').thumbnail,'/assets/photo.png');assert.deepEqual(result.xPosts,[id]);
+ assert.equal(find('x-first').thumbnail,image);assert.equal(find('photo-first').thumbnail,'/assets/photo.png');assert.equal(find('chosen-x').thumbnail,image);assert.deepEqual(result.xPosts,[id]);
  result=loadContent(root,{});assert.equal(find('x-first').thumbnail,'/assets/photo.png');
 });
 
@@ -312,9 +303,9 @@ test('malformed cardlink blocks fail clearly and unsafe image protocols never be
 });
 
 
-test('selected Mermaid thumbnail keeps the same diagram for home and maps its generated PNG to OG',t=>{
+test('automatic Mermaid thumbnail maps the first diagram to its generated PNG in OG',t=>{
  const root=fixture(t);post(root,'og-diagram',{thumbnail:'[[#^selected]]'},'```mermaid\ngraph TD; A-->B;\n```\n\n```mermaid\ngraph TD; C-->D;\n```\n^selected');
- const first=loadContent(root,{},{}).posts[0],{key}=require('../lib/card-images');assert.match(first.thumbnailDiagram,/C-->D/);
+ const first=loadContent(root,{},{}).posts[0],{key}=require('../lib/card-images');assert.match(first.thumbnailDiagram,/A-->B/);
  const mapped=loadContent(root,{},{[key(first)]:'/images/cards/diagram.png'}).posts[0];assert.equal(mapped.ogImage,'/images/cards/diagram.png');assert.equal(mapped.thumbnailDiagram,first.thumbnailDiagram);assert.equal(mapped.thumbnail,'');
 });
 

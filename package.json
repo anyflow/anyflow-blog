@@ -7,7 +7,7 @@
     "build": "node scripts/build.js",
     "dev": "BLOG_OUTPUT_DIR=_preview npm run build && python3 -m http.server 18765 --bind 127.0.0.1 --directory _preview",
     "test": "node --test tests/*.test.js",
-    "pretest": "node scripts/package-card-picker.js && node scripts/package-blog-links.js"
+    "pretest": "node scripts/package-blog-links.js"
   },
   "keywords": [],
   "author": "",

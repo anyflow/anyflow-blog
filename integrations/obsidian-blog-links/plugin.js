@@ -1,5 +1,6 @@
 const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment,stringifyYaml}=require('obsidian');
 const bookmark=require('./bookmark');
+const {VisualGallery}=require('./visual-gallery');
 const {mention,metadata,webUrl}=require('./link-preview');
 function pasteCandidate(event,editor,view){
  const url=event.clipboardData?.getData('text/plain')?.trim();if(event.defaultPrevented||!webUrl(url)||/\s/.test(url)||editor.somethingSelected())return '';
@@ -45,6 +46,15 @@ module.exports=class BlogLinks extends Plugin{
   observer.observe(container,{childList:true,subtree:true});
   this.register(()=>{observer.disconnect();container.querySelectorAll('.blog-category-picker').forEach(el=>el.remove());});
   this.mountCategoryButtons();
+  const openVisual=event=>{
+   const target=event.target.closest?.('.metadata-property-value');if(!target)return;
+   const row=target.closest('.metadata-property'),key=row?.dataset.propertyKey;if(!['cover','icon'].includes(key))return;
+   if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return;
+   const file=this.app.workspace.getLeavesOfType('markdown').find(leaf=>leaf.view.containerEl.contains(row))?.view.file;if(!file)return;
+   event.preventDefault();event.stopImmediatePropagation();if(this.visualModal)return;this.visualModal=new VisualGallery(this,file,key);this.visualModal.open();
+  };
+  this.registerDomEvent(container,'click',openVisual,true);this.registerDomEvent(container,'keydown',openVisual,true);
+  this.register(()=>{this.visualModal?.close();});
   const initialAttachments=this.app.vault.config.attachmentFolderPath;this.register(()=>{this.app.vault.config.attachmentFolderPath=initialAttachments;});
   const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.config.attachmentFolderPath='_assets/'+file.path.replace(/\.md$/,'');};
   this.registerEvent(this.app.workspace.on('file-open',attachments));
@@ -81,7 +91,7 @@ module.exports=class BlogLinks extends Plugin{
  async createPost(value){
   const path=newPostPath(value);if(this.app.vault.getAbstractFileByPath(path))throw new Error('같은 경로의 파일이 이미 있습니다: '+path);
   const date=moment().format('YYYY-MM-DD'),title=path.split('/').at(-1).slice(0,-3);
-  const content='---\n'+stringifyYaml({title,summary:'',created:date,updated:date,category:'',tags:[],publish:false,noindex:false,cover:'',thumbnail:'',icon:'',icon_image:''}).trimEnd()+'\n---\n\n';
+  const content='---\n'+stringifyYaml({title,summary:'',created:date,updated:date,category:'',tags:[],publish:false,noindex:false,cover:'',icon:''}).trimEnd()+'\n---\n\n';
   const folders=path.split('/').slice(0,-1);let parent='';
   for(const part of folders){parent+=(parent?'/':'')+part;const folder=this.app.vault.getAbstractFileByPath(parent);if(folder&&!Array.isArray(folder.children))throw new Error('폴더 경로에 파일이 있습니다: '+parent);if(!folder)await this.app.vault.createFolder(parent);}
   const file=await this.app.vault.create(path,content);await this.app.workspace.getLeaf(false).openFile(file);return file;

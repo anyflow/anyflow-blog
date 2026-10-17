@@ -55,7 +55,7 @@ test('failed metadata refresh retains source information and avoids repeated req
 test('per-note attachment folders do not write tracked application settings on every file switch',async()=>{
  const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,MutationObserver:class{observe(){} disconnect(){}},require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
  const p=new module.exports(),events={},config={attachmentFolderPath:'_assets'};let active={extension:'md',path:'cat/one.md'},writes=0;
- p.addCommand=p.register=p.registerEvent=p.registerMarkdownCodeBlockProcessor=p.registerMarkdownPostProcessor=()=>{};
+ p.addCommand=p.register=p.registerDomEvent=()=>{};p.registerEvent=p.registerMarkdownCodeBlockProcessor=p.registerMarkdownPostProcessor=()=>{};
  p.app={vault:{config,getAbstractFileByPath:()=>null,setConfig:()=>writes++},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>active,on:(n,f)=>events[n]=f},metadataCache:{on:(n,f)=>events[n]=f}};
  await p.onload();assert.equal(config.attachmentFolderPath,'_assets/cat/one');active={extension:'md',path:'cat/two.md'};events['file-open'](active);assert.equal(config.attachmentFolderPath,'_assets/cat/two');assert.equal(writes,0);
 });

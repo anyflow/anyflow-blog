@@ -1,9 +1,0 @@
-{
-  "id": "blog-card-image",
-  "name": "Blog 카드 이미지",
-  "version": "0.3.0",
-  "minAppVersion": "1.6.0",
-  "description": "블로그 카드에 사용할 사진과 Mermaid를 갤러리에서 선택합니다.",
-  "author": "anyflow",
-  "isDesktopOnly": false
-}
