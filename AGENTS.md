@@ -485,3 +485,14 @@ Make deploy가 정책을 반영하며 deploy-automation이 최초 정책을 boot
 Gateway Pod 직접 경로에서는 첫 출발지 소진 후 다른 Pod 출발지404를 확인해 IP 키 독립성을 검증했다. 위조 X-Forwarded-For를 매 요청 바꿔도 동일 출발지 제한을 우회하지 못했다.
 
 운영 반영 완료: 코드94c50f2·Actions39009348932 성공·배포 선언41e9ed5. 정적 이미지 sha256:92f94a95f9ea98adfd3fe2e7e5b37b0657b1deca59fedf4174dc1efaec993d77, 댓글 API sha256:73919eff7218312537a694c861a248468ffb76359aeff3b1ab9a8d3faee1988d의 rollout을 확인했다. 배포 전후 queue.base 정규화SHA256이 동일하여 실제 댓글·Like 보존을 확인했다. 대기0·접수기록4·순서키3 보존, 새 순서시각3, 완료 본문사본0이다. 홈/API/미리보기200과 정책 generation2 Accepted/Attached를 확인했다. 임시 검증 Pod4개는 정리했으며 전체 콘텐츠/화면 회귀는 반복하지 않았다. 미리보기 빌드와 OpenRC 재시작도 완료했다.
+
+
+## 2026-10-17 Markdown 이관 흔적 정리·카테고리 운영 반영
+
+코드f8965d2·콘텐츠476f6cc3·Actions39035497194 성공·배포 선언e8aa581. 정적 이미지sha256:c4b5a6defec42b7d554effaef86669639c0bbcb52220fdd26b2597de30240117의 rollout과 Ready1/1을 확인했다. 댓글 API 이미지는73919eff로 유지했으며 홈/API200이다.
+
+콘텐츠352개 파일에서 빈 문단 태그1046개·불필요한 블록ID를 제거하고 strong/em/code/del을 Markdown으로 전환했다. 문단 사이 빈 줄은 한 줄이며 파일 끝 빈 줄은 제거했다. 코드 블록을 보존했고 변경 글의 본문 문자와 강조/기울임/코드/취소선 의미 비교에서 차이가 없었다. season3의 사용자 수정도 포함한다. 전용 spacer CSS·검색/미리보기 예외는 제거했다. X 임베드1개는 Notion 경유를 제거하고 native iframe 및 카드/OG 사진 추출을 유지했다. 표 줄바꿈·밑줄·멀티미디어 HTML, 사용 중인 callout/첨부 참조는 보존했다.
+
+카테고리는 site.json의 categoryOrder대로 as 음악인 → as S/W 엔지니어 → 예술/인문 소감 → 自省(Introspection) / 세상살이 → 프로젝트s 순서다. 그 외 신규 분류는 뒤에 이름순으로 놓는다. 제목은 일반 h3로 변경해 클릭으로 접히지 않으며 스타일14px/400과 Load more는 유지했다.
+
+관련39개 테스트와 미리보기 빌드396글·872참조 자산·미해결0을 확인했다. 화면 회귀는1280×900·390×844에서 홈/anyway/C++CLI2/Mike Portnoy/stability-efficiency1/Leipzig 대표6종을 검사했다. 홈 순서·클릭 뒤 목록 유지·더 보기13건, 본문/코드/표 줄바꿈,13px 이탤릭 좌측 캡션과 figure 연결, X 실제 본문/사진/버튼 및 OG 사진, Mermaid2개와 확대·닫기·복원, 라이트/다크 전환을 확인했다. 확인한 모바일 페이지의 문서 가로 넘침은 없고 검사 탭의 오류 로그는0이다. 화면 표본 검사이며 모든 글의 모든 화면 조합 전수 검사는 수행하지 않았다. 운영 데이터 CUD는 테스트하지 않았다.
