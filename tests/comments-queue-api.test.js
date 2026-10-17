@@ -10,7 +10,7 @@ async function fixture(t,{preview=true,moderation=false}={}){
  const handler=createCommentsHandler({store:queue,catalog:[{id:'post_1'}],secret:'s'.repeat(64),adminToken:'a'.repeat(64),origins:[origin]});
  const server=http.createServer(async(req,res)=>{if(!await handler(req,res))res.writeHead(404).end();});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  t.after(async()=>{release();await new Promise(r=>server.close(r));await queue.close();await fs.rm(directory,{recursive:true,force:true});});
- function browser(){let cookie='';return {async request(method,url,data){const start=performance.now();const response=await fetch('http://127.0.0.1:'+server.address().port+url,{method,headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie},...(data?{body:JSON.stringify(data)}:{})});const values=new Map(cookie.split('; ').filter(Boolean).map(p=>p.split('=')));for(const value of response.headers.getSetCookie()){const [k,v]=value.split(';')[0].split('=');values.set(k,v);}cookie=[...values].map(([k,v])=>k+'='+v).join('; ');return {status:response.status,data:await response.json(),ms:performance.now()-start};}};}
+ function browser(){let cookie='';return {async request(method,url,data){const start=performance.now();const response=await fetch('http://127.0.0.1:'+server.address().port+url,{method,headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie},...(data?{body:JSON.stringify(data)}:{})});const values=new Map(cookie.split('; ').filter(Boolean).map(p=>p.split('=')));for(const value of response.headers.getSetCookie()){const [k,v]=value.split(';')[0].split('=');values.set(k,v);}cookie=[...values].map(([k,v])=>k+'='+v).join('; ');return {status:response.status,retryAfter:response.headers.get('Retry-After'),data:await response.json(),ms:performance.now()-start};}};}
  return {browser,queue,release};
 }
 const create=(request_id='create-http-123')=>({post_id:'post_1',request_id,name:'Owner',body:'Original'});
@@ -51,4 +51,12 @@ test('out-of-order Like HTTP arrival retains last browser intent, with per-brows
  assert.equal((await one.request('PUT','/api/likes',{...off,liked:true})).status,409);
  for(const data of [{...off,request_id:'invalid-1',sequence:0},{...off,request_id:'invalid-2',sequence:1.1},{...off,request_id:'invalid-3',client_id:'../bad'}])assert.equal((await one.request('PUT','/api/likes',data)).status,400);
  assert.equal(f.queue.record.jobs.length,1);f.release();
+});
+
+
+test('queue capacity returns retryable HTTP 503 without accepting the request',async t=>{
+ const f=await fixture(t);while(f.queue.active)await new Promise(resolve=>setImmediate(resolve));f.queue.closed=true;
+ f.queue.record.jobs=Array.from({length:100},(_,i)=>({id:'seed-'+i,requestId:'seed-'+i,kind:'like',actor:{actorHash:'seed',isAdmin:false},post:'post_1',commentId:null,liked:true,time:new Date().toISOString()}));
+ const before=structuredClone(f.queue.record),response=await f.browser().request('POST','/api/comments',create('capacity-http-request'));
+ assert.equal(response.status,503);assert.equal(response.retryAfter,'5');assert.equal(response.data.error,'queue_full');assert.deepEqual(f.queue.record,before);
 });

@@ -1,0 +1,43 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: anyflow-blog-api-limits
+  namespace: service
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: anyflow-blog
+  traffic:
+    rateLimit:
+      conditional:
+        - condition: 'request.method == "POST" && request.path.contains("/login")'
+          policy:
+            local:
+              - requests: 5
+                unit: Minutes
+                burst: 2
+                key: string(source.address)
+              - requests: 20
+                unit: Minutes
+                burst: 5
+        - condition: 'request.method != "GET" && request.method != "HEAD" && request.method != "OPTIONS"'
+          policy:
+            local:
+              - requests: 30
+                unit: Minutes
+                burst: 10
+                key: string(source.address)
+              - requests: 120
+                unit: Minutes
+                burst: 30
+        - condition: 'request.path.contains("/api/")'
+          policy:
+            local:
+              - requests: 120
+                unit: Minutes
+                burst: 30
+                key: string(source.address)
+              - requests: 600
+                unit: Minutes
+                burst: 120

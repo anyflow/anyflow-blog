@@ -27,6 +27,7 @@ endif
 	$(KUBECTL) apply -f deployment/services.yaml
 	$(KUBECTL) apply -f deployment/deployments.yaml
 	$(KUBECTL) apply -f deployment/httproute.yaml
+	$(KUBECTL) apply -f deployment/agentgatewaypolicy.yaml
 	$(KUBECTL) apply -f deployment/cronjob.yaml
 	$(KUBECTL) rollout status deployment/anyflow-blog-comments -n $(NAMESPACE) --timeout=120s
 	$(KUBECTL) rollout status deployment/anyflow-blog -n $(NAMESPACE) --timeout=300s
@@ -38,12 +39,14 @@ deploy-automation:
 	$(KUBECTL) apply -f deployment/roles.yaml
 	$(KUBECTL) apply -f deployment/rolebindings.yaml
 	$(KUBECTL) apply -f deployment/persistentvolumeclaims.yaml
+	$(KUBECTL) apply -f deployment/agentgatewaypolicy.yaml
 	$(KUBECTL) apply -f deployment/cronjob.yaml
 
 create: deploy-automation deploy
 
 delete:
 	$(KUBECTL) patch cronjob anyflow-blog-deploy -n $(NAMESPACE) --type=merge -p '{"spec":{"suspend":true}}' || true
+	$(KUBECTL) delete -f deployment/agentgatewaypolicy.yaml || true
 	$(KUBECTL) delete -f deployment/httproute.yaml || true
 	$(KUBECTL) delete deployment/anyflow-blog -n $(NAMESPACE) || true
 	$(KUBECTL) delete service/anyflow-blog -n $(NAMESPACE) || true

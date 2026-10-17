@@ -15,7 +15,7 @@ test('flat notes and per-post media migrate both ways, including later posts and
 test('comment identity conversion preserves ownership, relationships, likes and queue replay state',()=>{
  const plan={ids:{old:'/cat/slug'}},state={comments:{c:{id:'c',post_id:'old',parent_id:null,owner_hash:'owner',body:'Body'}},likes:{'post:old':{actor:true},'comment:c':{actor:true}},settings:{legacyLikes:{'post:old':7,'comment:c':3},moderation:true}};
  const next=transformState(state,plan);assert.equal(next.comments.c.post_id,'/cat/slug');assert.deepEqual(transformState(next,plan,true),state);
- const q={version:1,revision:0,base:state,jobs:[],receipts:{r:{post:'old',fingerprint:'unchanged',status:'done'}},sequences:{'actor:post:old:client':8}};
+ const q={version:1,revision:0,base:state,jobs:[],receipts:{r:{post:'old',fingerprint:'unchanged',status:'done'}},sequences:{'actor:post:old:client':8},sequenceTimes:{'actor:post:old:client':123}};
  const back=transformQueue(transformQueue(q,plan),plan,true);back.revision=q.revision;assert.deepEqual(back,q);
  assert.throws(()=>transformQueue({...q,jobs:[{}]},plan),/Drain/);assert.throws(()=>transformState({...state,comments:{c:{post_id:'missing'}}},plan),/Unmapped/);
  assert.match(transformState({...next,comments:{c:{post_id:'/new'}}},plan,true).comments.c.post_id,/^[a-f0-9]{32}$/);

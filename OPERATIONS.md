@@ -727,3 +727,15 @@ Blog 링크1.3.1은 새 글의 게시 속성12개를 YAML로 바로 생성하며
 작성 속성은 cover·icon만 남겼으며 224개 MD의 obsolete 시각 속성만 제거해 본문 바이트를 보존했다. Blog 링크1.4.0을 작성 vault에 설치하고 이전 카드 선택기 파일은 휴지통으로 옮겼다. Pixel Banner3.6.18은 icon 값 하나로 이미지·이모지를 표시하도록 호환 패치를 적용했다. 플러그인 업데이트 시 해당 패치를 유지한다.
 
 관련47개 테스트와 국기/키캡 이모지 추가2개 관련 테스트, 실제 Obsidian의 갤러리 현재 선택/빈 값 첫 페이지/이미지 저장·표시·이모지 전환/새 글 속성10개/오류0을 확인했다. 미리보기396글·872참조 자산·미해결0이며 운영 홈과 YouTube·X·Mermaid 대표3글 및 각 OG 이미지가200이다. 검증 초안은 시스템 휴지통으로 이동했으며 전체 회귀 검증은 반복하지 않았다.
+
+
+## 2026-10-17 블로그 API 요청 제한·큐 보관 제한
+
+AgentgatewayPolicy anyflow-blog-api-limits는 service/anyflow-blog HTTPRoute에만 부착되며 public-gateway1.6.0에서 실행한다. 접속 주소(source.address)별 분당 로그인5+burst2, 쓰기30+burst10, API조회120+burst30을 적용한다. 같은 조건에 전체 한도 로그인20+5, 쓰기120+30, 조회600+120도 적용한다. 일반 페이지·정적 파일 GET은 제한하지 않는다. 로그인은 POST 경로의 /login, 쓰기는 GET/HEAD/OPTIONS 외 메서드, 조회는 /api/가 포함된 경로로 구분한다. 표준 경로뿐 아니라 dot-segment 경로도 검증한다. 사용자 지정 X-Forwarded-For는 키로 신뢰하지 않는다. Local 카운터는 Gateway 재시작 시 초기화되고 replica별로 독립적이며 NAT를 공유하는 접속은 주소 한도를 공유한다.
+
+댓글 큐는 미처리100건·직렬화된 대기 요청1MiB까지 접수한다. 중복 접수 ID는 큐가 차도 기존 응답을 돌려주며 새로운 초과 요청은 저장 전에503 queue_full·Retry-After5로 거절한다. 미처리·재시도 작업은 정리하지 않는다. 완료/실패/superseded 접수 기록과 Like 순서 키는 최대7일·2000개를 보관하며 미처리 작업이 사용하는 키는 보존한다. 완료 성공 본문 사본은 즉시 제거하고 실패 본문은 보관 기간 동안 유지한다. 기존 기록의 완료 시각이 없으면 첫 실행 시 보관 기간을 시작한다. 정리는 시작·접수·기존 worker 처리 때 수행하며 별도 Pod·DB·Redis·정리 타이머는 추가하지 않는다. Git 댓글 데이터와 재시도 중복 방지 applied_requests는 그대로 유지한다. 장기간 비활성인 Like 클라이언트의 순서 기록은 보관 기간/개수 밖에서 제거될 수 있다.
+
+Make deploy가 정책을 반영하며 deploy-automation이 최초 정책을 bootstrap한다. 배포 ServiceAccount는 이 정책 한 개의 get/patch/update만 허용하고 신규 정책 create는 허용하지 않는다. Gateway429 응답은 브라우저에서 명확한 요청 제한 안내로 처리한다. 정책 server dry-run·Accepted/Attached와 관련64개 테스트를 통과했다. 임시 검증 Pod의 실제 요청에서 로그인401/429, 쓰기400/429, 조회404/429와 일반 페이지200을 확인했으며 실제 댓글·Like를 추가하지 않았다.
+
+키는 IP형을 문자열로 바꾼 string(source.address)를 사용한다. Service 경로는 Istio waypoint를 거치므로 서로 다른 Pod 출발지도 한 주소의 제한을 공유함을 실측했다. 외부 NodePort도 externalTrafficPolicy:Cluster이므로 원본 IP 보존을 보장하지 않는다. 사용자 헤더를 신뢰하지 않으며 현재 경로에서 이 제한은 공유 접속 주소별 한도로 해석한다. 원본 IP 보존을 위한 Gateway/mesh 전체 네트워크 변경은 이 작업에 포함하지 않는다.
+Gateway Pod 직접 경로에서는 첫 출발지 소진 후 다른 Pod 출발지404를 확인해 IP 키 독립성을 검증했다. 위조 X-Forwarded-For를 매 요청 바꿔도 동일 출발지 제한을 우회하지 못했다.

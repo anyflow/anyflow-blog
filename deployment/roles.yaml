@@ -20,3 +20,7 @@ rules:
     resources: [cronjobs]
     resourceNames: [anyflow-blog-deploy]
     verbs: [get, patch, update]
+  - apiGroups: [agentgateway.dev]
+    resources: [agentgatewaypolicies]
+    resourceNames: [anyflow-blog-api-limits]
+    verbs: [get, patch, update]

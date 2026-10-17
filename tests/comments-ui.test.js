@@ -53,7 +53,7 @@ function fixture(initial, options = {}) {
     if (url === 'https://anyflow.net/api/identity-migration') { if (migrationFailure) throw new Error('migration offline'); return {ok:true,status:204}; }
     const result = await responses.shift();
     if (result instanceof Error) throw result;
-    return {ok: !result.error, json: async () => result};
+    return {ok: !result.error, status:result.httpStatus, json: async () => {if(result.nonJson)throw new SyntaxError('not JSON');return result;}};
   };
   vm.runInNewContext(source, {document, URL, fetch, crypto, location: options.hostname ? {hostname:options.hostname} : undefined, AbortSignal, confirm: () => true, setTimeout: fn => {const id=++timerId; timers.set(id,fn); return id;}, clearTimeout: id => timers.delete(id)});
   const ready = async () => { await new Promise(resolve => setImmediate(resolve)); };
@@ -334,4 +334,10 @@ test('www imports apex visitor identity before loading comments, and migration f
   const f=fixture(snapshot([]),{hostname:'www.anyflow.net',migrationFailure});await f.ready();
   assert.equal(f.requests[0].url,'https://anyflow.net/api/identity-migration');assert.equal(f.requests[0].options.credentials,'include');assert.equal(f.requests[1].url,'/api/comments?post=post-fixed');assert.equal(f.find('comments-submit').disabled,false);
  }
+});
+
+
+test('gateway plain-text 429 restores Like and shows a rate-limit message',async()=>{
+ const f=fixture(snapshot([]));await f.ready();f.responses.push({error:true,httpStatus:429,nonJson:true});f.find('comments-like').events.click();await f.ready();
+ assert.equal(f.find('comments-like').getAttribute('aria-pressed'),'false');assert.match(f.find('comments-notice').textContent,/요청이 너무 많습니다/);
 });

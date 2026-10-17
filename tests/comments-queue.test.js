@@ -111,3 +111,32 @@ test('a stale local mirror returns immediately and signals one background refres
  const view=await q.view(actor,'post_1');assert.equal(view.refreshing,true);assert.equal(view.state.likes['post:post_1'],undefined);await until(()=>q.active);
  gate.resolve();await until(()=>!q.active);const fresh=await q.view(actor,'post_1');assert.equal(fresh.refreshing,false);assert.equal(fresh.state.likes['post:post_1'].external,true);
 });
+
+
+test('full queue rejects new jobs before acceptance and still answers duplicate retries',async t=>{
+ const q=await queue(t,memory());await until(()=>!q.active);q.closed=true;
+ const ops=Array.from({length:100},(_,i)=>operation('like','cap-'+i,{liked:Boolean(i%2),clientId:'tab',sequence:i+1}));
+ for(const op of ops)await q.enqueue(op);
+ const before=await fs.readFile(q.file,'utf8');await assert.rejects(q.enqueue(operation('like','overflow',{liked:true,clientId:'tab',sequence:101})),e=>e.status===503&&e.code==='queue_full');
+ assert.equal(q.record.jobs.length,100);assert.equal(q.record.receipts.overflow,undefined);assert.equal(await fs.readFile(q.file,'utf8'),before);
+ assert.equal((await q.enqueue(ops[0])).task_id,'cap-0');assert.equal(await fs.readFile(q.file,'utf8'),before);
+});
+
+test('pending byte budget refuses oversized growth without dropping accepted work',async t=>{
+ const q=await queue(t,memory());await until(()=>!q.active);q.closed=true;
+ q.record.jobs=Array.from({length:35},(_,i)=>create('bytes-'+i,'bytes-c'+i,{body:'가'.repeat(10000)}));
+ const before=structuredClone(q.record);await assert.rejects(q.enqueue(create('too-many-bytes','overflow',{body:'가'.repeat(10000)})),e=>e.code==='queue_full');
+ assert.deepEqual(q.record,before);
+});
+
+test('restart bounds completed history and sequence keys while preserving pending tasks and failure drafts',async t=>{
+ const root=await temporary(t),store=memory(),q=await queue(t,store,root);await until(()=>!q.active);q.closed=true;
+ const now=Date.now(),old=now-8*24*60*60*1000,pending=operation('like','pending-job',{liked:false,clientId:'keep',sequence:9}),key='owner:post:post_1:keep';
+ q.record.jobs=[pending];q.record.receipts={expired:{status:'done',completedAt:old,body:'expired'},recent:{status:'done',completedAt:now,body:'redundant'},failed:{status:'failed',completedAt:now,body:'restore me'},'pending-job':{status:'retrying',completedAt:old,body:'pending'}};
+ q.record.sequences={[key]:9,expired:1,recent:2};q.record.sequenceTimes={[key]:old,expired:old,recent:now};
+ for(let i=0;i<2005;i++){q.record.receipts['old-'+i]={status:'done',completedAt:now-100-i};q.record.sequences['stream-'+i]=i;q.record.sequenceTimes['stream-'+i]=now-100-i;}
+ await q.persist(q.record);await q.close();store.offline=true;
+ const restarted=await queue(t,store,root);assert.equal(restarted.record.jobs.length,1);assert.ok(restarted.record.receipts['pending-job']);assert.equal(restarted.record.receipts.expired,undefined);assert.equal(restarted.record.receipts.recent.body,undefined);assert.equal(restarted.record.receipts.failed.body,'restore me');assert.equal(Object.keys(restarted.record.receipts).length,2000);
+ assert.equal(restarted.record.sequences[key],9);assert.equal(restarted.record.sequences.expired,undefined);assert.equal(Object.keys(restarted.record.sequences).length,2000);assert.equal(Object.keys(restarted.record.sequenceTimes).length,2000);
+ await restarted.enqueue(operation('like','late-like',{liked:true,clientId:'keep',sequence:8}));assert.equal(restarted.record.receipts['late-like'].status,'superseded');assert.equal(restarted.record.jobs.length,1);assert.equal(restarted.record.sequences[key],9);
+});
