@@ -51,9 +51,12 @@ module.exports=class BlogLinks extends Plugin{
    const row=target.closest('.metadata-property'),key=row?.dataset.propertyKey;if(!['cover','icon'].includes(key))return;
    if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return;
    const file=this.app.workspace.getLeavesOfType('markdown').find(leaf=>leaf.view.containerEl.contains(row))?.view.file;if(!file)return;
-   event.preventDefault();event.stopImmediatePropagation();if(this.visualModal)return;this.visualModal=new VisualGallery(this,file,key);this.visualModal.open();
+   event.preventDefault();event.stopImmediatePropagation();
+   // Keep the native property editor from restoring and later saving its stale value.
+   if(event.type==='pointerdown'||event.type==='mousedown')return;
+   if(this.visualModal)return;target.querySelector?.('[contenteditable=true],input')?.blur();this.visualModal=new VisualGallery(this,file,key);this.visualModal.open();
   };
-  this.registerDomEvent(container,'click',openVisual,true);this.registerDomEvent(container,'keydown',openVisual,true);
+  this.registerDomEvent(container,'pointerdown',openVisual,true);this.registerDomEvent(container,'mousedown',openVisual,true);this.registerDomEvent(container,'click',openVisual,true);this.registerDomEvent(container,'keydown',openVisual,true);
   this.register(()=>{this.visualModal?.close();});
   const initialAttachments=this.app.vault.config.attachmentFolderPath;this.register(()=>{this.app.vault.config.attachmentFolderPath=initialAttachments;});
   const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.config.attachmentFolderPath='_assets/'+file.path.replace(/\.md$/,'');};

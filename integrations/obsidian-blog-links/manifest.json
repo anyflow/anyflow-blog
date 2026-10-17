@@ -1,7 +1,7 @@
 {
   "id": "blog-links",
   "name": "Blog 링크",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "minAppVersion": "1.6.0",
   "description": "블로그 새 글 생성·커버/아이콘 갤러리·분류 선택·링크 표현",
   "author": "anyflow",
