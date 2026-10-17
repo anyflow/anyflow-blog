@@ -1,5 +1,6 @@
-const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment,stringifyYaml}=require('obsidian');
+const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment,stringifyYaml,loadMermaid}=require('obsidian');
 const bookmark=require('./bookmark');
+const {createRenderer,installMermaid}=require('./mermaid-profile');
 const {VisualGallery}=require('./visual-gallery');
 const {mention,metadata,webUrl}=require('./link-preview');
 function cardlinkSource(source){
@@ -47,6 +48,11 @@ class NewPostModal extends Modal{
 }
 module.exports=class BlogLinks extends Plugin{
  async onload(){
+  const nativeMermaid=typeof loadMermaid==='function'?await loadMermaid():typeof window!=='undefined'?window.mermaid:null;
+  if(nativeMermaid){
+   let renderer;try{renderer=createRenderer(require('./vendor/mermaid-12.1.0.min.js'));const restore=installMermaid(nativeMermaid,renderer.engine);this.register(()=>{restore();renderer.dispose();});}
+   catch{renderer?.dispose();new Notice('GitHub Mermaid 렌더러를 시작하지 못했습니다. 기본 렌더러를 유지합니다.');}
+  }
   this.addCommand({id:'create-post',name:'새 글 만들기',callback:()=>new NewPostModal(this.app,this).open()});
   this.addCommand({id:'select-category',name:'분류 선택',checkCallback:checking=>{
    const file=this.app.workspace.getActiveFile();if(!file||file.extension!=='md'||file.path==='blog.md'||file.path.split('/').some(p=>p.startsWith('_')))return false;

@@ -49,3 +49,6 @@ body :is(.markdown-reading-view,.markdown-source-view.mod-cm6){--font-text:ui-sa
 .markdown-source-view.is-live-preview .cm-lang-cardlink:not(:has(.blog-list-card))+.cm-line:has(>br:only-child){line-height:8px;min-height:8px}
 
 .markdown-source-view.is-live-preview .cm-lineNumbers .cm-gutterElement[data-blog-number-offset]{box-sizing:border-box;padding-top:attr(data-blog-number-offset type(<length>),0px)!important;line-height:attr(data-blog-number-line-height type(<length>),24px)}
+
+/* Mermaid text uses the GitHub frame defaults instead of the article line height. */
+:is(.markdown-reading-view,.markdown-source-view) .mermaid{line-height:normal}

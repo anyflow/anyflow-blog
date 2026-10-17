@@ -142,4 +142,6 @@ canonical·OG URL은 `src/_data/site.json`의 대표 URL을 사용한다. sitema
 
 ## Obsidian 작성 서식
 
-Blog 링크1.4.4는 운영 블로그의 본문 CSS를 기준으로 읽기 모드와 Live Preview의 서식을 맞춘다. 패키징 시 src/css/style.css의 문단·제목·목록·인용문 규칙을 읽기 모드용으로 가져오며, 편집 모드는 별도 어댑터로 행 번호를 본문 폭708px 밖에 배치하고 글꼴·행간·제목·목록·카드 간격을 맞춘다. 목록 깊이·끝 위치는 Obsidian metadataCache의 listItems/parent를 사용하며 원문 Markdown과 들여쓰기를 수정하지 않는다. 편집용 문법 표시·커서·작업 목록은 Obsidian의 편집 기능을 유지한다.
+Blog 링크1.5.0는 운영 블로그의 본문 CSS를 기준으로 읽기 모드와 Live Preview의 서식을 맞춘다. 패키징 시 src/css/style.css의 문단·제목·목록·인용문 규칙을 읽기 모드용으로 가져오며, 편집 모드는 별도 어댑터로 행 번호를 본문 폭708px 밖에 배치하고 글꼴·행간·제목·목록·카드 간격을 맞춘다. 목록 깊이·끝 위치는 Obsidian metadataCache의 listItems/parent를 사용하며 원문 Markdown과 들여쓰기를 수정하지 않는다. 편집용 문법 표시·커서·작업 목록은 Obsidian의 편집 기능을 유지한다.
+
+Mermaid는 GitHub에서 확인한 Mermaid12.1.0·ELK·Trebuchet 글꼴·줄바꿈 설정을 사용한다. MIT 라이브러리를 플러그인에 포함하며 런타임 CDN은 사용하지 않는다. 로컬 iframe에서 렌더링하여 Obsidian 본문 CSS의 영향을 차단하고, 결과 SVG는 기존 읽기/Live Preview 및 확대 기능에 전달한다. 문서의 Mermaid frontmatter 설정과 원문은 유지하며 플러그인 해제 시 기본 렌더러를 복구한다.
