@@ -1,4 +1,4 @@
-const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment}=require('obsidian');
+const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment,stringifyYaml}=require('obsidian');
 const bookmark=require('./bookmark');
 const {mention,metadata,webUrl}=require('./link-preview');
 function pasteCandidate(event,editor,view){
@@ -80,12 +80,8 @@ module.exports=class BlogLinks extends Plugin{
  }
  async createPost(value){
   const path=newPostPath(value);if(this.app.vault.getAbstractFileByPath(path))throw new Error('같은 경로의 파일이 이미 있습니다: '+path);
-  const template=this.app.vault.getAbstractFileByPath('_templates/블로그 글.md');if(!template)throw new Error('블로그 글 템플릿을 찾을 수 없습니다.');
-  const now=moment(),title=path.split('/').at(-1).slice(0,-3);
-  let content=(await this.app.vault.read(template)).replace(/\{\{title\}\}/g,()=>title).replace(/\{\{(date|time)(?::([^}]+))?\}\}/g,(_,type,format)=>now.format(format||(type==='date'?'YYYY-MM-DD':'HH:mm')));
-  const front=/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(content);if(!front)throw new Error('템플릿의 YAML 속성을 확인하세요.');
-  let metadata=front[1];if(/^publish:/m.test(metadata))metadata=metadata.replace(/^publish:.*$/m,'publish: false');else metadata+='\npublish: false';
-  if(parseYaml(metadata)?.publish!==false)throw new Error('템플릿의 publish 속성을 확인하세요.');content=content.slice(0,front.index)+front[0].replace(front[1],()=>metadata)+content.slice(front[0].length);
+  const date=moment().format('YYYY-MM-DD'),title=path.split('/').at(-1).slice(0,-3);
+  const content='---\n'+stringifyYaml({title,summary:'',created:date,updated:date,category:'',tags:[],publish:false,noindex:false,cover:'',thumbnail:'',icon:'',icon_image:''}).trimEnd()+'\n---\n\n';
   const folders=path.split('/').slice(0,-1);let parent='';
   for(const part of folders){parent+=(parent?'/':'')+part;const folder=this.app.vault.getAbstractFileByPath(parent);if(folder&&!Array.isArray(folder.children))throw new Error('폴더 경로에 파일이 있습니다: '+parent);if(!folder)await this.app.vault.createFolder(parent);}
   const file=await this.app.vault.create(path,content);await this.app.workspace.getLeaf(false).openFile(file);return file;
