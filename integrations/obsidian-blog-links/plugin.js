@@ -1,4 +1,4 @@
-const {Plugin,Menu,Notice,parseYaml,requestUrl,setIcon}=require('obsidian');
+const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment}=require('obsidian');
 const bookmark=require('./bookmark');
 const {mention,metadata,webUrl}=require('./link-preview');
 function pasteCandidate(event,editor,view){
@@ -10,8 +10,33 @@ function pasteCandidate(event,editor,view){
  const line=(editor.getLine?.(position.line)||prefix.split('\n').at(-1)).slice(0,position.ch).replace(/\\./g,'');let ticks=0;for(const match of line.matchAll(/`+/g)){if(!ticks)ticks=match[0].length;else if(ticks===match[0].length)ticks=0;}if(ticks)return '';
  return webUrl(url);
 }
+function newPostPath(value){
+ const path=String(value||'').trim().replace(/\.md$/i,'')+'.md';
+ if(path.length>2048||path.toLowerCase()==='blog.md'||/[\\\s%?#<>:"|*\u0000-\u001f]/.test(path)||path.split('/').some(p=>!p||p==='.'||p==='..'||p.startsWith('_')||p.startsWith('.')))throw new Error('파일 경로를 확인하세요. 공백·특수문자·숨김 폴더 없이 폴더/파일명을 입력하세요.');
+ return path;
+}
+class NewPostModal extends Modal{
+ constructor(app,plugin){super(app);this.plugin=plugin;const folder=app.workspace.getActiveFile()?.parent?.path;this.path=folder&&folder!=='/'&&!folder.split('/').some(p=>p.startsWith('_')||p.startsWith('.'))?folder+'/':'';}
+ onOpen(){
+  this.titleEl.setText('새 블로그 글 만들기');
+  new Setting(this.contentEl).setName('파일 경로').setDesc('Vault 기준 경로입니다. 제목은 파일명, 작성일은 오늘 날짜로 입력하며 미발행 상태로 만듭니다.').addText(text=>{
+   text.setPlaceholder('sw-engineer/new-post').setValue(this.path).onChange(value=>{this.path=value;});
+   text.inputEl.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();this.submit();}});text.inputEl.focus();
+  });
+  this.error=this.contentEl.createDiv();this.error.style.color='var(--text-error)';this.error.setAttribute('role','alert');
+  new Setting(this.contentEl).addButton(button=>{this.button=button;button.setButtonText('생성').setCta().onClick(()=>this.submit());});
+ }
+ async submit(){
+  if(this.busy)return;this.busy=true;this.button.setDisabled(true);this.error.setText('');
+  try{await this.plugin.createPost(this.path);this.close();}
+  catch(error){this.error.setText(error.message);}
+  finally{this.busy=false;this.button.setDisabled(false);}
+ }
+ onClose(){this.contentEl.empty();}
+}
 module.exports=class BlogLinks extends Plugin{
  async onload(){
+  this.addCommand({id:'create-post',name:'새 글 만들기',callback:()=>new NewPostModal(this.app,this).open()});
   this.addCommand({id:'select-category',name:'분류 선택',checkCallback:checking=>{
    const file=this.app.workspace.getActiveFile();if(!file||file.extension!=='md'||file.path==='blog.md'||file.path.split('/').some(p=>p.startsWith('_')))return false;
    if(!checking)this.categoryMenu(file,{x:window.innerWidth/2,y:window.innerHeight/3});return true;
@@ -52,6 +77,18 @@ module.exports=class BlogLinks extends Plugin{
    const menu=new Menu();for(const [type,label]of [['url','일반 링크'],['mention','링크 멘션'],['preview','작은 미리보기'],['bookmark','북마크 카드']])menu.addItem(item=>item.setTitle(label).onClick(()=>this.choose(type,url,editor,start,end,file)));
    const coords=editor.cm?.coordsAtPos(editor.posToOffset(start));menu.showAtPosition({x:coords?.left||event.clientX||100,y:coords?.bottom||event.clientY||100});
   }));
+ }
+ async createPost(value){
+  const path=newPostPath(value);if(this.app.vault.getAbstractFileByPath(path))throw new Error('같은 경로의 파일이 이미 있습니다: '+path);
+  const template=this.app.vault.getAbstractFileByPath('_templates/블로그 글.md');if(!template)throw new Error('블로그 글 템플릿을 찾을 수 없습니다.');
+  const now=moment(),title=path.split('/').at(-1).slice(0,-3);
+  let content=(await this.app.vault.read(template)).replace(/\{\{title\}\}/g,()=>title).replace(/\{\{(date|time)(?::([^}]+))?\}\}/g,(_,type,format)=>now.format(format||(type==='date'?'YYYY-MM-DD':'HH:mm')));
+  const front=/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(content);if(!front)throw new Error('템플릿의 YAML 속성을 확인하세요.');
+  let metadata=front[1];if(/^publish:/m.test(metadata))metadata=metadata.replace(/^publish:.*$/m,'publish: false');else metadata+='\npublish: false';
+  if(parseYaml(metadata)?.publish!==false)throw new Error('템플릿의 publish 속성을 확인하세요.');content=content.slice(0,front.index)+front[0].replace(front[1],()=>metadata)+content.slice(front[0].length);
+  const folders=path.split('/').slice(0,-1);let parent='';
+  for(const part of folders){parent+=(parent?'/':'')+part;const folder=this.app.vault.getAbstractFileByPath(parent);if(folder&&!Array.isArray(folder.children))throw new Error('폴더 경로에 파일이 있습니다: '+parent);if(!folder)await this.app.vault.createFolder(parent);}
+  const file=await this.app.vault.create(path,content);await this.app.workspace.getLeaf(false).openFile(file);return file;
  }
  mountCategoryButtons(){
   for(const button of this.app.workspace.containerEl.querySelectorAll('.blog-category-picker'))if(button.closest('.metadata-property')?.dataset.propertyKey!=='category')button.remove();
@@ -98,3 +135,5 @@ module.exports=class BlogLinks extends Plugin{
  }
 };
 module.exports.pasteCandidate=pasteCandidate;
+
+module.exports.newPostPath=newPostPath;

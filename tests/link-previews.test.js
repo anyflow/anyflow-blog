@@ -25,7 +25,7 @@ test('explicit mentions stay inline, previews support captions, ordinary links r
  assert.ok(env.linkRequests.has(url));
 });
 test('paste menu is limited to single URLs outside code and preserves selected text',()=>{
- const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{}}:n==='./bookmark'?bookmark:links});
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
  const candidate=module.exports.pasteCandidate,view={app:{metadataCache:{getFileCache:()=>({})}},file:{}};
  const editor={somethingSelected:()=>false,getCursor:()=>({line:0,ch:0}),getValue:()=>''};
  const e={clipboardData:{getData:()=> 'https://example.com'}};
@@ -37,7 +37,7 @@ test('paste menu is limited to single URLs outside code and preserves selected t
  assert.equal(candidate(e,{...editor,getValue:()=> 'code',getCursor:()=>({line:2})},{...view,app:{metadataCache:{getFileCache:()=>({sections:[{type:'code',position:{start:{line:1},end:{line:3}}}]})}}}),'');
 });
 test('metadata completion cannot replace a URL changed by the author',async()=>{
- const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Notice:class{}}:n==='./bookmark'?bookmark:links});
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{},Notice:class{}}:n==='./bookmark'?bookmark:links});
  const p=new module.exports();p.cache={'https://example.com':{checkedAt:Date.now(),title:'Example'}};p.app={workspace:{getActiveFile:()=>({path:'note.md'})}};
  let replacements=0;await p.choose('mention','https://example.com',{getRange:()=> 'new text',replaceRange:()=>replacements++},{line:0,ch:0},{line:0,ch:19},{path:'note.md'});assert.equal(replacements,0);
 });
@@ -53,7 +53,7 @@ test('failed metadata refresh retains source information and avoids repeated req
 });
 
 test('per-note attachment folders do not write tracked application settings on every file switch',async()=>{
- const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,MutationObserver:class{observe(){} disconnect(){}},require:n=>n==='obsidian'?{Plugin:class{}}:n==='./bookmark'?bookmark:links});
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,MutationObserver:class{observe(){} disconnect(){}},require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
  const p=new module.exports(),events={},config={attachmentFolderPath:'_assets'};let active={extension:'md',path:'cat/one.md'},writes=0;
  p.addCommand=p.register=p.registerEvent=p.registerMarkdownCodeBlockProcessor=p.registerMarkdownPostProcessor=()=>{};
  p.app={vault:{config,getAbstractFileByPath:()=>null,setConfig:()=>writes++},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>active,on:(n,f)=>events[n]=f},metadataCache:{on:(n,f)=>events[n]=f}};
@@ -62,7 +62,7 @@ test('per-note attachment folders do not write tracked application settings on e
 
 test('category selection reads current notes and saves only the chosen note category',async()=>{
  const options=[],notices=[];class Menu{addItem(fn){const item={setTitle(v){this.title=v;return this;},setChecked(v){this.checked=v;return this;},onClick(fn){this.choose=fn;return this;}};fn(item);options.push(item);}showAtPosition(){}}
- const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Menu,Notice:class{constructor(s){notices.push(s);}}}:n==='./bookmark'?bookmark:links});
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{},Menu,Notice:class{constructor(s){notices.push(s);}}}:n==='./bookmark'?bookmark:links});
  const file={path:'cat/one.md'},other={path:'cat/two.md'},template={path:'_templates/template.md'},current={category:'One',title:'Preserve',draft:true},second={category:'Two'};
  const notes=new Map([[file,current],[other,second],[template,{category:'Private'}]]);let saved;
  const p=new module.exports();p.app={vault:{getMarkdownFiles:()=>[...notes.keys()],getAbstractFileByPath:()=>file},metadataCache:{getFileCache:f=>({frontmatter:notes.get(f)})},fileManager:{processFrontMatter:async(f,fn)=>{saved=f;fn(notes.get(f));}}};
