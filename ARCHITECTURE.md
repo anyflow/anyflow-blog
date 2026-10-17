@@ -20,8 +20,8 @@ flowchart TD
     Deploy --> Web
     Deploy --> API[Node.js: 댓글 API]
     Browser[브라우저] --> Gateway[agentgateway]
-    Gateway --> Web
-    Web -->|/api/ 프록시| API
+    Gateway -->|일반 페이지·정적 자산| Web
+    Gateway -->|/api 경로| API
     API --> Queue[PVC: 파일 큐·로컬 상태]
     Queue --> Worker[동일 프로세스의 단일 비동기 처리기]
     Worker --> Comments[비공개 댓글 Git 저장소]
@@ -37,8 +37,8 @@ flowchart TD
 | Eleventy·Nunjucks | Markdown 데이터와 템플릿을 HTML로 생성한다. 서버 측 페이지 실행 환경을 운영하지 않고 페이지 구조를 제어한다. |
 | Pagefind | 생성 HTML에서 검색 색인을 만들고 브라우저에서 조회한다. 검색을 위해 별도 서버·DB를 운영하지 않는다. |
 | Markdown-it·KaTeX·Mermaid | Markdown·수식·다이어그램을 처리한다. 본문 Mermaid는 브라우저에서 테마에 맞게 렌더링하고 카드/OG 이미지는 빌드에서 생성한다. |
-| nginx | 정적 파일·캐시·정규 URL 리다이렉트와 `/api/` 프록시를 담당한다. |
-| agentgateway | Gateway API 라우팅과 API 요청 제한을 담당한다. |
+| nginx | 정적 파일·캐시·정규 URL 리다이렉트를 담당한다. |
+| agentgateway | 블로그 HTTPRoute에서 `/api`는 댓글 Service, 그 외 경로는 웹 Service로 전달하고 API 요청 제한을 적용한다. |
 | GitHub Actions·GHCR | 홈 서버 밖에서 정적 빌드·이미지 생성과 버전별 이미지 게시를 수행한다. |
 | Kubernetes CronJob·Makefile | Git 배포 선언을 주기적으로 가져와 적용한다. 배포 수신 API와 전용 상시 배포 서버를 두지 않는다. |
 | Node.js·Git·PVC | 낮은 요청량의 댓글과 Like를 영속 큐·Git 이력으로 관리한다. 별도 SQL·Redis를 운영하지 않는다. |

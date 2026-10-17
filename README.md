@@ -71,6 +71,8 @@ Kubernetes에는 Gateway API·agentgateway CRD, 대상 네임스페이스와 Gat
 make create KUBE_CONTEXT=YOUR_CONTEXT
 ```
 
+HTTPRoute는 `/api` 경로를 댓글 Service로 직접 전달하고 그 외 경로는 nginx Service로 전달한다. URI를 재작성하지 않으며 두 규칙은 같은 도메인과 요청 제한 정책을 사용한다.
+
 일회성 반영은 `make deploy KUBE_CONTEXT=YOUR_CONTEXT`를 사용한다. 코드/콘텐츠 변경은 이미지 빌드와 배포 선언 게시를 거쳐 반영한다. 댓글 데이터 변경은 사이트 이미지 빌드와 독립적이다.
 
 ## 검증과 공개 범위

@@ -16,6 +16,13 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: anyflow-blog-comments
+          port: 3000
+    - matches:
+        - path:
+            type: PathPrefix
             value: /
       backendRefs:
         - name: anyflow-blog
