@@ -1,4 +1,4 @@
-const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment,stringifyYaml,loadMermaid}=require('obsidian');
+const {Plugin,Menu,Modal,Setting,Notice,parseYaml,requestUrl,setIcon,moment,stringifyYaml,loadMermaid,MarkdownRenderer}=require('obsidian');
 const bookmark=require('./bookmark');
 const {createRenderer,installMermaid}=require('./mermaid-profile');
 const {VisualGallery}=require('./visual-gallery');
@@ -87,7 +87,8 @@ module.exports=class BlogLinks extends Plugin{
    try{const data=parseYaml(cardlinkSource(source));if(!data||typeof data.url!=='string')throw new Error('URL이 필요합니다.');const saved=this.cache[data.url]||{};el.addClass('blog-links');el.innerHTML=bookmark({...saved,...data,title:data.title||saved.title,description:data.description||saved.description,cover:data.image||saved.cover,icon:data.favicon||saved.icon},{resolveImage:raw=>{const path=String(raw).replace(/^!?\[\[|\]\]$/g,'').split('|')[0];const file=this.app.metadataCache.getFirstLinkpathDest(path,ctx.sourcePath);return file?this.app.vault.getResourcePath(file):'';}});}
    catch(error){el.setText(source);new Notice(error.message);}
   });
-  this.registerMarkdownPostProcessor((el,ctx)=>{
+  this.registerMarkdownPostProcessor(async(el,ctx)=>{
+   await this.renderIndentedCaptions(el,ctx.sourcePath);
    const id=ctx.sourcePath==='blog.md'?'/':'/'+ctx.sourcePath.replace(/\.md$/,'');
    for(const paragraph of el.querySelectorAll('p')){
     const anchor=paragraph.querySelector(':scope>a');if(!anchor||anchor.title==='mention'||paragraph.children.length!==1||paragraph.textContent.trim()!==anchor.textContent.trim())continue;
@@ -99,6 +100,7 @@ module.exports=class BlogLinks extends Plugin{
     try{const box=document.createElement('span');box.className='blog-links';box.innerHTML=mention(anchor.getAttribute('href'),this.cache[anchor.getAttribute('href')],anchor.textContent);anchor.replaceWith(box);}catch{/* Keep the original link on invalid metadata. */}
    }
   });
+  for(const leaf of this.app.workspace.getLeavesOfType('markdown'))if(leaf.view.file)await this.renderIndentedCaptions(leaf.view.containerEl,leaf.view.file.path);
   this.registerEvent(this.app.workspace.on('editor-paste',(event,editor,view)=>{
    const url=pasteCandidate(event,editor,view);if(!url)return;
    event.preventDefault();const start=editor.getCursor();editor.replaceSelection(url);
@@ -106,6 +108,15 @@ module.exports=class BlogLinks extends Plugin{
    const menu=new Menu();for(const [type,label]of [['url','일반 링크'],['mention','링크 멘션'],['preview','작은 미리보기'],['bookmark','북마크 카드']])menu.addItem(item=>item.setTitle(label).onClick(()=>this.choose(type,url,editor,start,end,file)));
    const coords=editor.cm?.coordsAtPos(editor.posToOffset(start));menu.showAtPosition({x:coords?.left||event.clientX||100,y:coords?.bottom||event.clientY||100});
   }));
+ }
+ async renderIndentedCaptions(el,sourcePath){
+   for(const quote of [...(el.matches('blockquote')?[el]:[]),...el.querySelectorAll('blockquote')]){
+    const code=quote.querySelector(':scope>pre:only-child>code');if(!code||code.className.includes('language-')||!/^[ \t]*\[!caption\](?:[ \t]*\n|$)/i.test(code.textContent))continue;
+    const indent=/^[ \t]*/.exec(code.textContent)[0],source=code.textContent.split('\n').map(line=>line.startsWith(indent)?line.slice(indent.length):line).join('\n');
+    const rendered=document.createElement('div');
+    await MarkdownRenderer.render(this.app,source.trimEnd().split('\n').map(line=>'> '+line).join('\n'),rendered,sourcePath,this);
+    quote.replaceWith(...rendered.childNodes);
+   }
  }
  async createPost(value){
   const path=newPostPath(value);if(this.app.vault.getAbstractFileByPath(path))throw new Error('같은 경로의 파일이 이미 있습니다: '+path);

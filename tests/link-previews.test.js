@@ -116,3 +116,13 @@ test('line numbers align to the first text line without changing gutter block he
  const view={editor:{cm:{posAtDOM:row=>row.number,state:{doc:{lineAt:n=>({number:n})}}}},containerEl:{querySelectorAll:selector=>selector.includes('gutterElement')?labels:rows}};
  const plugin=new module.exports();plugin.app={workspace:{getLeavesOfType:()=>[{view}]}};plugin.mountLineNumbers();assert.equal(labels[0].dataset.blogNumberOffset,'31.5px');assert.equal(labels[1].dataset.blogNumberOffset,'5px');assert.equal(labels[2].dataset.blogNumberLineHeight,'16px');labels.forEach(label=>assert.equal(label.style.height,'unchanged'));
 });
+
+test('Obsidian rerenders only explicit indented captions and preserves code examples',async()=>{
+ const module={exports:{}},renders=[],replaced=[];
+ const MarkdownRenderer={render:async(app,source,el,path)=>{renders.push({source,path});el.childNodes=['caption'];}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,document:{createElement:()=>({})},require:n=>n==='obsidian'?{Plugin:class{},Modal:class{},MarkdownRenderer}:n==='./bookmark'?bookmark:links});
+ const p=new module.exports();p.app={};
+ const quote=(text,className='')=>({querySelector:()=>({textContent:text,className}),replaceWith:(...nodes)=>replaced.push(nodes)});
+ await p.renderIndentedCaptions({matches:()=>false,querySelectorAll:()=>[quote('[!caption]\nCaption **bold**\n'),quote('plain code'),quote('[!caption]\nExample','language-md')]},'note.md');
+ assert.equal(renders.length,1);assert.equal(renders[0].source,'> [!caption]\n> Caption **bold**');assert.equal(renders[0].path,'note.md');assert.deepEqual(replaced,[['caption']]);
+});

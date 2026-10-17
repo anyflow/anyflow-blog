@@ -147,3 +147,5 @@ Blog 링크1.5.0는 운영 블로그의 본문 CSS를 기준으로 읽기 모드
 Mermaid는 GitHub에서 확인한 Mermaid12.1.0·ELK·Trebuchet 글꼴·줄바꿈 설정을 사용한다. MIT 라이브러리를 플러그인에 포함하며 런타임 CDN은 사용하지 않는다. 로컬 iframe에서 렌더링하여 Obsidian 본문 CSS의 영향을 차단하고, 결과 SVG는 기존 읽기/Live Preview 및 확대 기능에 전달한다. 문서의 Mermaid frontmatter 설정과 원문은 유지하며 플러그인 해제 시 기본 렌더러를 복구한다.
 
 블로그 본문과 빌드의 카드·OG 다이어그램도 같은 로컬 Mermaid 라이브러리와 githubDefaults/createRenderer를 사용한다. 본문은 현재 테마를, PNG는 밝은 테마를 사용하며 렌더러·설정 변경 시 PNG 캐시를 무효화한다.
+
+`> [!caption]`의 `>` 뒤에 탭 또는 코드 들여쓰기가 있어도 명시적 캡션으로 해석한다. Obsidian은 표시 단계에서만 보정하며 원문 탭은 유지한다. 일반 들여쓰기 코드 블록과 코드 예제 내부의 캡션 문법은 바꾸지 않는다.

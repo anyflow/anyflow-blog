@@ -17,3 +17,14 @@ test('Mermaid anchors survive caption attachment; nested columns keep their own 
  assert.equal(id,'diagram');assert.match(html,/id="diagram"[\s\S]*<figure[\s\S]*<figcaption/);
  assert.match(render('> [!columns]\n>\n> > [!column|0.5]\n> >\n> > ![A](a.png)\n> >\n> > > [!caption]\n> > > A caption\n>\n> > [!column|0.5]\n> >\n> > > [!caption]\n> > > Standalone'),/<figcaption class="caption">[\s\S]*A caption[\s\S]*<\/figure>[\s\S]*<div class="caption">[\s\S]*Standalone/);
 });
+
+test('tabs and code indentation after quote markers still recognize explicit captions',()=>{
+ const media='```mermaid\ngraph TD; A-->B\n```\n';
+ for(const indent of ['\t',' \t','    ','\t\t']){
+  const caption='> '+indent+'[!caption]\n> '+indent+'Caption **bold** with [link](https://example.com).';
+  assert.match(render(media+caption),/<figure[\s\S]*<figcaption class="caption"><p>\s*Caption <strong>bold<\/strong>[\s\S]*<\/figcaption><\/figure>/);
+  assert.match(render(caption),/<div class="caption"><p>\s*Caption <strong>bold<\/strong>/);
+ }
+ assert.match(render('>     plain code'),/<blockquote>\s*<pre><code>plain code/);
+ assert.match(render('```md\n> \t[!caption]\n> \tExample\n```'),/<pre><code[^>]*>&gt;/);
+});
