@@ -17,3 +17,8 @@ test('X preview cache reuses resolved posts and preserves cached results after a
  const cached=await cacheXThumbnails(['123'],async()=>({id_str:'123'}),file);assert.equal(cached['123'],null);
  const failed=await cacheXThumbnails(['456'],async()=>{throw new Error('unavailable');},file);assert.equal(failed[id],image);assert.equal(Object.hasOwn(failed,'456'),false);assert.equal(readXCache(file)[id],image);
 });
+
+test('native X embed keeps card image lookup without Notion',()=>{
+ assert.equal(xPostId('https://platform.twitter.com/embed/Tweet.html?id=1717179344110358638&dnt=true'),'1717179344110358638');
+ for(const url of ['https://platform.twitter.com.evil.test/embed/Tweet.html?id=123','https://platform.twitter.com/embed/Tweet.html?id=invalid','http://platform.twitter.com/embed/Tweet.html?id=123'])assert.equal(xPostId(url),'');
+});

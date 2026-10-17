@@ -107,7 +107,6 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-body h4 { margin:22px 0 6px; padding:2px }
 .post-body p { margin:0; padding:8px 2px }
 .post-body>p:first-child,.post-body>.block-anchor:first-child+p { margin-top:10px }
-.post-body p.notion-empty-paragraph { min-height:30px }
 .post-body ul,.post-body ol { padding-left:30px; margin:4px 0}
 .post-body li { padding:3px 2px}
 .post-body li>p { padding:0}
