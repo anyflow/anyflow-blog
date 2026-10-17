@@ -6,59 +6,143 @@
 
 ## Summary
 
-GitHub 제공 runner에서 산출물을 생성하고, Kubernetes는 완성된 이미지와 배포 선언을 가져와 실행한다.
+GitHub 제공 runner에서 산출물을 생성하고, Kubernetes는 완성된 이미지와 배포 선언을 가져와 실행한다. 다음 그림은 애플리케이션 단위의 논리 배포 뷰다.
 
 ```mermaid
-flowchart TD
-    Content[Markdown 콘텐츠 저장소] --> Build[GitHub Actions: 검증·정적 빌드]
-    Code[블로그 코드 저장소] --> Build
-    Build --> Registry[GHCR: 이미지]
-    Build --> Declaration[Git: 이미지 digest 배포 선언]
-    Declaration --> Poll[Kubernetes CronJob: 1분 주기]
-    Poll --> Deploy[make deploy]
-    Registry --> Web[nginx: 정적 사이트]
-    Deploy --> Web
-    Deploy --> API[Node.js: 댓글 API]
-    Browser[브라우저] --> Gateway[agentgateway]
-    Gateway -->|일반 페이지·정적 자산| Web
-    Gateway -->|/api 경로| API
-    API --> Queue[PVC: 파일 큐·로컬 상태]
-    Queue --> Worker[동일 프로세스의 단일 비동기 처리기]
-    Worker --> Comments[비공개 댓글 Git 저장소]
-    Comments --> Publication[댓글 Actions: PR·승인·공개 데이터 생성]
+---
+config:
+  htmlLabels: false
+---
+flowchart TB
+    Admin["`**주인장 · 관리자**`"]
+    Commenter["`**댓글 게시자**
+브라우저`"]
+
+    subgraph GitHub["GitHub"]
+        Blog["`**blog repo**
+Markdown·첨부`"]
+        Code["`**anyflow-blog repo**
+코드·Makefile·배포 YAML`"]
+        Comments["`**comments repo**
+비공개 · 댓글·Like·공개 데이터`"]
+
+        subgraph Actions["GitHub Actions · GitHub 제공 runner"]
+            Build["`**빌드 workflow**
+정적 콘텐츠·컨테이너 이미지 생성`"]
+            Publish["`**댓글 게시 workflow**
+PR·승인·공개 데이터 생성`"]
+        end
+
+        GHCR["`**GHCR**
+웹·댓글 API·배포 도구 이미지`"]
+    end
+
+    subgraph Home["홈 서버 · Kubernetes"]
+        Cron["`**배포 CronJob**
+1분 주기
+emptyDir에 clone → make deploy`"]
+        Gateway["`**public-gateway**
+agentgateway
+블로그 HTTPRoute·요청 제한`"]
+        Web["`**nginx**
+웹 Deployment · Service:80
+정적 콘텐츠가 포함된 이미지`"]
+        API["`**댓글 Deployment**
+Node.js:3000 · Service:80
+API·단일 비동기 처리기`"]
+        PVC[("`**댓글 PVC**
+영속 큐·로컬 Git checkout`")]
+    end
+
+    Admin -->|"D1a. 글 push"| Blog
+    Admin -->|"D1b. 코드·설정 push"| Code
+    Blog -->|"D2a. workflow_dispatch·콘텐츠 checkout"| Build
+    Code -->|"D2b. 코드·workflow checkout"| Build
+    Build -->|"D3. 이미지 push"| GHCR
+    Build -->|"D4. 이미지 digest로 YAML 갱신·push"| Code
+    GHCR -->|"D5. 배포 도구 이미지 준비"| Cron
+    Code -->|"D6. 매 실행 새 clone"| Cron
+    Cron -->|"D7a. 웹 Service·Deployment 적용"| Web
+    Cron -->|"D7b. 댓글 Service·Deployment 적용"| API
+    Cron -->|"D7c. HTTPRoute·요청 제한 정책 적용"| Gateway
+    GHCR -->|"D8a. 웹 이미지 pull"| Web
+    GHCR -->|"D8b. API 이미지 pull"| API
+
+    Commenter -.->|"C1. 페이지·댓글·Like 요청"| Gateway
+    Gateway -.->|"C2a. 일반 경로 → Service:80"| Web
+    Gateway -.->|"C2b. /api → Service:80"| API
+    API -->|"C3. 영속 큐 저장·접수 완료"| PVC
+    API -.->|"C4. 비동기 Git push"| Comments
+    Comments -->|"C5. push로 workflow 실행"| Publish
+    Publish -->|"C6. PR·merge·공개 데이터 commit"| Comments
+    Comments -.->|"C7. Git pull·조회 상태 갱신"| API
+
+    classDef actor fill:#f1f5f9,stroke:#64748b,color:#0f172a
+    classDef repo fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef action fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef registry fill:#cffafe,stroke:#0891b2,color:#164e63
+    classDef service fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef gateway fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef storage fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    class Admin,Commenter actor
+    class Blog,Code,Comments repo
+    class Build,Publish,Cron action
+    class GHCR registry
+    class Web,API service
+    class Gateway gateway
+    class PVC storage
+    style GitHub fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style Actions fill:#faf5ff,stroke:#a78bfa,color:#4c1d95
+    style Home fill:#f0fdf4,stroke:#86b996,color:#14532d
 ```
 
-## 구성과 선택 이유
-
-블로그의 정적 읽기 경로와 변경 요청 경로에 필요한 구성 요소를 배치한다.
-
-| 구성 | 역할과 선택 이유 |
+| 컴포넌트 | 역할 |
 | --- | --- |
-| Eleventy·Nunjucks | Markdown 데이터와 템플릿을 HTML로 생성한다. 서버 측 페이지 실행 환경을 운영하지 않고 페이지 구조를 제어한다. |
-| Pagefind | 생성 HTML에서 검색 색인을 만들고 브라우저에서 조회한다. 검색을 위해 별도 서버·DB를 운영하지 않는다. |
-| Markdown-it·KaTeX·Mermaid | Markdown·수식·다이어그램을 처리한다. 본문 Mermaid는 브라우저에서 테마에 맞게 렌더링하고 카드/OG 이미지는 빌드에서 생성한다. |
-| nginx | 정적 파일·캐시·정규 URL 리다이렉트를 담당한다. |
-| agentgateway | 블로그 HTTPRoute에서 `/api`는 댓글 Service:80, 그 외 경로는 웹 Service:80으로 전달하고 API 요청 제한을 적용한다. 댓글 Service의 targetPort는 3000이다. |
-| GitHub Actions·GHCR | 홈 서버 밖에서 정적 빌드·이미지 생성과 버전별 이미지 게시를 수행한다. |
-| Kubernetes CronJob·Makefile | Git 배포 선언을 주기적으로 가져와 적용한다. 배포 수신 API와 전용 상시 배포 서버를 두지 않는다. |
-| Node.js·Git·PVC | 낮은 요청량의 댓글과 Like를 영속 큐·Git 이력으로 관리한다. 별도 SQL·Redis를 운영하지 않는다. |
+| 주인장 · 관리자 | 글·코드·설정을 작성하고 push하며 댓글 승인·관리를 수행한다. |
+| 댓글 게시자 | 브라우저에서 페이지를 조회하고 댓글·답글·Like와 본인 댓글 수정·삭제를 요청한다. |
+| blog repo | 작성 Markdown과 첨부를 보관하고 콘텐츠 변경 시 빌드 workflow를 호출한다. |
+| anyflow-blog repo | 코드·템플릿·Makefile·workflow와 이미지 digest가 기록된 배포 YAML을 보관한다. |
+| comments repo | 댓글·Like·작성 권한 데이터와 댓글 게시 workflow를 비공개로 보관한다. |
+| 빌드 workflow | GitHub 제공 runner에서 입력을 검증하고 정적 콘텐츠·이미지를 생성해 GHCR과 배포 YAML에 게시한다. |
+| 댓글 게시 workflow | GitHub 제공 runner에서 신규 댓글 PR·승인 절차와 공개 데이터 생성을 수행한다. |
+| GHCR | 웹·댓글 API·배포 도구 이미지를 digest별로 보관한다. |
+| 배포 CronJob | 매분 emptyDir에 코드를 clone하고 make deploy로 Service·Deployment·라우팅·정책을 적용한다. |
+| public-gateway | HTTPS를 수신하고 HTTPRoute로 정적 콘텐츠와 API를 분기하며 요청 제한을 적용한다. |
+| nginx | 이미지에 포함된 HTML·CSS·JS·미디어·검색 색인을 제공하고 정규 URL 리다이렉트를 처리한다. |
+| 댓글 Deployment | 입력·인증·권한 검증, 로컬 상태 조회, 영속 큐 접수와 단일 비동기 처리기의 Git 저장을 수행한다. |
+| 댓글 PVC | API 재시작에도 필요한 작업 큐·처리 기록·댓글 Git checkout을 보존한다. |
 
-## 콘텐츠 빌드와 게시
+D는 배포, C는 페이지 조회·댓글 처리 순서이며 a/b/c는 같은 단계의 분기다. 리소스 적용과 이미지 다운로드는 일부 병렬로 진행한다. C3의 영속 저장을 마친 뒤 접수를 응답한다. C6의 PR 절차는 신규 댓글·답글에 적용하며 Like·기존 공개 댓글 수정·삭제는 main에 직접 저장한다.
 
-빌드는 입력을 검증하고 완성된 산출물만 게시한다.
+waypoint·ztunnel·응답 경로·Secret 등 세부 인프라는 그림에서 생략한다. 현재 실제 웹/API 연결은 메시 설정에 따라 Istio waypoint를 경유하며, HTTPRoute에는 각 Service만 지정한다.
 
-1. 콘텐츠 저장소에서 `publish: true` 글과 참조 자산을 읽는다.
-2. Markdown·내부 링크·미디어·게시 속성을 해석하고 링크와 첨부를 검증한다.
-3. 링크 메타데이터·X 사진·Mermaid 등의 카드/OG 이미지를 수집하거나 캐시에서 재사용한다.
-4. Eleventy로 홈·본문·sitemap·robots·공개 댓글 카탈로그를 생성하고 Pagefind 색인을 만든다.
-5. 임시 경로의 생성이 성공하면 `_site` 또는 `_preview`를 교체한다. 직전 결과는 `.cache/previous-build`에 한 개 보관한다.
-6. Actions가 정적 사이트 이미지를 게시하고 `deployment/deployments.yaml`의 이미지 digest를 커밋한다.
+## 기술 선택 이유
 
-정적 이미지에는 생성된 HTML·JS·CSS·검색 색인·참조 자산이 들어간다. Markdown 원문·Obsidian 설정·Git 이력·비공개 메타데이터는 공개 출력으로 복사하지 않는다. 코드와 콘텐츠 SHA가 빌드 중 바뀌면 오래된 배포 선언 게시를 생략한다.
+각 기술은 정적 블로그와 낮은 요청량의 댓글을 운영하는 데 필요한 실행 환경과 관리 대상을 줄이기 위해 선택한다.
 
-CronJob은 `concurrencyPolicy: Forbid`로 정기 배포 작업의 중복 실행을 막는다. 매 실행마다 Pod의 `emptyDir`에 지정한 코드 저장소의 master 브랜치를 depth 1로 clone하고 `make deploy`를 실행한다. checkout은 작업 종료 시 정리하고 볼륨은 Pod와 함께 제거된다. 배포 PVC·파일 잠금·마지막 성공 기록은 사용하지 않는다. 동일한 이미지 digest의 YAML을 다시 적용해도 웹/API Pod는 교체하지 않는다. 실패한 작업은 다음 정기 실행에서 새 checkout으로 재시도한다.
+| 기술 | 선택 이유 |
+| --- | --- |
+| Eleventy·Nunjucks | 데이터와 템플릿으로 페이지 구조를 제어하고 HTML을 빌드하므로 서버 측 페이지 실행 환경을 운영하지 않는다. |
+| Pagefind | 생성 HTML로 색인을 만들고 브라우저에서 검색하므로 별도 검색 서버·DB를 운영하지 않는다. |
+| Markdown-it·KaTeX·Mermaid | Markdown 원본에 표현을 보존하면서 수식은 빌드 시, 다이어그램은 브라우저에서 테마에 맞게 처리한다. |
+| nginx | 정적 산출물과 HTTP 제공 설정을 같은 이미지로 고정해 교체·복구 단위를 일치시킨다. |
+| agentgateway | 공통 Gateway와 블로그 소유 HTTPRoute·정책의 설정 책임을 분리한다. |
+| GitHub Actions·GHCR | 홈 서버의 빌드 부하를 줄이고 코드·콘텐츠 조합의 산출물을 이미지 digest로 배포한다. |
+| Kubernetes CronJob·Makefile | 배포 수신 API·상시 배포 서버 없이 Kubernetes와 make 명령으로 주기적 적용을 수행한다. |
+| Node.js·Git·PVC | 낮은 요청량에서 별도 SQL·Redis를 운영하지 않고 영속 접수와 Git 변경 이력을 확보한다. |
 
-정적 이미지·댓글 API 이미지·배포 도구 이미지는 독립된 digest를 사용한다. 사이트 변경만 배포할 때 댓글 API를 교체하지 않는다. 이미지 선언과 적용 명령은 [Makefile](Makefile), [배포 스크립트](scripts/poll-deploy.sh), [workflow](.github/workflows/publish.yml)를 따른다.
+## 빌드와 배포 보장
+
+D 단계는 검증을 통과한 산출물을 게시하고, 배포 실패는 다음 정기 실행에서 재시도한다.
+
+- 게시 속성·Markdown·내부 링크·참조 첨부를 검증한다. 작성 규칙과 공개 범위는 [CONTENT_CONTRACT.md](CONTENT_CONTRACT.md)를 따른다.
+- 링크 메타데이터·X 사진·Mermaid 등의 카드/OG 이미지는 수집 결과를 캐시해 재사용한다.
+- HTML·검색 색인·sitemap·공개 글 카탈로그를 임시 경로에서 완성한 뒤 `_site` 또는 `_preview`를 교체한다. 직전 결과는 `.cache/previous-build`에 한 개 보관한다.
+- 빌드 중 코드 또는 콘텐츠 SHA가 바뀌면 오래된 배포 선언의 게시를 생략한다.
+
+CronJob은 `concurrencyPolicy: Forbid`로 정기 작업의 중복 실행을 막는다. 매 실행마다 master 브랜치를 depth 1로 clone하고 작업 종료 시 checkout을 정리한다. emptyDir은 Pod와 함께 제거하며 배포 PVC·파일 잠금·마지막 성공 기록은 사용하지 않는다. 동일한 이미지 digest의 YAML을 재적용해도 웹/API Pod는 교체하지 않는다.
+
+웹·댓글 API·배포 도구 이미지는 독립된 digest를 사용하므로 사이트 변경만 배포할 때 댓글 API를 교체하지 않는다. 이미지 선언과 적용 명령은 [Makefile](Makefile), [배포 스크립트](scripts/poll-deploy.sh), [빌드 workflow](.github/workflows/publish.yml)를 따른다.
 
 ## 댓글·Like 처리
 
