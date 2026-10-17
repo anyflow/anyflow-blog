@@ -36,3 +36,5 @@
 
 /* Keep the negative banner layer above the reading/editor background. */
 .pixel-banner .markdown-preview-view,.pixel-banner .markdown-source-view{isolation:isolate}
+
+.metadata-container .metadata-add-button{display:none}
