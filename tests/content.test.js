@@ -332,7 +332,9 @@ test('legacy visual metadata supplies emoji assets and aliases, never authored t
 test('internal page mentions decorate wiki and markdown labels without changing external or image links',t=>{
  const root=fixture(t);
  post(root,'target',{title:'Target title',icon:'🚧'});
- post(root,'source',{},'[[target]]\n\n[[target|Alias]]\n\n[Custom label](target.md)\n\n[Web label](https://www.anyflow.net/target/#section)\n\n[External](https://example.org/target)\n\n[Section](#section)\n\n`[[target]]`');
+ post(root,'home',{kind:'root',title:'Home title',icon:'🏠'});
+ fs.writeFileSync(path.join(root,'image.svg'),'<svg></svg>');
+ post(root,'source',{},'[[target]]\n\n[[target|Alias]]\n\n[Custom label](target.md)\n\n[[blog]]\n\n[![Image](image.svg)](target.md)\n\n[Web label](https://www.anyflow.net/target/#section)\n\n[External](https://example.org/target)\n\n[Section](#section)\n\n`[[target]]`');
  const source=loadContent(root).posts.find(p=>p.url==='/source');
  assert.match(source.html,/page-mention-icon[^>]*[^]*?🚧/);
  assert.match(source.html,/page-mention-title">Target title<\/span>/);
@@ -340,6 +342,8 @@ test('internal page mentions decorate wiki and markdown labels without changing 
  assert.match(source.html,/page-mention-title">Custom label<\/span>/);
  assert.match(source.html,/href="\/target#section" class="page-mention"/);
  assert.match(source.html,/>Web label<\/span>/);
+ assert.match(source.html,/page-mention-title">Home title<\/span>/);
+ assert.match(source.html,/<a href="\/target"><img /);
  assert.match(source.html,/<a href="https:\/\/example.org\/target" rel="noopener noreferrer">External<\/a>/);
  assert.match(source.html,/<a href="#section">Section<\/a>/);
  assert.match(source.html,/<code>\[\[target\]\]<\/code>/);
