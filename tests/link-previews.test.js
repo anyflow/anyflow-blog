@@ -126,3 +126,10 @@ test('Obsidian rerenders only explicit indented captions and preserves code exam
  await p.renderIndentedCaptions({matches:()=>false,querySelectorAll:()=>[quote('[!caption]\nCaption **bold**\n'),quote('plain code'),quote('[!caption]\nExample','language-md')]},'note.md');
  assert.equal(renders.length,1);assert.equal(renders[0].source,'> [!caption]\n> Caption **bold**');assert.equal(renders[0].path,'note.md');assert.deepEqual(replaced,[['caption']]);
 });
+
+test('caption editor styling follows quote boundaries and does not leak to other callouts',()=>{
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
+ const {captionLine}=module.exports,lines=['> \t[!caption]','> \tCaption wraps here.','>','> Next paragraph.','','> Ordinary quote','> [!info]','> Information','> > [!caption]','> > Nested caption','> Outer information'];const doc={line:n=>({text:lines[n-1]})};
+ for(const n of [1,2,3,4,9,10])assert.equal(captionLine(doc,n),true,'line '+n);
+ for(const n of [5,6,7,8,11])assert.equal(captionLine(doc,n),false,'line '+n);
+});

@@ -225,10 +225,10 @@ module.exports=class BlogLinks extends Plugin{
    const file=this.app.workspace.getActiveFile();if(!file||file.extension!=='md'||file.path==='blog.md'||file.path.split('/').some(p=>p.startsWith('_')))return false;
    if(!checking)this.categoryMenu(file,{x:window.innerWidth/2,y:window.innerHeight/3});return true;
   }});
-  const container=this.app.workspace.containerEl,observer=new MutationObserver(records=>{if(records.every(r=>r.type==='attributes'&&!r.target.matches('.cm-line.HyperMD-list-line,.markdown-source-view,.cm-lineNumbers .cm-gutterElement')))return;this.mountCategoryButtons();this.mountListIndents();this.mountCardIndents();this.mountLineNumbers();});
+  const container=this.app.workspace.containerEl,observer=new MutationObserver(records=>{if(records.every(r=>r.type==='attributes'&&!r.target.matches('.cm-line.HyperMD-list-line,.cm-line.HyperMD-quote,.markdown-source-view,.cm-lineNumbers .cm-gutterElement')))return;this.mountCategoryButtons();this.mountListIndents();this.mountCardIndents();this.mountCaptionLines();this.mountLineNumbers();});
   observer.observe(container,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','data-blog-list-indent']});
   this.register(()=>{observer.disconnect();container.querySelectorAll('.blog-category-picker').forEach(el=>el.remove());});
-  this.mountCategoryButtons();this.mountListIndents();this.mountCardIndents();this.mountLineNumbers();
+  this.mountCategoryButtons();this.mountListIndents();this.mountCardIndents();this.mountCaptionLines();this.mountLineNumbers();
   const openVisual=event=>{
    const target=event.target.closest?.('.metadata-property-value');if(!target)return;
    const row=target.closest('.metadata-property'),key=row?.dataset.propertyKey;if(!['cover','icon'].includes(key))return;
@@ -244,7 +244,7 @@ module.exports=class BlogLinks extends Plugin{
   const initialAttachments=this.app.vault.config.attachmentFolderPath;this.register(()=>{this.app.vault.config.attachmentFolderPath=initialAttachments;});
   const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.config.attachmentFolderPath='_assets/'+file.path.replace(/\.md$/,'');};
   this.registerEvent(this.app.workspace.on('file-open',attachments));
-  this.registerEvent(this.app.metadataCache.on('changed',file=>{attachments(file);this.mountListIndents();this.mountCardIndents();this.mountLineNumbers();}));
+  this.registerEvent(this.app.metadataCache.on('changed',file=>{attachments(file);this.mountListIndents();this.mountCardIndents();this.mountCaptionLines();this.mountLineNumbers();}));
   attachments(this.app.workspace.getActiveFile());
   this.cache={};const file=this.app.vault.getAbstractFileByPath('_assets/_meta/link-previews.json');
   if(file){try{this.cache=JSON.parse(await this.app.vault.read(file));}catch{new Notice('링크 정보 파일을 읽지 못했습니다. 원본 파일은 유지합니다.');}}
@@ -292,6 +292,19 @@ module.exports=class BlogLinks extends Plugin{
   const folders=path.split('/').slice(0,-1);let parent='';
   for(const part of folders){parent+=(parent?'/':'')+part;const folder=this.app.vault.getAbstractFileByPath(parent);if(folder&&!Array.isArray(folder.children))throw new Error('폴더 경로에 파일이 있습니다: '+parent);if(!folder)await this.app.vault.createFolder(parent);}
   const file=await this.app.vault.create(path,content);await this.app.workspace.getLeaf(false).openFile(file);return file;
+ }
+ mountCaptionLines(){
+  for(const leaf of this.app.workspace.getLeavesOfType('markdown')){
+   const view=leaf.view,cm=view.editor?.cm;if(!cm)continue;let changed=false;
+   for(const row of view.containerEl.querySelectorAll('.cm-line')){
+    const isCaption=row.classList.contains('HyperMD-quote')&&!row.classList.contains('HyperMD-codeblock')&&captionLine(cm.state.doc,cm.state.doc.lineAt(cm.posAtDOM(row)).number);
+    if(!isCaption){if(row.hasAttribute('data-blog-caption')){delete row.dataset.blogCaption;delete row.dataset.blogCaptionPrefix;changed=true;}continue;}
+    if(!row.hasAttribute('data-blog-caption')){row.dataset.blogCaption='true';changed=true;}
+    const prefix=(row.querySelector('.cm-formatting-quote')?.getBoundingClientRect().width||0)+'px';
+    if(row.dataset.blogCaptionPrefix!==prefix){row.dataset.blogCaptionPrefix=prefix;changed=true;}
+   }
+   if(changed)cm.requestMeasure();
+  }
  }
  mountLineNumbers(){
   for(const leaf of this.app.workspace.getLeavesOfType('markdown')){
@@ -390,3 +403,14 @@ module.exports.newPostPath=newPostPath;
 module.exports.cardlinkSource=cardlinkSource;
 
 module.exports.listIndent=listIndent;
+
+function captionLine(doc,number){
+ let depth=Infinity;
+ for(let n=number;n>0;n--){
+  const text=doc.line(n).text,prefix=/^[ \t]*(?:>[ \t]*)+/.exec(text)?.[0];if(!prefix)return false;
+  const current=prefix.split('>').length-1;if(current>depth)continue;depth=current;
+  const marker=/^\[!([\w-]+)\]/.exec(text.slice(prefix.length));if(marker)return marker[1].toLowerCase()==='caption';
+ }
+ return false;
+}
+module.exports.captionLine=captionLine;

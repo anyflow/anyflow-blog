@@ -99,6 +99,11 @@ body :is(.markdown-reading-view,.markdown-source-view.mod-cm6){--font-text:ui-sa
 /* Mermaid text uses the GitHub frame defaults instead of the article line height. */
 :is(.markdown-reading-view,.markdown-source-view) .mermaid{line-height:normal}
 
+/* The editing quote prefix hangs before caption text, without a quote rule or tab guide. */
+.markdown-source-view.is-live-preview .cm-line[data-blog-caption]{border:0!important;border-radius:0;margin-inline:0;font-size:13px;line-height:1.5;font-style:italic;color:var(--text-muted);padding-block:0;padding-inline:calc(2px + attr(data-blog-caption-prefix type(<length>),0px)) 2px!important;text-indent:calc(-1 * attr(data-blog-caption-prefix type(<length>),0px))!important}
+.markdown-source-view.is-live-preview .cm-line[data-blog-caption]::before,.markdown-source-view.is-live-preview .cm-line[data-blog-caption] .cm-indent::before{display:none!important}
+.markdown-source-view.is-live-preview .cm-line[data-blog-caption] .cm-quote:not(.cm-formatting):not(.cm-inline-code){color:inherit}
+
 .markdown-reading-view .markdown-preview-view.markdown-rendered h2 { margin:30px 0 6px!important; padding:2px }
 .markdown-reading-view .markdown-preview-view.markdown-rendered h3 { margin:26px 0 6px!important; padding:2px }
 .markdown-reading-view .markdown-preview-view.markdown-rendered h4 { margin:22px 0 6px!important; padding:2px }
