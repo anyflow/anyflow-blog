@@ -24,5 +24,7 @@ spec:
   selector:
     app: anyflow-blog-comments
   ports:
-    - port: 3000
+    - name: http
+      port: 80
       targetPort: 3000
+      protocol: TCP
