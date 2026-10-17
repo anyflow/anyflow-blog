@@ -159,13 +159,142 @@ CronJob은 `concurrencyPolicy: Forbid`로 정기 작업의 중복 실행을 막�
 
 방문자의 요청은 PVC에 저장한 뒤 접수를 응답하고 Git 저장은 같은 API 프로세스의 비동기 처리기가 순서대로 수행한다.
 
+```mermaid
+---
+config:
+  theme: base
+  htmlLabels: false
+  flowchart:
+    htmlLabels: false
+  themeVariables:
+    darkMode: false
+    textColor: "#0f172a"
+    primaryTextColor: "#0f172a"
+    lineColor: "#64748b"
+    edgeLabelBackground: "#ffffff"
+---
+flowchart TB
+    Visitor["`**댓글 게시자**
+브라우저 · 즉시 화면 반영`"]
+    Admin["`**주인장 · 관리자**
+로그인·승인·댓글 관리`"]
+    Gateway["`**public-gateway**
+agentgateway · 요청 제한
+/api → 댓글 Service:80`"]
+
+    subgraph Pod["댓글 Deployment · 1 Pod · 하나의 Node.js 프로세스"]
+        HTTP["`**HTTP API**
+Pod:3000
+입력·Origin·쿠키·권한 검증
+권한별 응답 생성`"]
+        Queue["`**작업·상태 관리**
+QueueStore
+중복·Like 순서·댓글 버전 검사
+기준 상태 + 대기 작업`"]
+        Worker["`**단일 비동기 처리기**
+QueueStore.drain
+작업을 배치로 인출·순서대로 적용`"]
+        Git["`**Git 저장기**
+GitStore
+fetch·commit·push`"]
+    end
+
+    subgraph PVC["댓글 PVC · Pod 재시작 후에도 유지"]
+        QueueFile[("`**영속 큐 파일**
+queue.json
+기준 상태·대기 작업·처리 기록`")]
+        Checkout[("`**로컬 Git checkout**
+댓글 저장소 작업 사본`")]
+    end
+
+    subgraph GitHub["GitHub"]
+        subgraph Repo["comments repo · 비공개"]
+            Incoming["`**incoming 브랜치**
+신규 댓글·답글
+대기 댓글 수정·삭제`"]
+            Main["`**main 브랜치**
+게시된 댓글·Like·설정
+공개 데이터`"]
+        end
+        Publish["`**댓글 게시 workflow**
+GitHub 제공 runner
+PR 생성·승인 확인·공개 데이터 생성`"]
+    end
+
+    Visitor <-->|"1a. 댓글·Like·조회 요청과 응답"| Gateway
+    Admin <-->|"1b. 관리자 요청과 응답"| Gateway
+    Gateway <-->|"2. Service:80 → Pod:3000"| HTTP
+
+    HTTP -->|"W3. 변경 작업 접수"| Queue
+    Queue -->|"W4. 임시 파일 기록·fsync·원자적 교체"| QueueFile
+    Queue -->|"W5. 영속 저장 후 접수 결과 반환"| HTTP
+    Queue -->|"W6. 작업 접수·오래된 조회 상태의 갱신 알림"| Worker
+    Worker -->|"W7. Git 트랜잭션·동기화"| Git
+    Git ---|"W8. 로컬 Git 작업"| Checkout
+    Git -->|"W9a. 신규·대기 댓글 push"| Incoming
+    Git -->|"W9b. 공개 댓글 수정·삭제·Like push"| Main
+
+    Incoming -->|"G1a. push로 실행"| Publish
+    Main -->|"G1b. push로 실행"| Publish
+    Publish -->|"G2. PR·merge·공개 데이터 commit"| Main
+
+    Repo -->|"S1. main·incoming 백그라운드 fetch"| Git
+    Git -->|"S2. 최신 저장 상태 반환"| Worker
+    Worker -->|"S3. 기준 상태·완료/실패 기록 갱신"| Queue
+    Worker -->|"S4. Git 일시 실패 시 재시도"| Worker
+    QueueFile -.->|"B1. 재시작 시 복원·미처리 작업 재개"| Queue
+
+    HTTP -->|"R3. 댓글·작업 상태 조회"| Queue
+    Queue -->|"R4. 기준 상태에 대기 작업을 적용해 반환"| HTTP
+
+    classDef actor fill:#f1f5f9,stroke:#64748b,color:#0f172a
+    classDef gateway fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    classDef process fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef worker fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef storage fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    classDef repo fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    class Visitor,Admin actor
+    class Gateway gateway
+    class HTTP,Queue process
+    class Worker,Git,Publish worker
+    class QueueFile,Checkout storage
+    class Incoming,Main repo
+    style Pod fill:#f0fdf4,stroke:#86b996,color:#0f172a
+    style PVC fill:#fff7ed,stroke:#ea580c,color:#0f172a
+    style GitHub fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+    style Repo fill:#eff6ff,stroke:#60a5fa,color:#0f172a
+```
+
+| 컴포넌트 | 역할 |
+| --- | --- |
+| 댓글 게시자 | 브라우저에서 댓글·답글·Like를 요청하고 화면에 즉시 반영하며 접수·처리 상태를 확인한다. |
+| 주인장 · 관리자 | 관리자 인증 후 댓글·승인 설정을 관리한다. |
+| public-gateway | 요청 제한과 HTTPRoute를 적용해 /api 요청을 댓글 Service로 전달한다. |
+| HTTP API | 입력·Origin·쿠키·권한을 검증하고 변경 접수·조회 응답을 제공한다. |
+| 작업·상태 관리 | 중복 요청·Like 순서·댓글 버전을 검사하고 기준 상태와 대기 작업을 결합한다. |
+| 단일 비동기 처리기 | 같은 Node.js 프로세스에서 작업을 순서대로 적용하고 Git 동기화·재시도를 수행한다. |
+| Git 저장기 | 로컬 checkout에서 fetch·commit·push를 수행한다. |
+| 영속 큐 파일 | 댓글 PVC에 기준 상태·대기 작업·처리 기록을 저장하며 재시작 시 미처리 작업을 복원한다. |
+| 로컬 Git checkout | 댓글 PVC에 댓글 저장소의 작업 사본을 유지한다. |
+| incoming 브랜치 | 신규 댓글·답글과 대기 댓글 변경을 PR 게시 전까지 보관한다. |
+| main 브랜치 | 게시된 댓글·Like·설정과 생성된 공개 데이터를 보관한다. |
+| 댓글 게시 workflow | 신규 댓글 PR 생성·승인 확인·merge와 공개 데이터 생성을 수행한다. |
+
+W는 변경 접수·저장, G는 GitHub 게시, S는 백그라운드 동기화, R은 조회, B는 재시작 복원 순서다. W5는 PVC 저장 완료를 뜻하며 Git 저장·공개 완료를 뜻하지 않는다. 작업 완료 기록도 Git 반영 완료를 나타내며 신규 댓글 공개는 PR 게시 절차를 따른다.
+
+> [!WARNING]
+> **댓글 서비스는 단일 Pod·단일 writer 전용이며 HPA를 지원하지 않는다.** 현재 처리량이 미미하고 높은 가용성 요구가 없으므로 API와 비동기 처리기를 한 Pod에 두고, PVC 한 개·`replicas: 1`·`Recreate`로 운영한다. 재시작·배포 중에는 일시적으로 댓글 API가 중단될 수 있다.
+>
+> 요청 직렬화와 worker 실행 제어는 프로세스 내부에만 존재한다. 여러 Pod가 같은 `queue.json`을 전체 덮어쓰면 작업 유실·중복 처리와 Git checkout 경합이 발생할 수 있다. `ReadWriteOnce`는 Pod 간 잠금이 아니며 `Recreate`도 HPA의 replica 증가를 막지 않는다.
+>
+> HPA 도입 시 여러 API Pod가 안전하게 접수·조회할 공유 영속 작업 저장소와 공통 상태를 마련하고, Git 저장은 별도 Deployment의 단일 worker가 수행하도록 분리해야 한다. worker 배포 중에도 중복 실행을 막아야 한다. worker만 분리하거나 PVC를 공유하는 것으로는 해결되지 않는다.
+
 - 브라우저는 작성·수정·삭제·Like 상태를 먼저 표시하고 접수·실패 상태를 안내한다. 실패한 초안과 재시도 식별자를 유지한다.
 - API는 입력·글 카탈로그·Origin·쿠키 권한을 검증한다. 이름·이메일·홈페이지 자체는 작성 권한 증명이 아니다.
 - `request_id`로 재접수를 구분하고 Like의 `client_id`·`sequence`로 연속 요청의 순서를 보존한다. 댓글 수정·삭제는 버전 충돌을 검사한다.
 - 큐는 대기 100건·직렬화된 대기 요청 1MiB로 제한한다. 신규 초과 요청은 저장 전에 `503 queue_full`과 `Retry-After: 5`로 거절한다.
 - 완료 기록과 비활성 Like 순서 키는 최대 7일·2,000개로 정리한다. 대기·재시도 작업과 작업이 사용하는 키는 보존한다.
 - 조회는 로컬 상태와 접수한 변경을 반영한다. 백그라운드 Git 동기화로 외부 변경을 가져오며 읽기 요청마다 Git fetch를 기다리지 않는다.
-- API는 PVC 한 개와 `replicas: 1`, `Recreate` 전략을 사용한다. 이 구조는 여러 writer Pod를 위한 분산 큐가 아니다.
 
 신규 댓글·답글은 비공개 댓글 저장소의 `incoming/**` 브랜치와 PR을 거친다. 승인 기본값은 OFF이며 해당 댓글 Actions가 자동 게시한다. 승인을 켜면 관리자의 승인 절차를 따른다. Like·기존 공개 댓글 수정·삭제는 신규 댓글 PR 알림을 만들지 않는다.
 
@@ -187,3 +316,15 @@ CronJob은 `concurrencyPolicy: Forbid`로 정기 작업의 중복 실행을 막�
 Gateway의 로컬 요청 제한은 로그인·쓰기·조회에 접속 주소별 한도와 전체 한도를 함께 적용한다. 정책 값은 [agentgatewaypolicy.yaml](deployment/agentgatewaypolicy.yaml)을 따른다. 카운터는 프록시마다 독립적이며 재시작 시 초기화된다. NAT나 중간 프록시로 출발지 주소가 합쳐지면 사용자들이 주소 한도를 공유한다. 클라이언트가 제공한 `X-Forwarded-For`를 식별 키로 신뢰하지 않는다.
 
 일반 방문자에게는 게시된 댓글·표시 작성자·Like 집계를 제공한다. 작성자와 관리자는 권한에 따라 대기 댓글과 작업 상태를 조회할 수 있다. 작성 권한 해시·요청 fingerprint·비공개 원본 설정은 공개 응답에 포함하지 않는다. `noindex`는 공개 접근 제어 수단이 아니다.
+
+## 수평 확장 범위
+
+nginx와 public-gateway는 댓글의 단일 writer 제약과 별개로 확장할 수 있으나 현재 두 Deployment에는 HPA를 설정하지 않는다.
+
+| 대상 | 확장 시 고려 사항 |
+| --- | --- |
+| nginx | 동일 digest의 정적 파일을 제공하며 공유 쓰기 상태·PVC가 없어 replica를 늘릴 수 있다. HPA를 설정할 때 배포 YAML의 고정 replicas 재적용과 조정되지 않도록 해야 한다. |
+| public-gateway | 여러 proxy replica로 HTTPRoute 트래픽을 처리할 수 있다. 현재 local rate limit 카운터는 Pod별로 독립적이므로 전체 허용량은 replica 수에 따라 늘어난다. 전체 고정 한도가 필요하면 공유 카운터를 사용하는 global rate limit이 필요하다. |
+| 댓글 API·worker | 위 WARNING의 단일 writer 제약을 해소하기 전까지 1 Pod를 유지한다. |
+
+공통 Gateway·Istio와 모든 replica는 같은 홈 서버에 있으므로 Pod 수 증가가 홈 서버 장애에 대한 가용성을 보장하지 않는다. [agentgateway 공식 문서](https://agentgateway.dev/docs/kubernetes/latest/documentation/security/rate-limit-http/)는 local rate limit을 “per proxy replica”로 정의한다.
