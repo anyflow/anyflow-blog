@@ -11,7 +11,18 @@ GitHub 제공 runner에서 산출물을 생성하고, Kubernetes는 완성된 �
 ```mermaid
 ---
 config:
+  theme: base
   htmlLabels: false
+  flowchart:
+    htmlLabels: false
+  themeVariables:
+    darkMode: false
+    textColor: "#0f172a"
+    primaryTextColor: "#0f172a"
+    secondaryTextColor: "#0f172a"
+    tertiaryTextColor: "#0f172a"
+    lineColor: "#64748b"
+    edgeLabelBackground: "#ffffff"
 ---
 flowchart TB
     Admin["`**주인장 · 관리자**`"]
