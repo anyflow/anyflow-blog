@@ -483,3 +483,5 @@ Make deploy가 정책을 반영하며 deploy-automation이 최초 정책을 boot
 
 키는 IP형을 문자열로 바꾼 string(source.address)를 사용한다. Service 경로는 Istio waypoint를 거치므로 서로 다른 Pod 출발지도 한 주소의 제한을 공유함을 실측했다. 외부 NodePort도 externalTrafficPolicy:Cluster이므로 원본 IP 보존을 보장하지 않는다. 사용자 헤더를 신뢰하지 않으며 현재 경로에서 이 제한은 공유 접속 주소별 한도로 해석한다. 원본 IP 보존을 위한 Gateway/mesh 전체 네트워크 변경은 이 작업에 포함하지 않는다.
 Gateway Pod 직접 경로에서는 첫 출발지 소진 후 다른 Pod 출발지404를 확인해 IP 키 독립성을 검증했다. 위조 X-Forwarded-For를 매 요청 바꿔도 동일 출발지 제한을 우회하지 못했다.
+
+운영 반영 완료: 코드94c50f2·Actions39009348932 성공·배포 선언41e9ed5. 정적 이미지 sha256:92f94a95f9ea98adfd3fe2e7e5b37b0657b1deca59fedf4174dc1efaec993d77, 댓글 API sha256:73919eff7218312537a694c861a248468ffb76359aeff3b1ab9a8d3faee1988d의 rollout을 확인했다. 배포 전후 queue.base 정규화SHA256이 동일하여 실제 댓글·Like 보존을 확인했다. 대기0·접수기록4·순서키3 보존, 새 순서시각3, 완료 본문사본0이다. 홈/API/미리보기200과 정책 generation2 Accepted/Attached를 확인했다. 임시 검증 Pod4개는 정리했으며 전체 콘텐츠/화면 회귀는 반복하지 않았다. 미리보기 빌드와 OpenRC 재시작도 완료했다.
