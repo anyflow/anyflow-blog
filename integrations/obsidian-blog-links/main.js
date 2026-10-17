@@ -243,7 +243,10 @@ module.exports=class BlogLinks extends Plugin{
    if(nested){do{line=line.previousElementSibling;}while(line&&(!line.classList.contains('cm-line')||line.classList.contains('HyperMD-codeblock')||!line.textContent.trim()));}
    const text=nested&&line?.classList.contains('HyperMD-list-line')?line.querySelector('[class*="cm-list-"]:not(.cm-formatting)'):null;
    el.classList.toggle('blog-list-card',Boolean(text));
-   el.style.marginInlineStart=text?Math.max(0,text.getBoundingClientRect().left-widget.getBoundingClientRect().left)+'px':'';
+   const margin=text?Math.max(0,text.getBoundingClientRect().left-widget.getBoundingClientRect().left)+'px':'';
+   if(el.style.marginInlineStart===margin)continue;
+   el.style.marginInlineStart=margin;
+   this.app.workspace.getLeavesOfType('markdown').find(leaf=>leaf.view.containerEl.contains(el))?.view.editor?.cm?.requestMeasure();
   }
  }
  mountCategoryButtons(){

@@ -41,5 +41,6 @@
 
 .cm-lang-cardlink .blog-list-card .bookmark{margin-inline:0;width:100%}
 
-/* Preserve CodeMirror line measurements while hiding a collapsed fence's leftover tab. */
-.cm-line.HyperMD-codeblock-begin:has(> .cm-indent:only-child):has(+ .cm-lang-cardlink){opacity:0}
+/* Render list cards at their opening fence line; expanded source keeps its normal height. */
+.cm-line.HyperMD-codeblock-begin:has(> .cm-indent:only-child):has(+ .cm-lang-cardlink){opacity:0;height:0;min-height:0;line-height:0;padding-block:0!important;overflow:hidden}
+.cm-lang-cardlink:has(.blog-list-card) .bookmark{margin-block:0}

@@ -90,10 +90,10 @@ test('Obsidian card processor renders tab-indented list cards without changing t
 
 test('Live Preview list cards inherit the actual list text edge and clear indentation outside lists',()=>{
  const module={exports:{}};vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
- let target=128,nested=true,marked=false;
+ let target=128,nested=true,marked=false,measures=0;
  const text={getBoundingClientRect:()=>({left:target})},line={classList:{contains:cls=>['cm-line','HyperMD-list-line'].includes(cls)},textContent:'List text',querySelector:()=>text};
  const begin={classList:{contains:()=>nested},previousElementSibling:line},widget={previousElementSibling:begin,getBoundingClientRect:()=>({left:100})};
  const el={closest:()=>widget,classList:{toggle:(cls,value)=>{assert.equal(cls,'blog-list-card');marked=value;}},style:{}};
- const plugin=new module.exports();plugin.app={workspace:{containerEl:{querySelectorAll:()=>[el]}}};plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'28px');assert.equal(marked,true);
- target=156;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'56px');nested=false;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'');assert.equal(marked,false);
+ const plugin=new module.exports();plugin.app={workspace:{containerEl:{querySelectorAll:()=>[el]},getLeavesOfType:()=>[{view:{containerEl:{contains:()=>true},editor:{cm:{requestMeasure:()=>measures++}}}}]}};plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'28px');assert.equal(marked,true);
+ target=156;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'56px');nested=false;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'');assert.equal(marked,false);assert.equal(measures,3);plugin.mountCardIndents();assert.equal(measures,3);
 });
