@@ -298,7 +298,9 @@ W는 변경 접수·저장, G는 GitHub 게시, S는 백그라운드 동기화, 
 
 신규 댓글·답글은 비공개 댓글 저장소의 `incoming/**` 브랜치와 PR을 거친다. 승인 기본값은 OFF이며 해당 댓글 Actions가 자동 게시한다. 승인을 켜면 관리자의 승인 절차를 따른다. Like·기존 공개 댓글 수정·삭제는 신규 댓글 PR 알림을 만들지 않는다.
 
-댓글 저장소에 적용할 workflow와 게시 코드는 [integrations/comments-data/](integrations/comments-data/)에 있다. 이 코드와 `lib/comments/`의 관련 모듈을 함께 배포하고 실제 댓글 데이터는 보존한다. GitHub PR 알림으로 새 댓글을 인지한다.
+PR은 승인 절차와 새 댓글 알림을 GitHub 기능으로 제공해 별도 구현을 줄이기 위해 사용한다. 승인 OFF에서도 PR 생성·자동 merge를 거쳐 알림을 제공하며, 승인 ON에서는 PR을 대기시켜 관리자가 검토한 뒤 공개한다. 이 선택은 자동 공개 시에도 브랜치·PR·merge 처리와 공개 지연을 수반한다. 데이터 보존과 변경 이력은 Git commit으로 확보하고 요청 순서·중복 제어는 큐와 worker가 담당하므로, 이 보장을 위해 PR이 필요한 것은 아니다.
+
+댓글 저장소에 적용할 workflow와 게시 코드는 [integrations/comments-data/](integrations/comments-data/)에 있다. 이 코드와 `lib/comments/`의 관련 모듈을 함께 배포하고 실제 댓글 데이터는 보존한다.
 
 ## 인증과 공개 경계
 
