@@ -53,7 +53,7 @@ BLOG_STATIC_DIR=_preview COMMENTS_PREVIEW=true node scripts/comments-server.js
 | Actions의 콘텐츠 checkout·이미지 저장소 | [.github/workflows/publish.yml](.github/workflows/publish.yml) |
 | 배포 checkout의 원격 저장소·브랜치 | [scripts/poll-deploy.sh](scripts/poll-deploy.sh) |
 | 도메인·Gateway·네임스페이스·이미지·댓글 환경변수 | [deployment/](deployment/) |
-| Obsidian 작성 도구 | [integrations/obsidian-blog-links/](integrations/obsidian-blog-links/) |
+| Obsidian 작성 도구 | [obsidian-common-ux](https://github.com/anyflow/obsidian-common-ux) |
 
 GitHub Actions는 콘텐츠 읽기용 `BLOG_CONTENT_READ_KEY`와 실행 시 제공되는 `GITHUB_TOKEN`을 사용한다. 콘텐츠 저장소의 workflow는 코드 저장소의 `publish.yml`을 `workflow_dispatch`로 호출하고 `content_sha`를 전달한다. `build_comments`·`build_deployer` 입력은 해당 이미지의 추가 빌드를 제어한다. 정적 사이트 이미지는 함께 생성한다.
 

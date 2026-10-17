@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict');
-const {githubDefaults,createRenderer,installMermaid}=require('../integrations/obsidian-blog-links/mermaid-profile');
+const {githubDefaults,createRenderer,installMermaid}=require('../src/js/vendor/mermaid-profile');
 test('GitHub defaults match ELK, wrapping and fonts without weakening security or mutating callers',()=>{
  const source={securityLevel:'strict',maxTextSize:50000,theme:'dark',themeVariables:{primaryColor:'#abc'},flowchart:{defaultRenderer:'dagre-wrapper',curve:'basis'}},before=JSON.stringify(source),out=githubDefaults(source);
  assert.equal(out.layout,'elk');assert.equal(out.startOnLoad,false);assert.equal(out.flowchart.wrappingWidth,120);assert.equal(out.flowchart.minNodeWidth,120);assert.equal(out.flowchart.diagramPadding,48);assert.equal(out.flowchart.useMaxWidth,true);assert.equal(out.flowchart.defaultRenderer,undefined);assert.equal(out.securityLevel,'strict');assert.equal(out.theme,'dark');assert.equal(out.themeVariables.primaryColor,undefined);assert.equal(out.maxTextSize,50000);assert.match(out.fontFamily,/trebuchet/);assert.equal(JSON.stringify(source),before);
@@ -21,6 +21,6 @@ test('native article containers cannot leak into diagram measurement and failed 
 });
 
 test('the browser uses the same isolated renderer and GitHub defaults as Obsidian',()=>{
- const fs=require('node:fs'),vm=require('node:vm'),context={};vm.runInNewContext(fs.readFileSync(require.resolve('../integrations/obsidian-blog-links/mermaid-profile'),'utf8'),context);
+ const fs=require('node:fs'),vm=require('node:vm'),context={};vm.runInNewContext(fs.readFileSync(require.resolve('../src/js/vendor/mermaid-profile'),'utf8'),context);
  assert.equal(typeof context.blogMermaid.createRenderer,'function');assert.equal(context.blogMermaid.installMermaid,undefined);assert.equal(JSON.stringify(context.blogMermaid.githubDefaults({theme:'dark',securityLevel:'strict'})),JSON.stringify(githubDefaults({theme:'dark',securityLevel:'strict'})));
 });

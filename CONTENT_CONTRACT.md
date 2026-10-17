@@ -121,7 +121,7 @@ description: 선택 설명
 
 `cardlink`는 `url`과 선택 필드 `title`·`description`·`image`·`favicon`·`type`을 사용한다. `type`은 `bookmark` 또는 `preview`다. 메타데이터가 필요하면 해당 링크를 조회하고 캐시하며 실패 시 기존 정보와 URL을 유지한다. 제목·설명은 HTML escape하고 이미지 주소를 검증한다. 잘못된 YAML·타입은 빌드 오류다. 독립 YouTube 링크는 썸네일 카드로 표시한다.
 
-`integrations/obsidian-blog-links`의 플러그인은 새 글 생성·분류 선택·커버/아이콘 갤러리·URL 붙여넣기 메뉴·링크 카드 표시를 제공한다. 새 글은 `publish: false`이며 기본 속성을 본문이 없는 Markdown 파일에 작성한다. 갤러리는 콘텐츠 저장소의 로컬 자산을 사용한다. 본문이 바뀌면 비동기 붙여넣기 변환은 대상 URL 범위를 확인하여 편집을 보존한다.
+별도 `obsidian-common-ux` 저장소의 공통 UX 플러그인은 새 글 생성·분류 선택·커버/아이콘 갤러리·URL 붙여넣기 메뉴·링크 카드 표시를 제공한다. 새 글은 `publish: false`이며 기본 속성을 본문이 없는 Markdown 파일에 작성한다. 갤러리는 콘텐츠 저장소의 로컬 자산을 사용한다. 본문이 바뀌면 비동기 붙여넣기 변환은 대상 URL 범위를 확인하여 편집을 보존한다.
 
 홈의 동적 목록은 독립 HTML 주석 `<!-- blog:recent -->`와 `<!-- blog:categories -->` 위치에 삽입한다. 각 표식은 한 번만 사용한다. 표식 앞 제목과 섹션 순서는 `blog.md`에서 정한다. 카테고리 제목은 접기 기능을 제공하지 않는다.
 
@@ -142,7 +142,7 @@ canonical·OG URL은 `src/_data/site.json`의 대표 URL을 사용한다. sitema
 
 ## Obsidian 작성 서식
 
-Blog 링크1.5.2는 운영 블로그의 본문 CSS를 기준으로 읽기 모드와 Live Preview의 서식을 맞춘다. 패키징 시 src/css/style.css의 문단·제목·목록·인용문 규칙을 읽기 모드용으로 가져오며, 편집 모드는 별도 어댑터로 행 번호를 본문 폭708px 밖에 배치하고 글꼴·행간·제목·목록·카드 간격을 맞춘다. 목록 깊이·끝 위치는 Obsidian metadataCache의 listItems/parent를 사용하며 원문 Markdown과 들여쓰기를 수정하지 않는다. 편집용 문법 표시·커서·작업 목록은 Obsidian의 편집 기능을 유지한다.
+공통 UX는 별도 `obsidian-common-ux` 저장소에서 관리한다. 운영 블로그의 본문 CSS를 기준으로 읽기 모드와 Live Preview를 맞추며, 설정·수정·배포 절차는 `obsidian-common-my` skill을 따른다. 블로그 저장소에서 Obsidian 플러그인을 빌드하거나 배포하지 않는다.
 
 Mermaid는 GitHub에서 확인한 Mermaid12.1.0·ELK·Trebuchet 글꼴·줄바꿈 설정을 사용한다. MIT 라이브러리를 플러그인에 포함하며 런타임 CDN은 사용하지 않는다. 로컬 iframe에서 렌더링하여 Obsidian 본문 CSS의 영향을 차단하고, 결과 SVG는 기존 읽기/Live Preview 및 확대 기능에 전달한다. 문서의 Mermaid frontmatter 설정과 원문은 유지하며 플러그인 해제 시 기본 렌더러를 복구한다.
 
