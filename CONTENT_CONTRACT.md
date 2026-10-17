@@ -138,3 +138,8 @@ canonical·OG URL은 `src/_data/site.json`의 대표 URL을 사용한다. sitema
 공개 댓글 카탈로그 `comments/catalog.json`에는 발행 대상의 ID·제목·주소·호환 별칭을 넣는다. 댓글 API는 카탈로그에 있는 글만 허용한다. 실제 댓글 원본·방문자 해시·설정·접수 기록·승인 대기 내용은 비공개 데이터다. 댓글과 Like 처리는 [ARCHITECTURE.md](ARCHITECTURE.md#댓글like-처리)를 따른다.
 
 비공개 `_assets/_meta`의 시각/링크 메타데이터는 빌드에서 읽지만 원본 JSON을 그대로 출력하지 않는다. 누락 첨부·잘못된 내부 글/블록 링크·깨진 이미지 문법·잘못된 게시 속성은 빌드를 실패시키며 기존 공개 결과는 유지한다.
+
+
+## Obsidian 작성 서식
+
+Blog 링크1.4.4는 운영 블로그의 본문 CSS를 기준으로 읽기 모드와 Live Preview의 서식을 맞춘다. 패키징 시 src/css/style.css의 문단·제목·목록·인용문 규칙을 읽기 모드용으로 가져오며, 편집 모드는 별도 어댑터로 행 번호를 본문 폭708px 밖에 배치하고 글꼴·행간·제목·목록·카드 간격을 맞춘다. 목록 깊이·끝 위치는 Obsidian metadataCache의 listItems/parent를 사용하며 원문 Markdown과 들여쓰기를 수정하지 않는다. 편집용 문법 표시·커서·작업 목록은 Obsidian의 편집 기능을 유지한다.

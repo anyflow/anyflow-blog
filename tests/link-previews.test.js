@@ -56,7 +56,7 @@ test('per-note attachment folders do not write tracked application settings on e
  const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/plugin.js'),'utf8'),{module,MutationObserver:class{observe(){} disconnect(){}},require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
  const p=new module.exports(),events={},config={attachmentFolderPath:'_assets'};let active={extension:'md',path:'cat/one.md'},writes=0;
  p.addCommand=p.register=p.registerDomEvent=()=>{};p.registerEvent=p.registerMarkdownCodeBlockProcessor=p.registerMarkdownPostProcessor=()=>{};
- p.app={vault:{config,getAbstractFileByPath:()=>null,setConfig:()=>writes++},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>active,on:(n,f)=>events[n]=f},metadataCache:{on:(n,f)=>events[n]=f}};
+ p.app={vault:{config,getAbstractFileByPath:()=>null,setConfig:()=>writes++},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>active,getLeavesOfType:()=>[],on:(n,f)=>events[n]=f},metadataCache:{on:(n,f)=>events[n]=f}};
  await p.onload();assert.equal(config.attachmentFolderPath,'_assets/cat/one');active={extension:'md',path:'cat/two.md'};events['file-open'](active);assert.equal(config.attachmentFolderPath,'_assets/cat/two');assert.equal(writes,0);
 });
 
@@ -84,7 +84,7 @@ test('Obsidian card processor renders tab-indented list cards without changing t
  const notices=[],module={exports:{}};let process;
  vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,MutationObserver:class{observe(){}disconnect(){}},require:n=>n==='obsidian'?{Plugin:class{},Modal:class{},parseYaml:require('js-yaml').load,Notice:class{constructor(message){notices.push(message);}}}:n==='./bookmark'?bookmark:links});
  const plugin=new module.exports();plugin.addCommand=plugin.register=plugin.registerEvent=plugin.registerDomEvent=plugin.registerMarkdownPostProcessor=()=>{};plugin.registerMarkdownCodeBlockProcessor=(name,callback)=>{if(name==='cardlink')process=callback;};
- plugin.app={vault:{config:{},getAbstractFileByPath:()=>null},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>null,on:()=>{}},metadataCache:{on:()=>{}}};await plugin.onload();
+ plugin.app={vault:{config:{},getAbstractFileByPath:()=>null},workspace:{containerEl:{querySelectorAll:()=>[]},getActiveFile:()=>null,getLeavesOfType:()=>[],on:()=>{}},metadataCache:{on:()=>{}}};await plugin.onload();
  const el={addClass(name){assert.equal(name,'blog-links');},setText(text){this.innerHTML=text;}},source='\turl: "https://github.com/anyflow/my-cluster"';await process(source,el,{sourcePath:'blog-construction/season4.md'});assert.match(el.innerHTML,/class="bookmark bookmark-card"/);assert.match(el.innerHTML,/href="https:\/\/github.com\/anyflow\/my-cluster"/);assert.equal(source[0],'\t');assert.equal(notices.length,0);
 });
 
@@ -96,4 +96,23 @@ test('Live Preview list cards inherit the actual list text edge and clear indent
  const el={closest:()=>widget,classList:{toggle:(cls,value)=>{assert.equal(cls,'blog-list-card');marked=value;}},style:{}};
  const plugin=new module.exports();plugin.app={workspace:{containerEl:{querySelectorAll:()=>[el]},getLeavesOfType:()=>[{view:{containerEl:{contains:()=>true},editor:{cm:{requestMeasure:()=>measures++}}}}]}};plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'28px');assert.equal(marked,true);
  target=156;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'56px');nested=false;plugin.mountCardIndents();assert.equal(el.style.marginInlineStart,'');assert.equal(marked,false);assert.equal(measures,3);plugin.mountCardIndents();assert.equal(measures,3);
+});
+
+test('blog list offsets use one 30px indent and 2px inset per owner, leaving task lists native',()=>{
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
+ const item=(start,end,extra={})=>({position:{start:{line:start},end:{line:end}},...extra}),indent=module.exports.listIndent;
+ assert.equal(indent([item(0,8)],1,28),'calc(32px - 28px)');assert.equal(indent([item(2,3,{parent:0}),item(0,1)],3,56),'calc(64px - 56px)');assert.equal(indent([item(0,8,{task:''})],1,28),'');assert.equal(indent([],1,28),'');assert.equal(indent([item(0,1,{parent:0})],1,28),'');
+});
+test('list layout metadata survives native inline-style refreshes and measures only changes',()=>{
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
+ let measures=0;const item={position:{start:{line:0},end:{line:1}}},row={className:'HyperMD-list-line-1',dataset:{},style:{textIndent:'-28px'},querySelector:()=>({getBoundingClientRect:()=>({left:128})}),getBoundingClientRect:()=>({left:100})};
+ const view={file:{path:'note.md'},editor:{getLine:()=>'- text',cm:{posAtDOM:()=>0,state:{doc:{lineAt:()=>({number:1})}},requestMeasure:()=>measures++}},containerEl:{querySelectorAll:()=>[row]}};
+ const plugin=new module.exports();plugin.app={workspace:{getLeavesOfType:()=>[{view}]},metadataCache:{getFileCache:()=>({listItems:[item]})}};plugin.mountListIndents();assert.equal(row.dataset.blogListIndent,'calc(32px - 28px)');assert.deepEqual(row.style,{textIndent:'-28px'});plugin.mountListIndents();assert.equal(measures,1);item.task='';plugin.mountListIndents();assert.equal(row.dataset.blogListIndent,undefined);assert.equal(measures,2);
+});
+
+test('line numbers align to the first text line without changing gutter block heights',()=>{
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync('integrations/obsidian-blog-links/plugin.js','utf8'),{module,getComputedStyle:el=>el.style,require:n=>n==='obsidian'?{Plugin:class{},Modal:class{}}:n==='./bookmark'?bookmark:links});
+ const rows=[{number:1,style:{lineHeight:'39px',paddingTop:'24px'}},{number:2,style:{lineHeight:'24px',paddingTop:'5px'}},{number:3,style:{lineHeight:'16px',paddingTop:'0px'}}];rows.forEach(row=>{row.getClientRects=()=>[{}];});const labels=rows.map(row=>({textContent:String(row.number),dataset:{},style:{height:'unchanged'}}));
+ const view={editor:{cm:{posAtDOM:row=>row.number,state:{doc:{lineAt:n=>({number:n})}}}},containerEl:{querySelectorAll:selector=>selector.includes('gutterElement')?labels:rows}};
+ const plugin=new module.exports();plugin.app={workspace:{getLeavesOfType:()=>[{view}]}};plugin.mountLineNumbers();assert.equal(labels[0].dataset.blogNumberOffset,'31.5px');assert.equal(labels[1].dataset.blogNumberOffset,'5px');assert.equal(labels[2].dataset.blogNumberLineHeight,'16px');labels.forEach(label=>assert.equal(label.style.height,'unchanged'));
 });

@@ -139,6 +139,11 @@ function cardlinkSource(source){
  for(const line of lines){if(!line.trim())continue;const indent=/^[\t ]*/.exec(line)[0];if(prefix===undefined)prefix=indent;while(!indent.startsWith(prefix))prefix=prefix.slice(0,-1);}
  return prefix?lines.map(line=>line.startsWith(prefix)?line.slice(prefix.length):line).join('\n'):source;
 }
+function listIndent(items,line,offset){
+ let owner=items.filter(item=>item.position.start.line<=line&&item.position.end.line>=line).sort((a,b)=>b.position.start.line-a.position.start.line)[0],depth=0;const seen=new Set();
+ while(owner&&!seen.has(owner)){if(owner.task!==undefined)return '';seen.add(owner);depth++;owner=owner.parent>=0?items.find(item=>item.position.start.line===owner.parent):null;}
+ return depth&&!owner?'calc('+depth*32+'px - '+offset+'px)':'';
+}
 function pasteCandidate(event,editor,view){
  const url=event.clipboardData?.getData('text/plain')?.trim();if(event.defaultPrevented||!webUrl(url)||/\s/.test(url)||editor.somethingSelected())return '';
  const position=editor.getCursor(),cache=view.app.metadataCache.getFileCache(view.file);
@@ -179,10 +184,10 @@ module.exports=class BlogLinks extends Plugin{
    const file=this.app.workspace.getActiveFile();if(!file||file.extension!=='md'||file.path==='blog.md'||file.path.split('/').some(p=>p.startsWith('_')))return false;
    if(!checking)this.categoryMenu(file,{x:window.innerWidth/2,y:window.innerHeight/3});return true;
   }});
-  const container=this.app.workspace.containerEl,observer=new MutationObserver(()=>{this.mountCategoryButtons();this.mountCardIndents();});
-  observer.observe(container,{childList:true,subtree:true});
+  const container=this.app.workspace.containerEl,observer=new MutationObserver(records=>{if(records.every(r=>r.type==='attributes'&&!r.target.matches('.cm-line.HyperMD-list-line,.markdown-source-view,.cm-lineNumbers .cm-gutterElement')))return;this.mountCategoryButtons();this.mountListIndents();this.mountCardIndents();this.mountLineNumbers();});
+  observer.observe(container,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','data-blog-list-indent']});
   this.register(()=>{observer.disconnect();container.querySelectorAll('.blog-category-picker').forEach(el=>el.remove());});
-  this.mountCategoryButtons();this.mountCardIndents();
+  this.mountCategoryButtons();this.mountListIndents();this.mountCardIndents();this.mountLineNumbers();
   const openVisual=event=>{
    const target=event.target.closest?.('.metadata-property-value');if(!target)return;
    const row=target.closest('.metadata-property'),key=row?.dataset.propertyKey;if(!['cover','icon'].includes(key))return;
@@ -198,7 +203,7 @@ module.exports=class BlogLinks extends Plugin{
   const initialAttachments=this.app.vault.config.attachmentFolderPath;this.register(()=>{this.app.vault.config.attachmentFolderPath=initialAttachments;});
   const attachments=file=>{if(file?.extension==='md'&&!file.path.split('/').some(p=>p.startsWith('_'))&&this.app.workspace.getActiveFile()?.path===file.path)this.app.vault.config.attachmentFolderPath='_assets/'+file.path.replace(/\.md$/,'');};
   this.registerEvent(this.app.workspace.on('file-open',attachments));
-  this.registerEvent(this.app.metadataCache.on('changed',attachments));
+  this.registerEvent(this.app.metadataCache.on('changed',file=>{attachments(file);this.mountListIndents();this.mountCardIndents();this.mountLineNumbers();}));
   attachments(this.app.workspace.getActiveFile());
   this.cache={};const file=this.app.vault.getAbstractFileByPath('_assets/_meta/link-previews.json');
   if(file){try{this.cache=JSON.parse(await this.app.vault.read(file));}catch{new Notice('링크 정보 파일을 읽지 못했습니다. 원본 파일은 유지합니다.');}}
@@ -235,6 +240,39 @@ module.exports=class BlogLinks extends Plugin{
   const folders=path.split('/').slice(0,-1);let parent='';
   for(const part of folders){parent+=(parent?'/':'')+part;const folder=this.app.vault.getAbstractFileByPath(parent);if(folder&&!Array.isArray(folder.children))throw new Error('폴더 경로에 파일이 있습니다: '+parent);if(!folder)await this.app.vault.createFolder(parent);}
   const file=await this.app.vault.create(path,content);await this.app.workspace.getLeaf(false).openFile(file);return file;
+ }
+ mountLineNumbers(){
+  for(const leaf of this.app.workspace.getLeavesOfType('markdown')){
+   const view=leaf.view,cm=view.editor?.cm;if(!cm)continue;
+   const labels=new Map([...view.containerEl.querySelectorAll('.cm-lineNumbers .cm-gutterElement')].map(el=>[Number(el.textContent.trim()),el]));if(!labels.size)continue;
+   for(const row of view.containerEl.querySelectorAll('.is-live-preview .cm-content>.cm-line')){
+    if(!row.getClientRects().length||cm.dom&&row.closest('.cm-editor')!==cm.dom)continue;
+    const label=labels.get(cm.state.doc.lineAt(cm.posAtDOM(row)).number);if(!label)continue;
+    const style=getComputedStyle(row),line=parseFloat(style.lineHeight)||24,height=line>0?Math.min(24,line):24;
+    label.dataset.blogNumberOffset=Math.max(0,(parseFloat(style.paddingTop)||0)+(line-height)/2)+'px';label.dataset.blogNumberLineHeight=height+'px';
+   }
+  }
+ }
+ mountListIndents(){
+  for(const leaf of this.app.workspace.getLeavesOfType('markdown')){
+   const view=leaf.view,cm=view.editor?.cm;if(!cm||!view.file)continue;
+   const items=this.app.metadataCache.getFileCache(view.file)?.listItems;if(!items)continue;let changed=false;
+   const ends=new Map(items.map(item=>[item.position.start.line,item.position.end.line]));
+   for(const item of [...items].sort((a,b)=>b.position.start.line-a.position.start.line))if(ends.has(item.parent))ends.set(item.parent,Math.max(ends.get(item.parent),ends.get(item.position.start.line)));
+   for(const row of view.containerEl.querySelectorAll('.is-live-preview .cm-content>.HyperMD-list-line:not(.HyperMD-codeblock)')){
+    const text=row.querySelector('[class*="cm-list-"]:not(.cm-formatting)');if(!text)continue;
+    const line=cm.state.doc.lineAt(cm.posAtDOM(row)).number-1,offset=text.getBoundingClientRect().left-row.getBoundingClientRect().left;
+    const margin=listIndent(items,line,offset);
+    const close=margin?[...ends.values()].filter(end=>end===line).length:0;
+    const item=items.find(item=>item.position.start.line===line),firstNested=Boolean(margin&&item?.parent>=0&&items.find(sibling=>sibling.parent===item.parent)===item);
+    if(String(close||'')!==(row.dataset.blogListClose||'')||Boolean(row.dataset.blogListNestedFirst)!==firstNested)changed=true;
+    if(close)row.dataset.blogListClose=String(close);else delete row.dataset.blogListClose;
+    if(firstNested)row.dataset.blogListNestedFirst='true';else delete row.dataset.blogListNestedFirst;
+    if(row.dataset.blogListIndent===margin)continue;
+    if(margin){row.dataset.blogListIndent=margin;row.dataset.blogListDepth=/HyperMD-list-line-(\d+)/.exec(row.className)?.[1]||'1';}else{delete row.dataset.blogListIndent;delete row.dataset.blogListDepth;}changed=true;
+   }
+   if(changed)cm.requestMeasure();
+  }
  }
  mountCardIndents(){
   for(const el of this.app.workspace.containerEl.querySelectorAll('.cm-lang-cardlink .block-language-cardlink')){
@@ -298,3 +336,5 @@ module.exports.pasteCandidate=pasteCandidate;
 module.exports.newPostPath=newPostPath;
 
 module.exports.cardlinkSource=cardlinkSource;
+
+module.exports.listIndent=listIndent;

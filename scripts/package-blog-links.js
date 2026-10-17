@@ -14,3 +14,11 @@ fs.copyFileSync(path.join(__dirname,'../integrations/obsidian-blog-links/vendor/
 fs.appendFileSync(path.join(root,"styles.css"),"\n.blog-category-picker{flex-shrink:0;margin-left:4px;padding:4px;border:0;background:transparent;box-shadow:none}.blog-category-picker svg{width:16px;height:16px}\n");
 
 fs.appendFileSync(path.join(root,"styles.css"),fs.readFileSync(path.join(root,"visual-gallery.css"),"utf8"));
+
+fs.appendFileSync(path.join(root,'styles.css'),fs.readFileSync(path.join(root,'editor-parity.css'),'utf8'));
+
+// Reuse public article rules so native Obsidian margins cannot override the blog.
+for(const selector of ['.post-body h2 ','.post-body h3 ','.post-body h4 ','.post-body p ','.post-body ul,','.post-body li ','.post-body li>p ','.post-body li + li ','.post-body blockquote:not(.callout)>p ','.post-body blockquote:not(.callout)>p+p ']){
+ const rule=css.split('\n').find(line=>line.startsWith(selector));if(!rule)throw new Error('Missing blog typography rule: '+selector);
+ fs.appendFileSync(path.join(root,'styles.css'),'\n'+(/h[234]/.test(selector)?rule.replace(/margin:([^;}]+)/,'margin:$1!important'):rule).replaceAll('.post-body','.markdown-reading-view .markdown-preview-view.markdown-rendered'));
+}
