@@ -45,7 +45,7 @@ spec:
                 capabilities:
                   drop: [ALL]
               volumeMounts:
-                - name: state
+                - name: workspace
                   mountPath: /data
                 - name: git
                   mountPath: /etc/deploy-git
@@ -53,9 +53,8 @@ spec:
                 - name: tmp
                   mountPath: /tmp
           volumes:
-            - name: state
-              persistentVolumeClaim:
-                claimName: anyflow-blog-deploy-state
+            - name: workspace
+              emptyDir: {}
             - name: git
               secret:
                 secretName: anyflow-blog-deploy-git

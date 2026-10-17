@@ -56,7 +56,7 @@ flowchart TD
 
 정적 이미지에는 생성된 HTML·JS·CSS·검색 색인·참조 자산이 들어간다. Markdown 원문·Obsidian 설정·Git 이력·비공개 메타데이터는 공개 출력으로 복사하지 않는다. 코드와 콘텐츠 SHA가 빌드 중 바뀌면 오래된 배포 선언 게시를 생략한다.
 
-CronJob은 잠금과 `concurrencyPolicy: Forbid`로 중복 배포를 막는다. 배포 checkout은 원격 주소·브랜치·깨끗한 작업 트리를 확인하고 fast-forward로 갱신한다. `deployment/` 트리가 마지막 성공 값과 같으면 적용을 생략한다. 적용과 rollout이 성공한 뒤 성공 값을 기록하므로 실패한 배포는 다음 실행에서 재시도한다.
+CronJob은 `concurrencyPolicy: Forbid`로 정기 배포 작업의 중복 실행을 막는다. 매 실행마다 Pod의 `emptyDir`에 지정한 코드 저장소의 master 브랜치를 depth 1로 clone하고 `make deploy`를 실행한다. checkout은 작업 종료 시 정리하고 볼륨은 Pod와 함께 제거된다. 배포 PVC·파일 잠금·마지막 성공 기록은 사용하지 않는다. 동일한 이미지 digest의 YAML을 다시 적용해도 웹/API Pod는 교체하지 않는다. 실패한 작업은 다음 정기 실행에서 새 checkout으로 재시도한다.
 
 정적 이미지·댓글 API 이미지·배포 도구 이미지는 독립된 digest를 사용한다. 사이트 변경만 배포할 때 댓글 API를 교체하지 않는다. 이미지 선언과 적용 명령은 [Makefile](Makefile), [배포 스크립트](scripts/poll-deploy.sh), [workflow](.github/workflows/publish.yml)를 따른다.
 

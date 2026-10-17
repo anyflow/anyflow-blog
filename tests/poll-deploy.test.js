@@ -1,91 +1,61 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const os = require('node:os');
-const {execFile} = require('node:child_process');
-const {promisify} = require('node:util');
-const exec = promisify(execFile);
+const fs = require('node:fs'), path = require('node:path'), os = require('node:os');
+const {promisify} = require('node:util'), exec = promisify(require('node:child_process').execFile);
+const yaml = require('js-yaml');
 const script = path.resolve(__dirname, '../scripts/poll-deploy.sh');
 function setup(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'poll-deploy-'));
   t.after(() => fs.rmSync(dir, {recursive:true, force:true}));
-  const bin = path.join(dir, 'bin');
-  fs.mkdirSync(bin);
+  const bin = path.join(dir, 'bin');fs.mkdirSync(bin);
   fs.writeFileSync(path.join(bin, 'git'), `#!/bin/sh
 printf '%s\\n' "$*" >>"$TEST_CALLS"
 case "$*" in
-  *'clone --no-tags --branch master --single-branch '*)
+  *'clone --depth 1 --no-tags --branch master --single-branch git@github.com:anyflow/anyflow-blog.git '*)
     [ "\${TEST_CLONE_STATUS:-0}" = 0 ] || exit "$TEST_CLONE_STATUS"
     for destination; do :; done
     mkdir -p "$destination/.git" ;;
-  'remote get-url origin') printf '%s\\n' "$TEST_ORIGIN" ;;
-  'branch --show-current') printf '%s\\n' "$TEST_BRANCH" ;;
-  'status --porcelain') printf '%s' "$TEST_DIRTY" ;;
-  *'fetch --no-tags origin master') exit "\${TEST_FETCH_STATUS:-0}" ;;
-  'merge --ff-only origin/master') exit "\${TEST_MERGE_STATUS:-0}" ;;
-  'rev-parse HEAD:deployment') printf '%s\\n' "$TEST_TREE" ;;
   'rev-parse HEAD') printf 'code-sha\\n' ;;
   *) exit 99 ;;
 esac
 `, {mode:0o700});
   fs.writeFileSync(path.join(bin, 'make'), `#!/bin/sh
 [ "$*" = deploy ] || exit 99
+[ -d .git ] || exit 98
 printf 'make-deploy\\n' >>"$TEST_CALLS"
 sleep "\${TEST_MAKE_SLEEP:-0}"
 exit "\${TEST_MAKE_STATUS:-0}"
 `, {mode:0o700});
-  const env = {...process.env, PATH:`${bin}:${process.env.PATH}`,
-    DEPLOY_DATA_DIR:path.join(dir,'data'), TEST_CALLS:path.join(dir,'calls'),
-    TEST_ORIGIN:'git@github.com:anyflow/anyflow-blog.git', TEST_BRANCH:'master',
-    TEST_DIRTY:'', TEST_TREE:'deployment-tree-1'};
+  const env = {...process.env,PATH:`${bin}:${process.env.PATH}`,DEPLOY_DATA_DIR:path.join(dir,'data'),TEST_CALLS:path.join(dir,'calls')};
   const run = values => exec('/bin/sh', [script], {env:{...env,...values}});
   const calls = () => fs.existsSync(env.TEST_CALLS) ? fs.readFileSync(env.TEST_CALLS,'utf8').trim().split('\n') : [];
-  const state = () => fs.readFileSync(path.join(env.DEPLOY_DATA_DIR,'last-success'),'utf8').trim();
-  return {env, run, calls, state};
+  const empty = () => assert.deepEqual(fs.readdirSync(env.DEPLOY_DATA_DIR),[]);
+  return {run,calls,empty};
 }
-test('bootstrap deploys once; code-only commits skip; changed deployment tree deploys', async t => {
-  const {run,calls,state} = setup(t);
-  await run();
-  assert.equal(state(),'deployment-tree-1');
-  await run();
-  assert.equal(calls().filter(x=>x==='make-deploy').length,1);
-  await run({TEST_TREE:'deployment-tree-2'});
-  assert.equal(state(),'deployment-tree-2');
-  assert.equal(calls().filter(x=>x==='make-deploy').length,2);
-  await run({TEST_TREE:'deployment-tree-1'});
-  assert.equal(state(),'deployment-tree-1');
-  assert.equal(calls().filter(x=>x==='make-deploy').length,3);
-  assert.equal(calls().filter(x=>x.includes('clone --no-tags')).length,1);
+test('each run clones a fresh shallow checkout and applies without persistent state',async t=>{
+ const {run,calls,empty}=setup(t);await run();empty();await run();empty();
+ const clones=calls().filter(x=>x.includes('clone --depth 1'));
+ assert.equal(clones.length,2);assert.notEqual(clones[0],clones[1]);
+ assert.equal(calls().filter(x=>x==='make-deploy').length,2);
 });
-test('failed apply preserves success marker and retries unchanged target', async t => {
-  const {run,calls,state} = setup(t);
-  await run();
-  await assert.rejects(run({TEST_TREE:'deployment-tree-2',TEST_MAKE_STATUS:'1'}));
-  assert.equal(state(),'deployment-tree-1');
-  await run({TEST_TREE:'deployment-tree-2'});
-  assert.equal(state(),'deployment-tree-2');
-  assert.equal(calls().filter(x=>x==='make-deploy').length,3);
+test('failed clone never applies and next execution starts clean',async t=>{
+ const {run,calls,empty}=setup(t);await assert.rejects(run({TEST_CLONE_STATUS:'1'}));empty();
+ assert.ok(!calls().includes('make-deploy'));await run();empty();assert.equal(calls().filter(x=>x==='make-deploy').length,1);
 });
-test('wrong origin, branch, dirty checkout and fetch/merge failures never deploy', async t => {
-  for (const values of [{TEST_ORIGIN:'git@github.com:evil/repo.git'},
-    {TEST_BRANCH:'other'}, {TEST_DIRTY:' M Makefile'},
-    {TEST_FETCH_STATUS:'1'}, {TEST_MERGE_STATUS:'1'}]) {
-    const {run,calls,env} = setup(t);
-    await assert.rejects(run(values));
-    assert.ok(!calls().includes('make-deploy'));
-    assert.ok(!fs.existsSync(path.join(env.DEPLOY_DATA_DIR,'last-success')));
-  }
+test('failed apply cleans temporary data and next execution retries',async t=>{
+ const {run,calls,empty}=setup(t);await assert.rejects(run({TEST_MAKE_STATUS:'1'}));empty();await run();empty();
+ assert.equal(calls().filter(x=>x==='make-deploy').length,2);
 });
-test('failed initial clone is cleaned and next run retries', async t => {
-  const {run,env,state} = setup(t);
-  await assert.rejects(run({TEST_CLONE_STATUS:'1'}));
-  assert.deepEqual(fs.readdirSync(env.DEPLOY_DATA_DIR),['deploy.lock']);
-  await run();
-  assert.equal(state(),'deployment-tree-1');
+test('independent executions do not share checkout files',async t=>{
+ const {run,calls,empty}=setup(t);await Promise.all([run({TEST_MAKE_SLEEP:'0.1'}),run({TEST_MAKE_SLEEP:'0.1'})]);empty();
+ assert.equal(calls().filter(x=>x==='make-deploy').length,2);
 });
-test('separate processes cannot overlap deployments', async t => {
-  const {run,calls} = setup(t);
-  await Promise.all([run({TEST_MAKE_SLEEP:'0.2'}),run({TEST_MAKE_SLEEP:'0.2'})]);
-  assert.equal(calls().filter(x=>x==='make-deploy').length,1);
+test('CronJob uses emptyDir with Forbid and only comments keep a PVC',()=>{
+ const cron=yaml.load(fs.readFileSync('deployment/cronjob.yaml','utf8'));
+ assert.equal(cron.spec.concurrencyPolicy,'Forbid');
+ const pod=cron.spec.jobTemplate.spec.template.spec,workspace=pod.volumes.find(v=>v.name==='workspace');
+ assert.deepEqual(workspace.emptyDir,{});assert.ok(!pod.volumes.some(v=>v.persistentVolumeClaim));
+ assert.ok(pod.containers[0].volumeMounts.some(v=>v.name==='workspace'&&v.mountPath==='/data'));
+ const claims=yaml.loadAll(fs.readFileSync('deployment/persistentvolumeclaims.yaml','utf8'));
+ assert.deepEqual(claims.map(c=>c.metadata.name),['anyflow-blog-comments-state']);
 });

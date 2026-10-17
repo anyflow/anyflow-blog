@@ -65,7 +65,7 @@ Kubernetes에는 Gateway API·agentgateway CRD, 대상 네임스페이스와 Gat
 | `anyflow-blog-comments` | 댓글 서명/관리자 설정과 댓글 Git SSH 인증 |
 | `anyflow-blog-deploy-git` | 배포 선언을 읽는 Git SSH 인증 |
 
-배포 context를 지정한 뒤 리소스를 생성한다. `make create`는 PVC·RBAC·정책·CronJob과 웹/API 리소스를 적용한다. 이후 CronJob이 1분마다 배포 디렉터리 변경을 확인한다.
+배포 context를 지정한 뒤 리소스를 생성한다. `make create`는 댓글 PVC·RBAC·정책·CronJob과 웹/API 리소스를 적용한다. 이후 CronJob이 1분마다 `emptyDir`에 저장소를 새로 clone하고 `make deploy`를 실행한다. 같은 이미지 digest를 적용하면 실행 중인 웹/API Pod를 교체하지 않는다.
 
 ```sh
 make create KUBE_CONTEXT=YOUR_CONTEXT
