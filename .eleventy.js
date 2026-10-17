@@ -7,7 +7,8 @@ module.exports = function(config) {
   const content=loadContent();
   config.addGlobalData("posts",content.posts);
   config.addGlobalData("home",{id:"home",...site,coverPosition:"50% 50%",...content.home});
-  const names=[...new Set(content.posts.map(post=>post.category))].sort((a,b)=>a.localeCompare(b,"ko"));
+  const order=new Map(site.categoryOrder.map((name,index)=>[name,index]));
+  const names=[...new Set(content.posts.map(post=>post.category))].sort((a,b)=>(order.get(a)??Infinity)-(order.get(b)??Infinity)||a.localeCompare(b,"ko"));
   config.addGlobalData("categories",names.map(name=>({name,posts:content.posts.filter(p=>p.category===name)})));
   config.addFilter("tagColor",name=>{const palette=["#f1f0ef","#e7f3e6","#e3f2fb","#ffe8f3","#fef5e6","#f9eee2","#f6edfa","#ffe8e7"];return palette[Array.from(String(name)).reduce((n,c)=>n+c.codePointAt(0),0)%palette.length];});
   config.addFilter("tagStyle",bg=>{

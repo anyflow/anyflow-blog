@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {loadContent}=require('../lib/content'),{validateContent}=require('../lib/validate-content');
 function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'blog-home-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));fs.mkdirSync(path.join(root,'target'));fs.writeFileSync(path.join(root,'target.md'),'---\ntitle: Target\npost_id: target123\npermalink: /target\npublish: true\ncreated: 2026-01-01\ncategory: Test\n---\n\nA post.');return root;}
 const header='---\ntitle: Authored home\npost_id: root12345\nsummary: Authored summary\npermalink: /\npublish: true\n---\n\n';
-function render(content){const env=new nunjucks.Environment(new nunjucks.FileSystemLoader([path.resolve('src'),path.resolve('src/_includes')]));for(const [name,fn]of Object.entries({absoluteUrl:url=>new URL(url,'https://www.anyflow.net').href,versionedAsset:url=>url,tagColor:()=>'',tagStyle:()=>''}))env.addFilter(name,fn);const data={...content,site:{title:'Fallback title',description:'Fallback description'},categories:[]};return env.render('base.njk',{...data,content:env.render('index.njk',data)});}
+function render(content,categories=[]){const env=new nunjucks.Environment(new nunjucks.FileSystemLoader([path.resolve('src'),path.resolve('src/_includes')]));for(const [name,fn]of Object.entries({absoluteUrl:url=>new URL(url,'https://www.anyflow.net').href,versionedAsset:url=>url,tagColor:()=>'',tagStyle:()=>''}))env.addFilter(name,fn);const data={...content,site:{title:'Fallback title',description:'Fallback description'},categories};return env.render('base.njk',{...data,content:env.render('index.njk',data)});}
 test('root Markdown owns title, introduction, contacts, section labels, order and TOC',t=>{
  const root=fixture(t),file=path.join(root,'blog.md');fs.writeFileSync(file,header+'## Intro authored\n\nHello **reader**.\n\n- [Contact](https://example.com/contact)\n\n[My bookmark](https://www.anyflow.net/target)\n\n## Fresh writing\n\nBefore cards.\n\n<!-- blog:recent -->\n\nAfter cards.\n\n## Grouped writing\n\n<!-- blog:categories -->');
  let content=loadContent(root);validateContent(content);let html=render(content);
@@ -13,4 +13,16 @@ test('root Markdown owns title, introduction, contacts, section labels, order an
 test('home slots are explicit standalone comments and duplicate lists fail',t=>{
  const root=fixture(t),file=path.join(root,'blog.md');fs.writeFileSync(file,header+'## Notes\n\n```md\n<!-- blog:recent -->\n```');let c=loadContent(root);assert.ok(c.home.sections.every(s=>s.parts.every(p=>p.kind==='html')));assert.equal(c.unresolved.length,0);
  fs.writeFileSync(file,header+'## One\n\n<!-- blog:recent -->\n\n## Two\n\n<!-- blog:recent -->');assert.throws(()=>loadContent(root),/Duplicate home list/);
+});
+
+test('home categories keep configured order and headings cannot collapse',t=>{
+ const root=fixture(t);fs.writeFileSync(path.join(root,'blog.md'),header+'## Categories\n\n<!-- blog:categories -->');
+ const expected=['as 음악인','as S/W 엔지니어','예술/인문 소감','自省(Introspection) / 세상살이','프로젝트s'];
+ for(const [i,category]of [...expected].reverse().entries())fs.writeFileSync(path.join(root,`category-${i}.md`),`---\ntitle: Category ${i}\npublish: true\ncreated: 2026-01-01\ncategory: ${category}\n---\n\nBody.`);
+ const previous=process.env.BLOG_CONTENT_DIR;process.env.BLOG_CONTENT_DIR=root;const globals={};
+ try{require('../.eleventy.js')({addFilter(){},addGlobalData(name,value){globals[name]=value;},addPassthroughCopy(){}});}finally{if(previous===undefined)delete process.env.BLOG_CONTENT_DIR;else process.env.BLOG_CONTENT_DIR=previous;}
+ assert.deepEqual(globals.categories.map(g=>g.name),[...expected,'Test']);
+ const html=render(loadContent(root),globals.categories);
+ assert.equal((html.match(/class="category-heading"/g)||[]).length,6);assert.doesNotMatch(html,/<details[^>]*category-group|<summary/);
+ for(const name of expected)assert.ok(html.includes(name));
 });

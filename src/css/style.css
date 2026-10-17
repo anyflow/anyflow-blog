@@ -95,7 +95,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .load-more svg { width:14px; height:14px; margin:0 6px 0 -1px; fill:currentColor; opacity:.3; flex-shrink:0}
 .category-section>h2 { margin-top:40px; margin-bottom:16px}
 .category-group { margin-bottom:22px}
-.category-group summary { font-size:14px; line-height:28px; cursor:pointer; user-select:none; list-style:none; display:flex; gap:8px; align-items:center}
+.category-group .category-heading { margin:0; padding:0; font-size:14px; font-weight:400; line-height:28px; display:flex; gap:8px; align-items:center}
 .category-label { padding:0 6px; border-radius:3px; line-height:1.2; background:var(--tag-bg); color:var(--tag-fg)}
 [data-theme=dark] .category-label { background:var(--tag-dark-bg); color:var(--tag-dark-fg)}
 .category-count { font-size:12px; color:var(--muted)}

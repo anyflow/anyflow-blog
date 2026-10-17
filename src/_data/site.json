@@ -7,5 +7,12 @@
   "analyticsHosts": [
     "anyflow.net",
     "www.anyflow.net"
+  ],
+  "categoryOrder": [
+    "as 음악인",
+    "as S/W 엔지니어",
+    "예술/인문 소감",
+    "自省(Introspection) / 세상살이",
+    "프로젝트s"
   ]
 }
