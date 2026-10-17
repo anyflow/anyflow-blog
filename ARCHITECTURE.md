@@ -127,6 +127,75 @@ D는 배포, C는 페이지 조회·댓글 처리 순서이며 a/b/c는 같은 �
 
 waypoint·ztunnel·응답 경로·Secret 등 세부 인프라는 그림에서 생략한다. 현재 실제 웹/API 연결은 메시 설정에 따라 Istio waypoint를 경유하며, HTTPRoute에는 각 Service만 지정한다.
 
+## 저장소별 데이터 구조
+
+작성 원본은 [blog](https://github.com/anyflow/blog), 댓글·Like 원본은 비공개 [blog-comments](https://github.com/anyflow/blog-comments)에 저장한다. 이 문서의 comments repo는 `blog-comments`를 뜻한다. 웹·API 코드와 배포 선언은 `anyflow-blog`에 둔다.
+
+### blog: 문서·첨부·메타데이터
+
+글의 vault 상대경로를 URL과 댓글 `post_id`로 사용하고, 글별 미디어는 같은 경로를 `_assets` 아래에 구성한다.
+
+```text
+blog/
+├── blog.md                           # 홈 /
+├── sw-engineer/
+│   └── example.md                    # /sw-engineer/example
+├── _assets/
+│   ├── sw-engineer/example/          # 해당 글의 이미지·영상·첨부
+│   ├── _covers/                      # 공용 커버 이미지
+│   ├── _icons/                       # 공용 아이콘 이미지
+│   └── _meta/                        # 링크 캐시·갤러리·이관 메타데이터
+├── .obsidian/                        # vault 설정·플러그인 연결·로컬 상태
+└── .github/workflows/                # 콘텐츠 push → 빌드 workflow 호출
+```
+
+| 데이터 | 저장 형식·관계 |
+| --- | --- |
+| 글 | Markdown 본문과 YAML frontmatter. `publish: true`인 글을 발행하며 `title`·`created`·`category` 필수 |
+| 선택 속성 | `summary`·`updated`·`tags`·`noindex`·`cover`·`icon`. 홈은 `favicon`도 사용 |
+| 주소·식별자 | `sw-engineer/example.md` → URL·`post_id` 모두 `/sw-engineer/example`. 홈 `blog.md`는 `/` |
+| 첨부 참조 | 상대 Markdown 경로·Wikilink로 연결. 참조된 허용 형식만 공개 `/assets/`에 복사 |
+| 링크 정보 | `_assets/_meta/link-previews.json`은 URL별 제목·설명·이미지 등 수집 캐시. `bookmarks.json`은 글별 북마크 표현 정보 |
+| 갤러리·보존 정보 | `notion-gallery.json`은 수집한 아이콘·커버 목록. `visuals.json`·`notion-import.json`·`path-migration.json`·CSV는 이관·경로 대응 등 보존 정보 |
+| 공개 경계 | `.obsidian`·원본 Markdown·메타데이터 JSON·미참조 첨부는 정적 출력에 포함하지 않음 |
+
+`permalink`·`post_id`·`kind`·`draft`를 frontmatter에 따로 저장하지 않는다. 제목·분류 변경은 주소를 바꾸지 않는다. 폴더·파일 이동은 주소와 댓글·Like 연결을 바꾸므로 참조·댓글 데이터도 함께 이전한다. 게시 속성과 본문 문법의 상세 계약은 [CONTENT_CONTRACT.md](CONTENT_CONTRACT.md)를 따른다.
+
+### comments: 댓글·Like·공개 데이터
+
+댓글 한 개를 JSON 파일 한 개로 저장하며, 댓글 ID와 글의 `post_id`를 분리한다. `main`은 게시 기준 데이터이고 `incoming/<comment_id>`는 PR merge 전의 신규·대기 댓글 데이터를 보관한다.
+
+```text
+blog-comments/
+├── .comments-store                   # 댓글 전용 저장소 식별 표식
+├── settings.json                     # 승인 설정·이전 Like 집계
+├── comments/<comment_id>.json         # 댓글·답글 원본
+├── likes/<SHA256(target)>.json        # 대상별 브라우저 Like
+├── requests/<comment_id>.json         # 신규 댓글 PR 알림 정보
+├── public/<SHA256(post_id)>.json      # 글별 생성 공개 데이터
+├── originals/                        # 댓글 이관 원본
+├── migrations/                       # 데이터 이전 기록·복구 자료
+├── lib/comments/                     # 게시·공개 데이터 생성용 코드
+├── scripts/                          # 게시·export 실행 진입점
+└── .github/workflows/                # PR·승인·merge·공개 데이터 갱신
+```
+
+| 데이터 | 주요 필드·관계 |
+| --- | --- |
+| 댓글 식별 | `id`는 댓글 파일명. 신규 댓글은 브라우저 식별·글·`request_id`를 HMAC한 32자리 값이며, 이관 댓글은 `disqus-...`·`backup-...` 등 보존 ID 사용 |
+| 글·답글 연결 | `post_id`는 글 경로, `parent_id`는 부모 댓글 `id` 또는 `null`. 같은 글 안에서 답글 연결 |
+| 표시 내용 | `author: {name, link, is_admin}`·`body`·`created_at`·`updated_at` |
+| 상태·출처 | `status: pending / published / deleted`, `legacy`, `source`. 삭제는 원본 레코드의 상태를 바꾸고 본문을 비움 |
+| 비공개 권한·재처리 | `owner_hash`는 작성 브라우저 권한 식별. `request_fingerprint`와 `applied_requests`는 요청 충돌·재적용 제어 |
+| Like | `{target, actors: {<브라우저 해시>: true}}`. `target`은 `post:/sw-engineer/example` 또는 `comment:<comment_id>`. 파일명은 target 전체의 SHA256 |
+| 설정 | `moderation`은 승인 여부로 기본 `false`. `legacyLikes`는 target별 이전 Like 수. 표시 집계는 이전 수 + 현재 Like 브라우저 수 |
+| 게시 요청 | `{comment_id, post_id, title, post_url}`. 신규 댓글의 PR 제목·본문·글 링크 생성에 사용 |
+| 공개 산출물 | `{comments: [...], post_likes}`. 댓글별 표시 데이터·버전·Like 수를 포함하며 권한 해시·요청 기록·승인 대기 데이터는 제외 |
+
+`public/` 파일명은 현재 사용하는 경로형 `post_id`의 SHA256으로 생성한다. JSON 안의 댓글 `post_id`는 원래 경로를 유지한다. 내보내기는 [export.js](lib/comments/export.js)와 [post-key.js](lib/comments/post-key.js)를 따른다. API는 공개 파일만 읽는 구조가 아니라 로컬 기준 상태와 대기 작업을 결합하고, 방문자 권한에 맞춰 응답한다.
+
+정적 빌드가 생성하는 `comments/catalog.json`은 발행 글의 ID·제목·URL·별칭을 가진 허용 대상 목록이다. 이는 댓글 원본 저장소의 `comments/` 및 `public/`와 별개이며 API가 요청의 글 식별자를 검증하는 데 사용한다. 접수 중인 작업·처리 기록·Like 순서는 Git 파일이 아닌 댓글 PVC의 `queue.json`에 저장한다. 이 파일은 `version`·`revision`·`base`·`jobs`·`receipts`·`sequences`·`sequenceTimes`를 갖고 Git 반영 전 작업과 재시작 복구를 보존한다.
+
 ## 기술 선택 이유
 
 각 기술은 정적 블로그와 낮은 요청량의 댓글을 운영하는 데 필요한 실행 환경과 관리 대상을 줄이기 위해 선택한다.
