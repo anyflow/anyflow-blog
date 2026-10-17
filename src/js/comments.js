@@ -110,6 +110,27 @@
     if (text !== undefined) node.textContent = text;
     return node;
   }
+  function commentBody(text) {
+    const node = element('div', 'comment-body');
+    let offset = 0;
+    for (const match of text.matchAll(/\b(?:https?:\/\/|www\.)[^\s<>"'“”‘’]+/gi)) {
+      let label = match[0].replace(/[.,!?;:，。！？；：]+$/, '');
+      const pairs = {')': '(', ']': '[', '}': '{'};
+      while (pairs[label.at(-1)] && label.split(label.at(-1)).length > label.split(pairs[label.at(-1)]).length)
+        label = label.slice(0, -1).replace(/[.,!?;:，。！？；：]+$/, '');
+      const href = safeAuthorLink(/^www\./i.test(label) ? 'https://' + label : label);
+      if (!href) continue;
+      node.append(document.createTextNode(text.slice(offset, match.index)));
+      const link = element('a', '', label);
+      link.href = href;
+      link.target = '_blank';
+      link.rel = 'nofollow ugc noopener noreferrer';
+      node.append(link);
+      offset = match.index + label.length;
+    }
+    node.append(document.createTextNode(text.slice(offset)));
+    return node;
+  }
   function button(text, action, className = '') {
     const node = element('button', className, text);
     node.type = 'button';
@@ -384,7 +405,7 @@
           article.append(reference);
         }
       }
-      article.append(element('div', 'comment-body', comment.body));
+      article.append(commentBody(comment.body));
       const actions = element('div', 'comment-actions');
       if (!comment.id.startsWith('local-')) {
         actions.append(likeButton(comment.id, comment.likes, comment.liked));

@@ -29,6 +29,7 @@ a.comment-author { text-decoration:underline; text-underline-offset:3px; text-de
 .comment-date,.comment-edited { color:var(--muted); font-size:11px; }
 .comment-badge { background:var(--soft); border:1px solid var(--faint); border-radius:3px; padding:0 4px; font-size:10px; }
 .comment-body { margin:8px 0; white-space:pre-wrap; line-height:1.65; }
+.comment-body a { color:var(--link); text-decoration:underline; text-decoration-color:var(--link-underline); text-underline-offset:3px; }
 .comment-actions { display:flex; gap:3px; flex-wrap:wrap; color:var(--muted); font-size:12px; }
 .comments .comment-actions button { padding:3px 7px; min-height:32px; }
 .comments .comment-toggle { display:inline-flex; align-items:center; gap:10px; color:var(--text); }

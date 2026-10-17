@@ -341,3 +341,14 @@ test('gateway plain-text 429 restores Like and shows a rate-limit message',async
  const f=fixture(snapshot([]));await f.ready();f.responses.push({error:true,httpStatus:429,nonJson:true});f.find('comments-like').events.click();await f.ready();
  assert.equal(f.find('comments-like').getAttribute('aria-pressed'),'false');assert.match(f.find('comments-notice').textContent,/요청이 너무 많습니다/);
 });
+
+test('comment URLs become safe links while text, punctuation and HTML stay intact', async () => {
+  const body='참고 (https://example.com/a_(b)?x=1&y=2).\nwww.example.org/path, HTTP://EXAMPLE.NET! <img src=x onerror=bad()> javascript:alert(1) data:text/html,bad https://%';
+  const f=fixture(snapshot([comment('links',null,{body})]));await f.ready();
+  const rendered=f.find('comment-body'),links=rendered.children.filter(n=>n.tagName==='a');
+  assert.equal(rendered.textContent,body);
+  assert.deepEqual(links.map(n=>n.textContent),['https://example.com/a_(b)?x=1&y=2','www.example.org/path','HTTP://EXAMPLE.NET']);
+  assert.deepEqual(links.map(n=>n.href),['https://example.com/a_(b)?x=1&y=2','https://www.example.org/path','http://example.net/']);
+  for(const link of links){assert.equal(link.target,'_blank');assert.equal(link.rel,'nofollow ugc noopener noreferrer');}
+  assert.ok(!f.all().some(n=>n.tagName==='img'||n.tagName==='script'));
+});
