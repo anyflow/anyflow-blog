@@ -29,10 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: anyflow/blog
           ref: main
@@ -54,7 +54,7 @@ jobs:
           echo "current=true" >> "$GITHUB_OUTPUT"
           echo "content=$latest" >> "$GITHUB_OUTPUT"
           echo "code=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.inputs.outputs.current == 'true'
         with:
           node-version: '22'
@@ -62,7 +62,7 @@ jobs:
       - name: Check deployment logic
         if: steps.inputs.outputs.current == 'true'
         run: node --test tests/deployment-images.test.js tests/poll-deploy.test.js
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         if: steps.inputs.outputs.current == 'true'
         with:
           path: |
@@ -79,9 +79,9 @@ jobs:
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           npm ci
           npm run build
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: steps.inputs.outputs.current == 'true'
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         if: steps.inputs.outputs.current == 'true'
         with:
           registry: ghcr.io
@@ -90,7 +90,7 @@ jobs:
       - name: Build static site
         id: site
         if: steps.inputs.outputs.current == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -103,7 +103,7 @@ jobs:
       - name: Build comments API
         id: comments
         if: steps.inputs.outputs.current == 'true' && (github.event_name == 'push' || inputs.build_comments)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: comments-api
@@ -116,7 +116,7 @@ jobs:
       - name: Build deployment tools
         id: deployer
         if: steps.inputs.outputs.current == 'true' && (github.event_name == 'push' || inputs.build_deployer)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.deploy
