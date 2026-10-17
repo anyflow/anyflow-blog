@@ -19,3 +19,8 @@ test('native article containers cannot leak into diagram measurement and failed 
  const restore=installMermaid(native,engine);native.render('id','source',{article:true});native.mermaidAPI.render('id2','source2',{article:true});assert.deepEqual(args,[['id','source'],['id2','source2']]);restore();assert.equal(native.render,original);
  assert.throws(()=>installMermaid(native,{...engine,initialize(){throw new Error('broken');}}),/broken/);assert.equal(native.render,original);
 });
+
+test('the browser uses the same isolated renderer and GitHub defaults as Obsidian',()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),context={};vm.runInNewContext(fs.readFileSync(require.resolve('../integrations/obsidian-blog-links/mermaid-profile'),'utf8'),context);
+ assert.equal(typeof context.blogMermaid.createRenderer,'function');assert.equal(context.blogMermaid.installMermaid,undefined);assert.equal(JSON.stringify(context.blogMermaid.githubDefaults({theme:'dark',securityLevel:'strict'})),JSON.stringify(githubDefaults({theme:'dark',securityLevel:'strict'})));
+});

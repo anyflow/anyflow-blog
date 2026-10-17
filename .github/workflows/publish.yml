@@ -69,9 +69,9 @@ jobs:
             .cache/card-images
             .cache/x-thumbnails.json
             .cache/link-previews.json
-          key: card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'src/js/vendor/mermaid.min.js') }}-${{ github.run_id }}
+          key: card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'integrations/obsidian-blog-links/mermaid-profile.js', 'integrations/obsidian-blog-links/vendor/mermaid-12.1.0.min.js') }}-${{ github.run_id }}
           restore-keys: |
-            card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'src/js/vendor/mermaid.min.js') }}-
+            card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'integrations/obsidian-blog-links/mermaid-profile.js', 'integrations/obsidian-blog-links/vendor/mermaid-12.1.0.min.js') }}-
       - name: Build static artifacts and card images
         if: steps.inputs.outputs.current == 'true'
         run: |

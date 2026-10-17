@@ -136,7 +136,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-body th { background:var(--soft); font-weight:500 }
 .post-body iframe,.post-body video { max-width:100%; border:0}
 .missing-image { font-size:14px; color:var(--muted)}
-.mermaid { overflow:auto; text-align:center; background:var(--bg); padding:16px}
+.mermaid { line-height:normal; overflow:auto; text-align:center; background:var(--bg); padding:16px}
 .back-to-top { position:fixed; right:18px; bottom:18px; z-index:12; display:flex; gap:7px; align-items:center; background:var(--bg); box-shadow:0 2px 8px #0001; padding:7px 10px; font-size:12px}
 .toast { position:fixed; bottom:25px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 14px; border-radius:4px; opacity:0; pointer-events:none; font-size:14px}
 .toast.show { opacity:1}

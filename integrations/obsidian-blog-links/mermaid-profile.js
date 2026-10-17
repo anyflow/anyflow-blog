@@ -25,4 +25,5 @@ function installMermaid(native,engine){
   native.initialize(config);return restore;
  }catch(error){restore();throw error;}
 }
-module.exports={githubDefaults,createRenderer,installMermaid};
+if(typeof module!=='undefined')module.exports={githubDefaults,createRenderer,installMermaid};
+else globalThis.blogMermaid={githubDefaults,createRenderer};

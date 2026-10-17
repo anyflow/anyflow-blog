@@ -3,7 +3,9 @@ const fs=require("node:fs"),path=require("node:path"),{createHash}=require("node
 const site=require("./src/_data/site.json");
 module.exports = function(config) {
   config.addFilter("absoluteUrl",url=>new URL(url,site.url).href);
-  config.addFilter("versionedAsset",url=>`${url}?v=${createHash("sha256").update(fs.readFileSync(path.join(__dirname,"src",url))).digest("hex").slice(0,12)}`);
+  const sharedAssets={"/js/mermaid-profile.js":"integrations/obsidian-blog-links/mermaid-profile.js","/js/vendor/mermaid.min.js":"integrations/obsidian-blog-links/vendor/mermaid-12.1.0.min.js"};
+  for(const [url,source] of Object.entries(sharedAssets))config.addPassthroughCopy({[source]:url.slice(1)});
+  config.addFilter("versionedAsset",url=>`${url}?v=${createHash("sha256").update(fs.readFileSync(path.join(__dirname,sharedAssets[url]||path.join("src",url)))).digest("hex").slice(0,12)}`);
   const content=loadContent();
   config.addGlobalData("posts",content.posts);
   config.addGlobalData("home",{id:"home",...site,coverPosition:"50% 50%",...content.home});
