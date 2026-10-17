@@ -328,3 +328,19 @@ test('legacy visual metadata supplies emoji assets and aliases, never authored t
  fs.writeFileSync(path.join(root,'_assets/_meta/visuals.json'),JSON.stringify({emojis:{'⭐':'_icons/star.webp'},pages:{'/one':{pageId:'abcdefab-cdef-abcd-efab-cdefabcdefab',source:'https://old.example/one',icon:'X',cover:'bad.png',properties:[{text:'Test'},{text:'Old tag'}],sourceTags:['my-tag']}}}));
  const p=loadContent(root).posts[0];assert.deepEqual(p.tags,['my-tag']);assert.equal(p.icon,'⭐');assert.equal(p.cover,'');assert.equal(p.iconImage,'/assets/_assets/_icons/star.webp');assert.ok(p.aliases.includes('abcdefabcdefabcdefabcdefabcdefab'));assert.ok(p.aliases.includes('https://old.example/one'));
 });
+
+test('internal page mentions decorate wiki and markdown labels without changing external or image links',t=>{
+ const root=fixture(t);
+ post(root,'target',{title:'Target title',icon:'🚧'});
+ post(root,'source',{},'[[target]]\n\n[[target|Alias]]\n\n[Custom label](target.md)\n\n[Web label](https://www.anyflow.net/target/#section)\n\n[External](https://example.org/target)\n\n[Section](#section)\n\n`[[target]]`');
+ const source=loadContent(root).posts.find(p=>p.url==='/source');
+ assert.match(source.html,/page-mention-icon[^>]*[^]*?🚧/);
+ assert.match(source.html,/page-mention-title">Target title<\/span>/);
+ assert.match(source.html,/page-mention-title">Alias<\/span>/);
+ assert.match(source.html,/page-mention-title">Custom label<\/span>/);
+ assert.match(source.html,/href="\/target#section" class="page-mention"/);
+ assert.match(source.html,/>Web label<\/span>/);
+ assert.match(source.html,/<a href="https:\/\/example.org\/target" rel="noopener noreferrer">External<\/a>/);
+ assert.match(source.html,/<a href="#section">Section<\/a>/);
+ assert.match(source.html,/<code>\[\[target\]\]<\/code>/);
+});
