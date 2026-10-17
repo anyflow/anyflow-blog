@@ -6,3 +6,6 @@
 .metadata-container .metadata-add-button{display:none}
 
 .cm-lang-cardlink .blog-list-card .bookmark{margin-inline:0;width:100%}
+
+/* Preserve CodeMirror line measurements while hiding a collapsed fence's leftover tab. */
+.cm-line.HyperMD-codeblock-begin:has(> .cm-indent:only-child):has(+ .cm-lang-cardlink){opacity:0}
