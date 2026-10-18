@@ -122,6 +122,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-body p:has(>img) { margin:16px 0 4px; padding:0}
 .post-body .caption { font-size:14px; font-style:normal; color:var(--muted); line-height:1.4; margin:4px 0 20px; padding:0 2px; text-align:left }
 .post-body .caption > p { font-size:inherit; line-height:inherit; margin:0; padding:0 }
+.post-body .caption code { font-size:inherit }
 .post-body .caption > p + p { margin-top:8px }
 .post-body figure:has(>figcaption) { margin-bottom:20px }
 .post-body figure > .caption { margin-bottom:0 }
