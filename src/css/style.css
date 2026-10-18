@@ -34,12 +34,12 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .page-width { max-width:900px; padding-left:var(--padding); padding-right:var(--padding); margin:auto}
 .page-icon { width:78px; height:78px; font-size:78px; line-height:1.1; margin-top:-42px; margin-left:3px; position:relative; z-index:1; user-select:none}
 .page-title { font-size:40px; font-weight:700; line-height:1.2; margin:9px 0 0; padding:0 2px; overflow-wrap:anywhere}
-.properties { margin-top:0; padding-bottom:24px; border-bottom:1px solid var(--faint)}
+.properties { margin-top:12px; padding-bottom:24px}
 .property-row { display:grid; grid-template-columns:164px minmax(0,1fr); min-height:34px; font-size:14px}
 .property-label { display:flex; align-items:center; height:34px; gap:8px; padding:0 6px; color:rgba(55,53,47,.6); line-height:1.2; white-space:nowrap}
 .property-label>span { width:16px; text-align:center; color:#aaa; font-size:18px; line-height:18px}
 .property-label>svg { width:16px; height:16px; color:rgba(55,53,47,.45)}
-.property-row:not(:last-child) { padding-bottom:4px }
+.property-empty { color:var(--muted); font-weight:400 }
 [data-theme=dark] .property-label { color:var(--muted) }
 [data-theme=dark] .property-label>svg { color:#7d7a75 }
 .property-value { padding:8px 8px 2px; display:flex; align-items:flex-start; flex-wrap:wrap; min-width:0}

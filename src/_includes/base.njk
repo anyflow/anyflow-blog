@@ -53,8 +53,9 @@
   <h1 class="page-title">{{ pageTitle | escape }}</h1>
   {% if post %}<div class="properties">
     <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="currentColor" stroke="none"/><path d="m6 7.5 3 3 3-3" stroke="var(--bg)"/></svg>Category</div><div class="property-value">{{ tag(post.category) }}</div></div>
-    <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M7 5h8M7 9h8M7 13h8"/><circle cx="3" cy="5" r=".8"/><circle cx="3" cy="9" r=".8"/><circle cx="3" cy="13" r=".8"/></svg>Tags</div><div class="property-value">{% for name in post.tags %}{{ tag(name,true) }}{% endfor %}</div></div>
+    <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M7 5h8M7 9h8M7 13h8"/><circle cx="3" cy="5" r=".8"/><circle cx="3" cy="9" r=".8"/><circle cx="3" cy="13" r=".8"/></svg>Tags</div><div class="property-value">{% if post.tags.length %}{% for name in post.tags %}{{ tag(name,true) }}{% endfor %}{% else %}<span class="property-empty">None</span>{% endif %}</div></div>
     <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="4" width="12" height="11" rx="1"/><path d="M3 7h12M6 2v4M12 2v4M6 10h6M6 12h4"/></svg>Created time</div><div class="property-value date-property">{{ post.displayDate }}</div></div>
+    <div class="property-row"><div class="property-label"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="4" width="12" height="11" rx="1"/><path d="M3 7h12M6 2v4M12 2v4M6 10h6M6 12h4"/></svg>Updated time</div><div class="property-value date-property">{% if post.updated %}{{ post.updated | dateLabel }}{% else %}<span class="property-empty">None</span>{% endif %}</div></div>
   </div>{% endif %}
 </div>
 <div class="page-layout page-width">
