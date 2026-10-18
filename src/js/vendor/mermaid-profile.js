@@ -79,8 +79,19 @@ function installMermaid(native,engine,getTheme){
  try{
   Object.assign(native,engine);native.initialize=options=>{current=options;return engine.initialize(githubDefaults(options));};
   // Never let a native caller pass the article DOM into isolated text measurement.
-  const render=(method,id,source)=>{if(getTheme)engine.initialize(githubDefaults({...current,theme:getTheme()}));return method(id,source);};
+  const render=async(method,id,source)=>{
+   if(getTheme)engine.initialize(githubDefaults({...current,theme:getTheme()}));
+   const result=await method(id,source);
+   return typeof result?.svg==='string'?{...result,svg:result.svg.replace('<svg ','<svg data-common-mermaid-source="'+encodeURIComponent(source)+'" ')}:result;
+  };
   native.render=(id,source)=>render(engine.render,id,source);native.mermaidAPI={...engine.mermaidAPI,initialize:native.initialize,render:(id,source)=>render(engine.mermaidAPI.render,id,source)};
+  restore.refresh=async container=>{
+   for(const svg of container.querySelectorAll('svg[data-common-mermaid-source]')){
+    const source=decodeURIComponent(svg.getAttribute('data-common-mermaid-source')),result=await native.render(svg.id,source);
+    if(!svg.isConnected)continue;
+    const template=svg.ownerDocument.createElement('template');template.innerHTML=result.svg;svg.replaceWith(template.content);result.bindFunctions?.(container);
+   }
+  };
   native.initialize(config);return restore;
  }catch(error){restore();throw error;}
 }
