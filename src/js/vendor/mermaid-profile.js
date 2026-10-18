@@ -73,13 +73,14 @@ function createRenderer(source,doc=document){
   return {engine:adaptEngine(engine,frame.contentDocument),dispose:()=>frame.remove()};
  }catch(error){frame.remove();throw error;}
 }
-function installMermaid(native,engine){
- const previous=Object.getOwnPropertyDescriptors(native),config=native.mermaidAPI.getSiteConfig();
+function installMermaid(native,engine,getTheme){
+ const previous=Object.getOwnPropertyDescriptors(native),config=native.mermaidAPI.getSiteConfig();let current=config;
  const restore=()=>{for(const key of Object.keys(native))if(!Object.hasOwn(previous,key))delete native[key];Object.defineProperties(native,previous);native.initialize(config);};
  try{
-  Object.assign(native,engine);native.initialize=options=>engine.initialize(githubDefaults(options));
+  Object.assign(native,engine);native.initialize=options=>{current=options;return engine.initialize(githubDefaults(options));};
   // Never let a native caller pass the article DOM into isolated text measurement.
-  native.render=(id,source)=>engine.render(id,source);native.mermaidAPI={...engine.mermaidAPI,initialize:native.initialize,render:(id,source)=>engine.mermaidAPI.render(id,source)};
+  const render=(method,id,source)=>{if(getTheme)engine.initialize(githubDefaults({...current,theme:getTheme()}));return method(id,source);};
+  native.render=(id,source)=>render(engine.render,id,source);native.mermaidAPI={...engine.mermaidAPI,initialize:native.initialize,render:(id,source)=>render(engine.mermaidAPI.render,id,source)};
   native.initialize(config);return restore;
  }catch(error){restore();throw error;}
 }
