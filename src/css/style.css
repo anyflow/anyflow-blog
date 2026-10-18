@@ -331,9 +331,9 @@ html:has(.image-viewer[open]) { overflow:hidden }
 
 .image-viewer>svg { width:100%; height:100%; max-width:none!important; background:var(--bg); cursor:zoom-out }
 
-.diagram-preview .mermaid { width:100%; height:100%; margin:0; padding:8px; overflow:hidden; display:flex; align-items:center; justify-content:center }
+.diagram-preview .mermaid { width:100%; height:100%; margin:0; padding:0; overflow:hidden; display:flex; align-items:center; justify-content:center }
 .diagram-preview .mermaid:not([data-processed=true]) { visibility:hidden }
-.diagram-preview .mermaid>svg { width:100%; height:100%; max-width:none!important }
+.diagram-preview .mermaid>svg { flex:none; max-width:none!important }
 
 .post-body table code { white-space:pre-wrap }
 

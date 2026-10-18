@@ -15,5 +15,14 @@ if(window.hljs)hljs.highlightAll();
 const graphSources=Array.from(document.querySelectorAll('.mermaid')).map(node=>({node,source:node.textContent}));
 const graphScript=document.currentScript;
 let graphDraw=Promise.resolve(),graphRenderer;
-function drawGraphs(){if(!graphRenderer)return;graphDraw=graphDraw.then(async()=>{const graphs=graphSources.filter(({node})=>!node.closest('[hidden]'));graphRenderer.engine.initialize(blogMermaid.githubDefaults({theme:root.dataset.theme==='dark'?'dark':'default',securityLevel:'strict'}));for(const [index,{node,source}] of graphs.entries()){try{const {svg,bindFunctions}=await graphRenderer.engine.render('blog-graph-'+index,source);node.innerHTML=svg;node.dataset.processed='true';bindFunctions?.(node);}catch{node.removeAttribute('data-processed');node.textContent=source;}}});}
+function drawGraphs(){if(!graphRenderer)return;graphDraw=graphDraw.then(async()=>{const graphs=graphSources.filter(({node})=>!node.closest('[hidden]'));graphRenderer.engine.initialize(blogMermaid.githubDefaults({theme:root.dataset.theme==='dark'?'dark':'default',securityLevel:'strict'}));for(const [index,{node,source}] of graphs.entries()){try{const {svg,bindFunctions}=await graphRenderer.engine.render('blog-graph-'+index,source);node.innerHTML=svg;
+if(node.closest('.diagram-preview')){
+ const drawing=node.querySelector('svg'),box=drawing.viewBox.baseVal;
+ drawing.style.width=box.width+'px';drawing.style.height=box.height+'px';
+ const frame=node.getBoundingClientRect(),cx=frame.left+frame.width/2,cy=frame.top+frame.height/2;
+ const distance=rect=>(rect.left+rect.width/2-cx)**2+(rect.top+rect.height/2-cy)**2;
+ const focus=Array.from(drawing.querySelectorAll('g.node'),element=>element.getBoundingClientRect()).filter(rect=>rect.width&&rect.height).reduce((best,rect)=>!best||distance(rect)<distance(best)?rect:best,null);
+ if(focus)drawing.style.transform='translate('+(cx-focus.left-focus.width/2)+'px, '+(cy-focus.top-focus.height/2)+'px)';
+}
+node.dataset.processed='true';bindFunctions?.(node);}catch{node.removeAttribute('data-processed');node.textContent=source;}}});}
 if(graphSources.length)(async()=>{try{const response=await fetch(graphScript.dataset.mermaidSrc);if(!response.ok)throw new Error('Mermaid HTTP '+response.status);graphRenderer=blogMermaid.createRenderer(await response.text());drawGraphs();}catch{notify('다이어그램을 불러오지 못했습니다. 새로고침해 주세요.');}})();
