@@ -28,7 +28,7 @@ spec:
             fsGroupChangePolicy: OnRootMismatch
           containers:
             - name: deploy
-              image: ghcr.io/anyflow/anyflow-blog-deploy@sha256:6e274405809e7ac2d04b5e57ad9766792685250fb1fa4128b3300dc750816161
+              image: ghcr.io/anyflow/anyflow-blog-deploy@sha256:eb39fd24e6b5b352368fb4b2310ad90431581b611a311c9b93469cabdd3de1ea
               imagePullPolicy: IfNotPresent
               env:
                 - name: GIT_SSH_COMMAND
