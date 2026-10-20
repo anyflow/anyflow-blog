@@ -383,3 +383,16 @@ html:has(.image-viewer[open]) { overflow:hidden }
   .profile-columns>.bookmark { position:relative }
   .profile-columns>.bookmark>img { position:absolute; right:0; top:0; width:46%; height:100% }
 }
+
+/* Cell backgrounds are stored as {bg:color} in Markdown. */
+:root{--table-gray:#f1f1ef;--table-brown:#f3eeee;--table-orange:#fbebde;--table-yellow:#f9f3dc;--table-green:#e8f1ec;--table-blue:#e7f3f8;--table-purple:#f4f0f7;--table-pink:#f9eef3;--table-red:#fce9e7;}
+.theme-dark,[data-theme=dark]{--table-gray:#30302e;--table-brown:#3a302b;--table-orange:#4a3525;--table-yellow:#454027;--table-green:#293d34;--table-blue:#293b47;--table-purple:#3b3045;--table-pink:#462f3c;--table-red:#4a302e;}
+table :is(td,th)[data-cell-bg=gray]{background-color:var(--table-gray)!important}
+table :is(td,th)[data-cell-bg=brown]{background-color:var(--table-brown)!important}
+table :is(td,th)[data-cell-bg=orange]{background-color:var(--table-orange)!important}
+table :is(td,th)[data-cell-bg=yellow]{background-color:var(--table-yellow)!important}
+table :is(td,th)[data-cell-bg=green]{background-color:var(--table-green)!important}
+table :is(td,th)[data-cell-bg=blue]{background-color:var(--table-blue)!important}
+table :is(td,th)[data-cell-bg=purple]{background-color:var(--table-purple)!important}
+table :is(td,th)[data-cell-bg=pink]{background-color:var(--table-pink)!important}
+table :is(td,th)[data-cell-bg=red]{background-color:var(--table-red)!important}
