@@ -134,7 +134,8 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-body blockquote:not(.callout)>p+p { margin-top:16px }
 .post-body table { display:block; max-width:100%; overflow:auto; border-collapse:collapse; margin:16px 0 32px; font-size:14px; line-height:20px }
 .post-body td,.post-body th { border:1px solid var(--faint); padding:7px 9px; text-align:left; vertical-align:top }
-.post-body th { background:var(--soft); font-weight:500 }
+.post-body th { font-weight:500 }
+.post-body th,.post-body td:first-child { background:var(--soft) }
 .post-body iframe,.post-body video { max-width:100%; border:0}
 .missing-image { font-size:14px; color:var(--muted)}
 .mermaid { line-height:normal; overflow:auto; text-align:center; background:var(--bg); padding:16px}
