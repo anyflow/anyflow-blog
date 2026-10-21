@@ -49,7 +49,7 @@
   </div><div class="reading-progress"></div>
 </header>
 {% set cover = visual.cover %}
-{% if cover %}<div class="page-cover"><img src="{{ cover | escape }}" alt="" style="object-position:{{ visual.coverPosition | escape }}"></div>{% else %}<div class="page-cover empty-cover"></div>{% endif %}
+{% if cover %}<div class="page-cover{% if not post and not categoryPage %} home-cover{% endif %}"><img src="{{ cover | escape }}" alt="" style="object-position:{{ visual.coverPosition | escape }}"></div>{% else %}<div class="page-cover empty-cover"></div>{% endif %}
 <div class="page-header page-width">
   {% if visual.icon or visual.iconImage %}<div class="page-icon">{{ icon(visual,true) }}</div>{% endif %}
   <h1 class="page-title">{{ pageTitle | escape }}</h1>
