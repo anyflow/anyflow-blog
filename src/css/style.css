@@ -11,13 +11,13 @@ button { border:0; background:none; border-radius:3px}
 button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 [hidden] { display:none!important}
 .site-header svg,.property-label>svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.5; flex-shrink:0}
-.site-header { height:47px; position:sticky; top:0; z-index:20; background:var(--bg); display:flex; align-items:center; justify-content:space-between; padding:0 12px 0 20px; gap:16px; font-size:14px}
+.site-header { min-height:47px; height:auto; position:sticky; top:0; z-index:20; background:var(--bg); display:flex; align-items:center; justify-content:space-between; padding:0 12px 0 20px; gap:16px; font-size:14px}
 .breadcrumbs { min-width:0; display:flex; align-items:center; gap:12px; white-space:nowrap; overflow:hidden}
 .site-logo,.post-crumb { min-width:0; display:flex; align-items:center; gap:6px; padding:3px 0}
 .site-logo span,.post-crumb span { overflow:hidden; text-overflow:ellipsis}
 .site-logo { flex-shrink:0}
-.post-crumb { flex:1}
-.category-crumb { min-width:0; max-width:28%; overflow:hidden; text-overflow:ellipsis; color:var(--muted) }
+.post-crumb { flex:1; min-width:26px }
+.category-crumb { min-width:0; flex:0 1 auto; white-space:normal; overflow-wrap:anywhere; color:var(--muted) }
 .crumb-divider { color:#aaa}
 .header-actions { display:flex; align-items:center; gap:10px; flex-shrink:0}
 .search-button,.share-button,.rss-link { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:4px; font-size:14px; line-height:20px}
