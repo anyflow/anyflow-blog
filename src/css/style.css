@@ -396,3 +396,5 @@ table :is(td,th)[data-cell-bg=blue]{background-color:var(--table-blue)!important
 table :is(td,th)[data-cell-bg=purple]{background-color:var(--table-purple)!important}
 table :is(td,th)[data-cell-bg=pink]{background-color:var(--table-pink)!important}
 table :is(td,th)[data-cell-bg=red]{background-color:var(--table-red)!important}
+
+.table-layout-scroll{max-width:100%;overflow-x:auto}table.table-has-layout{display:table;max-width:none;overflow:visible}table.table-has-layout :is(td,th){overflow-wrap:anywhere;word-break:normal}table.table-has-layout tr{overflow:visible}
