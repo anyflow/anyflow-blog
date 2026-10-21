@@ -19,8 +19,8 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-crumb { flex:1}
 .crumb-divider { color:#aaa}
 .header-actions { display:flex; align-items:center; gap:10px; flex-shrink:0}
-.search-button,.share-button { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:4px; font-size:14px; line-height:20px}
-.share-button svg { fill:currentColor; stroke-width:1}
+.search-button,.share-button,.rss-link { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:4px; font-size:14px; line-height:20px}
+.share-button svg { fill:none; stroke-width:1.5}
 .theme-toggle { height:24px; width:48px; border-radius:20px; background:#e8e8e8; position:relative; padding:0}
 .theme-knob { position:absolute; top:4px; left:4px; background:white; width:16px; height:16px; border-radius:50%; transition:left .15s}
 .theme-symbol { position:absolute; right:5px; top:0; color:#37352f; font-size:19px; line-height:24px}
@@ -167,8 +167,8 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .site-logo { flex-shrink:1; max-width:150px}
 .post-crumb { max-width:150px}
 .header-actions { gap:8px}
-.header-actions .search-button span,.header-actions .share-button span { display:none}
-.header-actions .search-button,.header-actions .share-button { padding:3px}
+.header-actions .search-button span,.header-actions .share-button span,.header-actions .rss-link span { display:none}
+.header-actions .search-button,.header-actions .share-button,.header-actions .rss-link { padding:3px}
 .empty-cover { height:120px; min-height:120px}
 .page-title { font-size:32px; margin-top:20px}
 .property-row { grid-template-columns:124px minmax(0,1fr)}
@@ -207,7 +207,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 @media(max-width:600px) {
   .site-header { padding:0 10px 0 18px; gap:16px; }
   .header-actions { gap:12px; }
-  .header-actions .search-button,.header-actions .share-button { padding:4px; }
+  .header-actions .search-button,.header-actions .share-button,.header-actions .rss-link { padding:4px; }
   .site-logo { max-width:none; }
   .breadcrumbs:has(.post-crumb) .site-logo { width:76px; max-width:76px; flex-shrink:0; }
   .post-crumb { max-width:none; }
@@ -413,4 +413,4 @@ table :is(td,th)[data-cell-bg=red]{background-color:var(--table-red)!important}
 :is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.italic,.hljs-emphasis){font-style:italic}
 :is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.hljs-subst,.token.interpolation){color:var(--syntax-text)}
 
-.rss-link{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px;border-radius:3px;color:var(--muted)}.rss-link:hover{background:var(--hover)}
+.rss-link{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px;border-radius:3px;color:inherit}.rss-link:hover{background:var(--hover)}
