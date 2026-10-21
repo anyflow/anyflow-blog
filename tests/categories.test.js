@@ -25,6 +25,7 @@ test('category HTML has cover, icon, linked entry points, two sections, no prope
  const root=fixture(t),{env,data}=environment(root),page=data.categoryPages[0],context={...data,site:require('../src/_data/site.json'),categoryPage:page};
  const body=env.renderString(fs.readFileSync('src/_includes/category.njk','utf8').replace(/^---[\s\S]*?---\n/,''),context),html=env.render('base.njk',{...context,content:body});
  assert.match(html,/<title>Test<\/title>/);assert.match(html,/class="page-cover"/);assert.match(html,/class="page-icon"/);assert.match(html,/href="https:\/\/www.anyflow.net\/category\/test"/);
+ assert.match(html,/<a class="category-crumb" href="\/category\/test"[^>]*aria-current="page">Test<\/a>/);
  assert.equal((body.match(/class="card"/g)||[]).length,10);assert.equal((body.match(/class="category-row"/g)||[]).length,3);assert.doesNotMatch(body,/data-load-more="recent-cards"/);
  assert.doesNotMatch(html,/class="properties"|id="comments"|\/js\/comments.js|name="robots" content="noindex"/);
  const article=env.render('base.njk',{...data,site:context.site,post:data.posts.find(p=>p.category==='Test'),content:''});assert.match(article,/<a class="category-crumb" href="\/category\/test"/);
