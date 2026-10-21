@@ -10,7 +10,7 @@ layout: base.njk
 {% elif part.kind == "recent" %}{% include "home-recent.njk" %}
 {% elif part.kind == "categories" %}{% include "home-categories.njk" %}
 {% elif part.kind == "profileLinks" %}
-<div class="profile-columns">{{ part.html | safe }}<a class="bookmark" href="{{ part.link.url | escape }}" target="_blank" rel="noopener noreferrer"><div><span>{{ part.label | escape }}</span><small>{{ icon(part.link) }} {{ part.displayUrl | escape }}</small></div>{% if part.link.thumbnail or part.link.cover %}<img src="{{ (part.link.thumbnail or part.link.cover) | escape }}" alt="">{% endif %}</a></div>
+<div class="profile-columns">{{ part.html | safe }}<a class="bookmark" href="{{ part.link.url | escape }}" target="_blank" rel="noopener noreferrer"><div><span>{{ part.link.title | escape }}</span><small>{{ icon(part.link) }} {{ part.displayUrl | escape }}</small></div>{% if part.link.thumbnail or part.link.cover %}<img src="{{ (part.link.thumbnail or part.link.cover) | escape }}" alt="">{% endif %}</a></div>
 {% endif %}
 {% endfor %}
 </section>
