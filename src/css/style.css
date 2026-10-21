@@ -398,3 +398,17 @@ table :is(td,th)[data-cell-bg=pink]{background-color:var(--table-pink)!important
 table :is(td,th)[data-cell-bg=red]{background-color:var(--table-red)!important}
 
 .table-layout-scroll{max-width:100%;overflow-x:auto}table.table-has-layout{display:table;max-width:none;overflow:visible}table.table-has-layout :is(td,th){overflow-wrap:anywhere;word-break:normal}table.table-has-layout tr{overflow:visible}
+
+/* Syntax tokens shared by native CodeMirror, Prism and Highlight.js grammars. */
+:root{--syntax-keyword:#0077aa;--syntax-string:#669900;--syntax-value:#990055;--syntax-function:#dd4a68;--syntax-comment:#708090;--syntax-punctuation:#777777;--syntax-variable:#aa6600;--syntax-text:#2c2c2b;}
+.theme-dark,[data-theme=dark]{--syntax-keyword:#66a2cc;--syntax-string:#bde052;--syntax-value:#d1949e;--syntax-function:#ecec93;--syntax-comment:#998066;--syntax-punctuation:#aaa69d;--syntax-variable:#f5b83d;--syntax-text:#f0efed;}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.keyword,.token.atrule,.token.tag,.token.selector,.token.property,.token.attr-name,.token.namespace,.hljs-keyword,.hljs-selector-tag,.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-name,.hljs-tag,.hljs-attr,.hljs-attribute,.hljs-built_in,.hljs-type),.markdown-source-view .cm-hmd-codeblock:is(.cm-keyword,.cm-atom,.cm-property,.cm-attribute,.cm-tag,.cm-builtin,.cm-qualifier){color:var(--syntax-keyword)}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.string,.token.char,.token.attr-value,.token.regex,.token.inserted,.hljs-string,.hljs-regexp,.hljs-selector-pseudo,.hljs-quote,.hljs-addition),.markdown-source-view .cm-hmd-codeblock:is(.cm-string,.cm-string-2){color:var(--syntax-string)}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.boolean,.token.number,.token.constant,.token.symbol,.token.deleted,.hljs-number,.hljs-literal,.hljs-symbol,.hljs-deletion),.markdown-source-view .cm-hmd-codeblock:is(.cm-number){color:var(--syntax-value)}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.function,.token.class-name,.hljs-title,.hljs-section),.markdown-source-view .cm-hmd-codeblock:is(.cm-def,.cm-type){color:var(--syntax-function)}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.comment,.token.prolog,.token.doctype,.token.cdata,.hljs-comment,.hljs-doctag,.hljs-meta),.markdown-source-view .cm-hmd-codeblock:is(.cm-comment,.cm-meta){color:var(--syntax-comment)}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.punctuation,.token.operator,.token.entity,.token.url,.hljs-punctuation,.hljs-operator,.hljs-bullet),.markdown-source-view .cm-hmd-codeblock:is(.cm-operator,.cm-bracket){color:var(--syntax-punctuation)}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.variable,.token.parameter,.token.interpolation-punctuation,.hljs-variable,.hljs-params,.hljs-template-variable,.hljs-template-tag),.markdown-source-view .cm-hmd-codeblock:is(.cm-variable,.cm-variable-2,.cm-variable-3){color:var(--syntax-variable)}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.bold,.hljs-strong){font-weight:600}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.italic,.hljs-emphasis){font-style:italic}
+:is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.hljs-subst,.token.interpolation){color:var(--syntax-text)}
