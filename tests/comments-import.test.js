@@ -81,10 +81,10 @@ test('private imported guestbook comments and replies stay pending',()=>{
 test('home guestbook inventory recognizes its Markdown list and exact image block only',t=>{
  const fs=require('fs'),path=require('path'),os=require('os');const root=fs.mkdtempSync(path.join(os.tmpdir(),'guestbook-import-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  const block='* **방명록 백업**\n\n  ![Untitled](<./Untitled.png>)\n\n  ![Untitled](<./Untitled 1.png>)\n\n  ![Untitled](<./Untitled 2.png>)\n';
- fs.writeFileSync(path.join(root,'_root.md'),'Home\n\n***\n\n'+block+'\n## Next\nKeep');fs.writeFileSync(path.join(root,'post.md'),block);
- const result=backupInventory({root,posts:[{id:'home',permalink:'/',note:'_root.md'},{id:'post1',permalink:'/post/',note:'post.md'}]});
- assert.equal(result.length,1);assert.equal(result[0].note,'_root.md');assert.deepEqual(result[0].images,['Untitled.png','Untitled 1.png','Untitled 2.png']);assert.equal(result[0].raw,block+'\n');assert(!result[0].raw.includes('Next'));
- const source=fs.readFileSync(path.join(root,'_root.md'),'utf8');assert.equal(source.slice(result[0].start,result[0].end),result[0].raw);
+ fs.writeFileSync(path.join(root,'index.md'),'Home\n\n***\n\n'+block+'\n## Next\nKeep');fs.writeFileSync(path.join(root,'post.md'),block);
+ const result=backupInventory({root,posts:[{id:'home',permalink:'/',note:'index.md'},{id:'post1',permalink:'/post/',note:'post.md'}]});
+ assert.equal(result.length,1);assert.equal(result[0].note,'index.md');assert.deepEqual(result[0].images,['Untitled.png','Untitled 1.png','Untitled 2.png']);assert.equal(result[0].raw,block+'\n');assert(!result[0].raw.includes('Next'));
+ const source=fs.readFileSync(path.join(root,'index.md'),'utf8');assert.equal(source.slice(result[0].start,result[0].end),result[0].raw);
 });
 
 

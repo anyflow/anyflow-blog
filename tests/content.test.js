@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {loadContent}=require('../lib/content');
 function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'anyflow-blog-test-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));return root;}
-function post(root,name,overrides={},body='## Introduction\n\nText.'){const dir=root;const values={title:name,permalink:'/'+name,created:'2025-01-01',category:'test',publish:true,...overrides};delete values.kind;const file=path.join(dir,overrides.kind==='root'?'_root.md':name+'.md');fs.writeFileSync(file,'---\n'+Object.entries(values).map(([k,v])=>k+': '+JSON.stringify(v)).join('\n')+'\n---\n\n'+body);return file;}
+function post(root,name,overrides={},body='## Introduction\n\nText.'){const dir=root;const values={title:name,permalink:'/'+name,created:'2025-01-01',category:'test',publish:true,...overrides};delete values.kind;const file=path.join(dir,overrides.kind==='root'?'index.md':name+'.md');fs.writeFileSync(file,'---\n'+Object.entries(values).map(([k,v])=>k+': '+JSON.stringify(v)).join('\n')+'\n---\n\n'+body);return file;}
 test('only published notes and referenced assets, correct legacy paths and dates',t=>{
  const root=fixture(t);
  const source=post(root,'first',{},'## Introduction\n\n![Photo](obsolete folder/image(1).png)\n\n> [!caption]\n> Photo\n\n[Other](../other/other.md)\n\n[other](../other/other.md)\n\n## Introduction\n\n```html\n<img src="do-not-touch.png">\n```\n\n```mermaid\ngraph TD; A-->B;\n```\n\n> 💡 Callout text.');
@@ -314,7 +314,7 @@ test('publication and comment catalog use paths and explicit draft flag without 
  fs.mkdirSync(path.join(root,'_templates'));fs.writeFileSync(path.join(root,'_templates/private.md'),'---\ntitle: Template\npublish: true\n---\nPrivate');
  const content=loadContent(root);assert.equal(content.posts.length,1);assert.equal(content.home.id,'/');
  assert.deepEqual(require('../lib/comments/import').postCatalog(root).posts.map(p=>p.id).sort(),['/','/article']);
- assert.equal(require('../lib/content-layout').noteUrl('_root.md'),'/');
+ assert.equal(require('../lib/content-layout').noteUrl('index.md'),'/');
 });
 
 test('publish requires a boolean true and never falls back to obsolete draft',t=>{
@@ -334,7 +334,7 @@ test('internal page mentions decorate wiki and markdown labels without changing 
  post(root,'target',{title:'Target title',icon:'🚧'});
  post(root,'home',{kind:'root',title:'Home title',icon:'🏠'});
  fs.writeFileSync(path.join(root,'image.svg'),'<svg></svg>');
- post(root,'source',{},'[[target]]\n\n[[target|Alias]]\n\n[Custom label](target.md)\n\n[[_root]]\n\n[![Image](image.svg)](target.md)\n\n[Web label](https://www.anyflow.net/target/#section)\n\n[External](https://example.org/target)\n\n[Section](#section)\n\n`[[target]]`');
+ post(root,'source',{},'[[target]]\n\n[[target|Alias]]\n\n[Custom label](target.md)\n\n[[index]]\n\n[![Image](image.svg)](target.md)\n\n[Web label](https://www.anyflow.net/target/#section)\n\n[External](https://example.org/target)\n\n[Section](#section)\n\n`[[target]]`');
  const source=loadContent(root).posts.find(p=>p.url==='/source');
  assert.match(source.html,/page-mention-icon[^>]*[^]*?🚧/);
  assert.match(source.html,/page-mention-title">Target title<\/span>/);

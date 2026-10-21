@@ -4,7 +4,7 @@ function fixture(t){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'blog-categories-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  fs.mkdirSync(path.join(root,'_categories'));fs.mkdirSync(path.join(root,'_assets'));
  fs.writeFileSync(path.join(root,'_assets/category.svg'),'<svg xmlns="http://www.w3.org/2000/svg"></svg>');
- fs.writeFileSync(path.join(root,'_root.md'),'---\ntitle: Home\npublish: true\n---\n\n## By Category\n\n<!-- blog:categories -->');
+ fs.writeFileSync(path.join(root,'index.md'),'---\ntitle: Home\npublish: true\n---\n\n## By Category\n\n<!-- blog:categories -->');
  fs.writeFileSync(path.join(root,'_categories/test.md'),'---\ntitle: Test\npublish: true\ncover: _assets/category.svg\nicon: 🎨\n---\n\n## Recent Posts\n\n<!-- blog:recent -->\n\n## Older Posts\n\n<!-- blog:older -->');
  for(let i=1;i<=13;i++)fs.writeFileSync(path.join(root,`post${i}.md`),`---\ntitle: Post ${i}\npublish: true\ncreated: 2026-01-${String(i).padStart(2,'0')}\ncategory: Test\n---\n\nBody.`);
  fs.writeFileSync(path.join(root,'other.md'),'---\ntitle: Other\npublish: true\ncreated: 2026-02-01\ncategory: Other\n---\n\nBody.');return root;
@@ -35,6 +35,6 @@ test('category HTML has cover, icon, linked entry points, two sections, no prope
 });
 test('hidden notes remain private while the exact root and direct category Markdown are recognized',t=>{
  const root=fixture(t);fs.writeFileSync(path.join(root,'_private.md'),'---\ntitle: Private\npublish: true\n---\n');
- const content=loadContent(root);assert.equal(content.posts.length,14);assert.equal(content.categoryPages.length,1);assert.equal(require('../lib/content-layout').noteUrl('_root.md'),'/');assert.equal(require('../lib/content-layout').noteUrl('_categories/test.md'),'/category/test');assert.equal(require('../lib/content-layout').noteUrl('blog.md'),'/blog');assert.throws(()=>require('../lib/content-layout').noteUrl('_categories/bad name.md'),/Invalid note path/);
+ const content=loadContent(root);assert.equal(content.posts.length,14);assert.equal(content.categoryPages.length,1);assert.equal(require('../lib/content-layout').noteUrl('index.md'),'/');assert.equal(require('../lib/content-layout').noteUrl('_categories/test.md'),'/category/test');assert.equal(require('../lib/content-layout').noteUrl('blog.md'),'/blog');assert.throws(()=>require('../lib/content-layout').noteUrl('_categories/bad name.md'),/Invalid note path/);
  fs.writeFileSync(path.join(root,'_categories/duplicate.md'),'---\ntitle: Test\npublish: true\n---\n');assert.throws(()=>loadContent(root),/Duplicate category/);
 });
