@@ -17,6 +17,6 @@ test('Open Graph renders escaped article metadata, absolute URLs and image fallb
  for(const thumbnail of ['https://i.ytimg.com/vi/yonRGtMDDH8/hqdefault.jpg','https://pbs.twimg.com/media/F9SlgpVWkAAXsNw.jpg','/assets/custom.webp'])assert.equal(meta(render({...post,thumbnail,ogImage:thumbnail}),'image'),new URL(thumbnail,site.url).href);
  assert.equal(meta(render({...post,thumbnail:'',cover:'/cover full.webp'}),'image'),site.url+'/cover%20full.webp');
  assert.equal(meta(render({...post,thumbnail:'',cover:''}),'image'),site.url+'/home.webp');
- html=render(null);assert.equal(meta(html,'type'),'website');assert.equal(meta(html,'url'),site.url+'/');assert.equal(meta(html,'image'),site.url+'/home.webp');
+ html=render(null);assert.match(html,/rel="alternate" type="application\/rss\+xml"[^>]*href="https:\/\/www.anyflow.net\/rss\.xml"/);assert.match(html,/class="rss-link" href="\/rss\.xml"[^>]*aria-label="RSS 구독"/);assert(html.indexOf('class="rss-link"')<html.indexOf('class="search-button"'));assert.match(render(),/class="rss-link"/);assert.equal(meta(html,'type'),'website');assert.equal(meta(html,'url'),site.url+'/');assert.equal(meta(html,'image'),site.url+'/home.webp');
  assert.equal(meta(render({...post,thumbnail:'',cover:''},{...home,cover:''},{...site,cover:'/obsolete-source-cover.webp'}),'image'),undefined);
 });

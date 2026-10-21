@@ -412,3 +412,5 @@ table :is(td,th)[data-cell-bg=red]{background-color:var(--table-red)!important}
 :is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.bold,.hljs-strong){font-weight:600}
 :is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.token.italic,.hljs-emphasis){font-style:italic}
 :is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.hljs-subst,.token.interpolation){color:var(--syntax-text)}
+
+.rss-link{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px;border-radius:3px;color:var(--muted)}.rss-link:hover{background:var(--hover)}

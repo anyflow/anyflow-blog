@@ -6,6 +6,7 @@ module.exports = function(config) {
   config.addFilter("versionedAsset",url=>`${url}?v=${createHash("sha256").update(fs.readFileSync(path.join(__dirname,"src",url))).digest("hex").slice(0,12)}`);
   const content=loadContent();
   config.addGlobalData("posts",content.posts);
+  config.addGlobalData("rss",require("./lib/rss").rss({posts:content.posts,site,home:content.home||{}}));
   config.addGlobalData("home",{id:"home",...site,coverPosition:"50% 50%",...content.home});
   const order=new Map(site.categoryOrder.map((name,index)=>[name,index]));
   const names=[...new Set(content.posts.map(post=>post.category))].sort((a,b)=>(order.get(a)??Infinity)-(order.get(b)??Infinity)||a.localeCompare(b,"ko"));
