@@ -17,7 +17,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .site-logo span,.post-crumb span { overflow:hidden; text-overflow:ellipsis}
 .site-logo { flex-shrink:0}
 .post-crumb { flex:1; min-width:26px }
-.category-crumb { min-width:0; flex:0 1 auto; white-space:normal; overflow-wrap:anywhere; color:var(--muted) }
+.category-crumb { min-width:0; flex:0 1 auto; white-space:normal; overflow-wrap:anywhere }
 .crumb-divider { color:#aaa}
 .header-actions { display:flex; align-items:center; gap:10px; flex-shrink:0}
 .search-button,.share-button,.rss-link { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:4px; font-size:14px; line-height:20px}
