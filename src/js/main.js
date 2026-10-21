@@ -1,6 +1,6 @@
 const root=document.documentElement;
 const theme=document.querySelector(".theme-toggle");
-function updateTheme(){const dark=root.dataset.theme==="dark";theme.setAttribute("aria-checked",String(dark));theme.setAttribute("aria-label",dark?"Turn off the dark mode":"Turn on the dark mode");document.querySelector(".theme-symbol").src=dark?"/images/reference/moon.png":"/images/reference/sun.png";}
+function updateTheme(){const dark=root.dataset.theme==="dark";theme.setAttribute("aria-checked",String(dark));theme.setAttribute("aria-label",dark?"Turn off the dark mode":"Turn on the dark mode");theme.setAttribute("title",dark?"밝은 테마로 전환":"어두운 테마로 전환");document.querySelector(".theme-symbol").src=dark?"/images/reference/moon.png":"/images/reference/sun.png";}
 updateTheme();theme.addEventListener("click",()=>{root.dataset.theme=root.dataset.theme==="dark"?"light":"dark";try{localStorage.setItem("theme",root.dataset.theme)}catch{}updateTheme();drawGraphs();});
 const toc=document.querySelector(".toc"),content=document.querySelector(".content"),progress=document.querySelector(".reading-progress");
 function onScroll(){if(toc)toc.style.top=Math.max(60,content.getBoundingClientRect().top+(content.classList.contains("post-content")?12:4))+"px";const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?scrollY/max*100:0)+"%";}
