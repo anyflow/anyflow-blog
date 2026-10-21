@@ -19,7 +19,7 @@ spec:
         - name: anyflow-blog-registry
       containers:
         - name: anyflow-blog
-          image: ghcr.io/anyflow/anyflow-blog@sha256:28d7148644ff57dc9ec12f135e986715b86b167d06850def374ae9727ee741b3
+          image: ghcr.io/anyflow/anyflow-blog@sha256:37bab5381f999ace384c091841c3cee143663557309c60ef7d2f0e15e5e4147a
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
