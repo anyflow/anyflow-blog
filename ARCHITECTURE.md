@@ -137,7 +137,7 @@ waypoint·ztunnel·응답 경로·Secret 등 세부 인프라는 그림에서 �
 
 ```text
 blog/
-├── blog.md                           # 홈 /
+├── _root.md                           # 홈 /
 ├── sw-engineer/
 │   └── example.md                    # /sw-engineer/example
 ├── _assets/
@@ -153,7 +153,7 @@ blog/
 | --- | --- |
 | 글 | Markdown 본문과 YAML frontmatter. `publish: true`인 글을 발행하며 `title`·`created`·`category` 필수 |
 | 선택 속성 | `summary`·`updated`·`tags`·`noindex`·`cover`·`icon`. 홈은 `favicon`도 사용 |
-| 주소·식별자 | `sw-engineer/example.md` → URL·`post_id` 모두 `/sw-engineer/example`. 홈 `blog.md`는 `/` |
+| 주소·식별자 | `sw-engineer/example.md` → URL·`post_id` 모두 `/sw-engineer/example`. 홈 `_root.md`는 `/` |
 | 첨부 참조 | 상대 Markdown 경로·Wikilink로 연결. 참조된 허용 형식만 공개 `/assets/`에 복사 |
 | 링크 정보 | `_assets/_meta/link-previews.json`은 URL별 제목·설명·이미지 등 수집 캐시. `bookmarks.json`은 글별 북마크 표현 정보 |
 | 갤러리·보존 정보 | `notion-gallery.json`은 수집한 아이콘·커버 목록. `visuals.json`·`notion-import.json`·`path-migration.json`·CSV는 이관·경로 대응 등 보존 정보 |

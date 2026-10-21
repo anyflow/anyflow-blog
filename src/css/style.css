@@ -416,3 +416,5 @@ table :is(td,th)[data-cell-bg=red]{background-color:var(--table-red)!important}
 :is(.post-body,.markdown-rendered,.markdown-source-view) pre code :is(.hljs-subst,.token.interpolation){color:var(--syntax-text)}
 
 .rss-link{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px;border-radius:3px;color:inherit}.rss-link:hover{background:var(--hover)}
+
+.category-crumb[href]:hover,.category-heading a.category-label:hover{text-decoration:underline;text-underline-offset:3px}

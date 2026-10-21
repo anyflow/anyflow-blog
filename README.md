@@ -90,3 +90,5 @@ npm test
 소스 공개 범위에는 글 원본·댓글 원본·관리자 키·Git 개인키를 포함하지 않는다. 작성 Markdown은 신뢰하는 작성자의 입력으로 취급하며 HTML 표현도 지원한다. 댓글 입력은 HTML로 실행하지 않는다. 외부 YouTube·X·링크 메타데이터와 GA4는 해당 서비스의 네트워크와 정책을 따른다.
 
 브라우저 라이브러리의 버전·라이선스는 [src/js/vendor/README.txt](src/js/vendor/README.txt)와 각 라이선스 파일을 참조한다.
+
+카테고리 페이지는 `_categories/*.md`의 제목·커버·아이콘으로 구성하며 `/category/<slug>`에 게시한다. 홈과 같은 본문 스타일에서 Recent Posts 카드와 Older Posts 목록을 제공하고, 홈 카테고리 제목과 글 breadcrumb로 이동한다.

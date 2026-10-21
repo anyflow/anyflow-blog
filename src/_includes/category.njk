@@ -1,0 +1,17 @@
+---
+layout: base.njk
+---
+{% from "tags.njk" import tag %}
+{% from "icon.njk" import icon %}
+{% for section in categoryPage.sections %}
+<section class="{{ section.className }}"{% if section.id %} aria-labelledby="{{ section.id | escape }}"{% endif %}>
+{% for part in section.parts %}
+{% if part.kind == "html" %}{{ part.html | safe }}
+{% elif part.kind == "recent" %}{% set posts = categoryPage.recent %}{% include "home-recent.njk" %}
+{% elif part.kind == "older" %}
+<div id="older-posts">{% for item in categoryPage.older %}<a class="category-row" href="{{ item.url }}" {% if loop.index>10 %}hidden{% endif %}>{{ icon(item) }}<span class="row-title">{{ item.title | escape }}</span><time datetime="{{ item.date }}">{{ item.displayDate }}</time></a>{% endfor %}</div>
+{% if categoryPage.older.length>10 %}<button class="load-more" data-load-more="older-posts" type="button"><svg viewBox="0 0 30 30" aria-hidden="true"><polygon points="24.594 16.594 16 25.188 16 1 14 1 14 25.188 5.406 16.594 4 18 15 29 26 18"></polygon></svg><span>Load more</span></button>{% endif %}
+{% endif %}
+{% endfor %}
+</section>
+{% endfor %}

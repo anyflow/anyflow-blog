@@ -9,6 +9,7 @@ const {loadContent}=require("../lib/content");
   let content=loadContent();
   require("../lib/validate-content").validateContent(content);
   if(!content.posts.length) throw new Error("Build requires at least one published post");
+  if(!content.home) throw new Error("Build requires a published _root.md home page");
   await require("../lib/x-cache").cacheXThumbnails(content.xPosts);
   await require("../lib/link-cache").cacheLinks(content.linkRequests,process.env.BLOG_CONTENT_DIR||".cache/blog");
   content=loadContent();

@@ -69,7 +69,7 @@ test('inline code and JSON media remain opaque during file relocation',t=>{
 
 test('rollback restores root kind and draft from publish without changing its body',t=>{
  const root=fixture(t);fs.mkdirSync(path.join(root,'_assets/visuals'),{recursive:true});fs.writeFileSync(path.join(root,'_assets/visuals/manifest.json'),JSON.stringify({pages:{}}));
- const file=path.join(root,'blog.md');fs.writeFileSync(file,'---\ntitle: Home\nkind: root\ndraft: false\npermalink: /\n---\n\nHome body.');cp.execFileSync('git',['init','-q',root]);cp.execFileSync('git',['-C',root,'add','.']);
+ const file=path.join(root,'_root.md');fs.writeFileSync(file,'---\ntitle: Home\nkind: root\ndraft: false\npermalink: /\n---\n\nHome body.');cp.execFileSync('git',['init','-q',root]);cp.execFileSync('git',['-C',root,'add','.']);
  const plan=makePlan(root);applyContent(root,plan);fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace('kind: root\ndraft: false','publish: true'));applyContent(root,plan,true);
  const raw=fs.readFileSync(file,'utf8');assert.match(raw,/^kind: root$/m);assert.match(raw,/^draft: false$/m);assert.doesNotMatch(raw,/^publish:/m);assert.ok(raw.endsWith('Home body.'));
 });
