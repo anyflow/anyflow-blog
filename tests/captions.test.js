@@ -28,3 +28,7 @@ test('tabs and code indentation after quote markers still recognize explicit cap
  assert.match(render('>     plain code'),/<blockquote>\s*<pre><code>plain code/);
  assert.match(render('```md\n> \t[!caption]\n> \tExample\n```'),/<pre><code[^>]*>&gt;/);
 });
+
+test('caption text on the marker line is retained',()=>{
+ assert.match(render('> [!caption] **Cover**: Artist\n> More detail.'),/<div class="caption"><p><strong>Cover<\/strong>: Artist[\s\S]*More detail\.<\/p>/);
+});

@@ -27,3 +27,11 @@ test('home categories keep configured order and headings cannot collapse',t=>{
  assert.equal((html.match(/class="category-heading"/g)||[]).length,6);assert.doesNotMatch(html,/<details[^>]*category-group|<summary/);
  for(const name of expected)assert.ok(html.includes(name));
 });
+
+test('only the leading home caption overlays an existing cover, without duplication',t=>{
+ const root=fixture(t);fs.writeFileSync(path.join(root,'cover.svg'),'<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+ const body='> [!caption] **Cover credit**\n\n## Intro\n\n> [!caption] Body caption.';
+ fs.writeFileSync(path.join(root,'index.md'),header.replace('publish: true','publish: true\ncover: cover.svg')+body);
+ let content=loadContent(root),html=render(content);assert.match(content.home.coverCaption,/<strong>Cover credit<\/strong>/);assert.match(html,/<div class="cover-caption">/);assert.equal((html.match(/Cover credit/g)||[]).length,1);assert.match(html,/Body caption/);
+ fs.writeFileSync(path.join(root,'index.md'),header+body);content=loadContent(root);assert.equal(content.home.coverCaption,undefined);assert.match(render(content),/Cover credit/);
+});
