@@ -274,7 +274,7 @@ test('all folding callouts use disclosure arrows and preserve normal callout ico
  const folded=[...html.matchAll(/<details\b[\s\S]*?<\/details>/g)].map(m=>m[0]);assert.equal(folded.length,2);
  for(const item of folded){assert.match(item,/<summary><span class="callout-icon callout-toggle" aria-hidden="true"><\/span>/);assert.doesNotMatch(item,/ℹ️/);}
  assert.match(folded[0],/data-callout="abstract"><summary>/);assert.match(folded[1],/data-callout="info" open><summary>/);
- assert.match(html,/<blockquote class="callout"><span class="callout-icon" aria-hidden="true">ℹ️<\/span>/);
+ assert.match(html,/<blockquote class="callout"><span class="callout-icon" aria-hidden="true"><svg class="callout-info"/);assert.match(html,/<circle cx="12" cy="12" r="10"\/>/);
 });
 
 test('cardlink blocks render metadata safely, retain document order and feed card thumbnails',t=>{
