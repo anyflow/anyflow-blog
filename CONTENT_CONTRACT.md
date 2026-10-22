@@ -203,7 +203,7 @@ Obsidian Live Preview에서 셀의 오른쪽 경계를 드래그하면 열 너�
 
 ```markdown
 ---
-title: as S/W 엔지니어
+title: as Software Engineer
 publish: true
 cover: _assets/_covers/example.jpg
 icon: 💻

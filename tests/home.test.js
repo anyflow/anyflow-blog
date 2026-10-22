@@ -18,7 +18,7 @@ test('home slots are explicit standalone comments and duplicate lists fail',t=>{
 
 test('home categories keep configured order and headings cannot collapse',t=>{
  const root=fixture(t);fs.writeFileSync(path.join(root,'index.md'),header+'## Categories\n\n<!-- blog:categories -->');
- const expected=['as 음악인','as S/W 엔지니어','예술/인문 소감','自省(Introspection) / 세상살이','프로젝트s'];
+ const expected=['as 음악인','as Software Engineer','예술/인문 소감','自省(Introspection) / 세상살이','프로젝트s'];
  for(const [i,category]of [...expected].reverse().entries())fs.writeFileSync(path.join(root,`category-${i}.md`),`---\ntitle: Category ${i}\npublish: true\ncreated: 2026-01-01\ncategory: ${category}\n---\n\nBody.`);
  const previous=process.env.BLOG_CONTENT_DIR;process.env.BLOG_CONTENT_DIR=root;const globals={};
  try{require('../.eleventy.js')({addFilter(){},addGlobalData(name,value){globals[name]=value;},addPassthroughCopy(){}});}finally{if(previous===undefined)delete process.env.BLOG_CONTENT_DIR;else process.env.BLOG_CONTENT_DIR=previous;}
