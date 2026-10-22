@@ -77,7 +77,7 @@ test('local cover and icon assets, emoji catalog, home metadata and explicit cle
  const result=loadContent(root),first=result.posts.find(p=>p.title==='first');
  assert.equal(first.icon,'📌');assert.equal(first.iconImage,'/assets/_assets/_icons/pin.webp');
  assert.equal(first.cover,'/assets/cover.webp');assert.equal(first.coverPosition,'50% 50%');
- assert.equal(result.home.cover,'/assets/home.png');assert.equal(result.home.coverPosition,'50% 0%');
+ assert.equal(result.home.cover,'/assets/home.png');assert.equal(result.home.coverPosition,'50% 50%');
  const image=result.posts.find(p=>p.title==='custom');assert.equal(image.iconIsImage,true);assert.equal(image.iconImage,'/assets/custom.svg');
  assert.equal(result.posts.find(p=>p.title==='native').icon,'🫧');assert.equal(result.posts.find(p=>p.title==='native').iconImage,'');
  const cleared=result.posts.find(p=>p.title==='cleared');assert.equal(cleared.icon,'');assert.equal(cleared.cover,'');
@@ -100,7 +100,7 @@ test('Pixel Banner image links center post covers and preserve icons',t=>{
  }
 });
 
-test('cover crop top-aligns home and centers posts, ignoring old coordinates',t=>{
+test('cover crop centers home and posts, ignoring old coordinates',t=>{
  const root=fixture(t),cases=[
   ['automatic',{},'50% 50%'],
   ['blank',{cover_x:'',cover_y:'  '},'50% 50%'],
@@ -119,7 +119,7 @@ test('cover crop top-aligns home and centers posts, ignoring old coordinates',t=
  fs.writeFileSync(reference,JSON.stringify({'/automatic':{coverPosition:'0% 0%'},'/':{coverPosition:'0% 0%'}}));
  const result=loadContent(root);
  for(const [name,,expected] of cases) assert.equal(result.posts.find(p=>p.title===name).coverPosition,expected);
- assert.equal(result.home.coverPosition,'50% 0%');
+ assert.equal(result.home.coverPosition,'50% 50%');
  assert.equal(result.unresolved.length,0);
 });
 
@@ -283,7 +283,7 @@ test('cardlink blocks render metadata safely, retain document order and feed car
  assert.equal((item.html.match(/class="bookmark bookmark-card"/g)||[]).length,2);
  assert.match(item.html,/Title &lt;script&gt; &amp; text/);assert.match(item.html,/Second line &lt;img src=x onerror=bad&gt;/);assert.doesNotMatch(item.html,/<script>|<img src=x/);
  assert.match(item.html,/href="https:\/\/example.com\/article\?q=1&amp;x=2"/);assert.match(item.html,/class="bookmark-description"/);assert.match(item.html,/class="bookmark-icon"/);
- assert.equal(item.thumbnail,'https://example.com/cover.webp');assert.match(item.html,/language-markdown/);assert.match(item.html,/example-only/);
+ assert.equal(item.thumbnail,'https://example.com/later.png');assert.match(item.html,/language-markdown/);assert.match(item.html,/example-only/);
 });
 
 test('cardlink local image and favicon embeds become published assets; YouTube cards retain thumbnail fallback',t=>{
@@ -347,4 +347,16 @@ test('internal page mentions decorate wiki and markdown labels without changing 
  assert.match(source.html,/<a href="https:\/\/example.org\/target" rel="noopener noreferrer">External<\/a>/);
  assert.match(source.html,/<a href="#section">Section<\/a>/);
  assert.match(source.html,/<code>\[\[target\]\]<\/code>/);
+});
+
+test('body images and Mermaid outrank link card thumbnails while link-only posts retain their first card image',t=>{
+ const root=fixture(t),card='```cardlink\nurl: https://example.com\ntitle: Link\nimage: https://example.com/card.png\n```',photo='![Body](body.png)',diagram='```mermaid\ngraph TD; A-->B;\n```';
+ fs.writeFileSync(path.join(root,'body.png'),'photo');
+ post(root,'photo-priority',{},card+'\n\n'+photo);
+ post(root,'diagram-priority',{},card+'\n\n'+diagram+'\n\n'+photo);
+ post(root,'link-fallback',{},card+'\n\n'+card.replace('card.png','second.png'));
+ const posts=loadContent(root).posts,find=name=>posts.find(p=>p.title===name);
+ assert.equal(find('photo-priority').thumbnail,'/assets/body.png');
+ assert.equal(find('diagram-priority').thumbnail,'');assert.match(find('diagram-priority').thumbnailDiagram,/A-->B/);
+ assert.equal(find('link-fallback').thumbnail,'https://example.com/card.png');
 });
