@@ -19,7 +19,7 @@ spec:
         - name: anyflow-blog-registry
       containers:
         - name: anyflow-blog
-          image: ghcr.io/anyflow/anyflow-blog@sha256:a8894cb024e6d331e1d37758380c55fd82f844a2cec2ffe7abef349db455db49
+          image: ghcr.io/anyflow/anyflow-blog@sha256:60644273a9451b5ee5c551012902f3fce59b84b34f0cb60126a6b2447baf391a
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -68,7 +68,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: api
-          image: ghcr.io/anyflow/anyflow-blog-comments@sha256:dc636cc7b9bd53bdf3e6cf368c187aa39c61a3475cab19182db33d250d8b2b9d
+          image: ghcr.io/anyflow/anyflow-blog-comments@sha256:cefaa894a534e02dac8326822f88748e73f8215c9960a7245060bece9a4cde85
           ports:
             - containerPort: 3000
           env:
