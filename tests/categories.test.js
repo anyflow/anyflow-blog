@@ -34,7 +34,7 @@ test('category HTML has cover, icon, linked entry points, two sections, no prope
  assert.doesNotMatch(html,/<a class="category-crumb"/);
  const home=env.render('base.njk',{...data,site:context.site,content:''});assert.match(home,/<span class="site-logo" aria-current="page">/);assert.doesNotMatch(home,/<a class="site-logo"/);
 
- const categories=env.renderString('{% from "icon.njk" import icon %}{% include "home-categories.njk" %}',context);assert.match(categories,/<a class="category-label" href="\/category\/test">Test<\/a>/);assert.match(categories,/<h3 class="category-heading">[\s\S]*?<span class="visual-icon-text">🎨<\/span>/);
+ const categories=env.renderString('{% from "icon.njk" import icon %}{% include "home-categories.njk" %}',context);assert.match(categories,/<a class="category-label" href="\/category\/test">Test<\/a>/);assert.match(categories,/<h4 class="category-heading">[\s\S]*?<span class="visual-icon-text">🎨<\/span>/);
  page.iconImage="/assets/category.svg";page.iconIsImage=true;const imageHtml=env.render("base.njk",{...context,content:""});assert.match(imageHtml,/<span class="category-crumb"[^>]*>[\s\S]*?<img class="visual-icon" src="\/assets\/category.svg"/);
  const sitemap=env.renderString(fs.readFileSync('src/sitemap.njk','utf8').replace(/^---[\s\S]*?---\n/,''),context);assert.match(sitemap,/<loc>https:\/\/www.anyflow.net\/category\/test<\/loc>/);
  assert.doesNotMatch(data.rss,/<link>https:\/\/www.anyflow.net\/category\/test<\/link>/);
