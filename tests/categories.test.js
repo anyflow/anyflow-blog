@@ -25,10 +25,15 @@ test('category HTML has cover, icon, linked entry points, two sections, no prope
  const root=fixture(t),{env,data}=environment(root),page=data.categoryPages[0],context={...data,site:require('../src/_data/site.json'),categoryPage:page};
  const body=env.renderString(fs.readFileSync('src/_includes/category.njk','utf8').replace(/^---[\s\S]*?---\n/,''),context),html=env.render('base.njk',{...context,content:body});
  assert.match(html,/<title>Test<\/title>/);assert.match(html,/class="page-cover"/);assert.match(html,/class="page-icon"/);assert.match(html,/href="https:\/\/www.anyflow.net\/category\/test"/);
- assert.match(html,/<a class="category-crumb" href="\/category\/test"[^>]*aria-current="page">Test<\/a>/);
+ assert.match(html,/<span class="category-crumb" title="Test" aria-current="page">Test<\/span>/);
  assert.equal((body.match(/class="card"/g)||[]).length,10);assert.equal((body.match(/class="category-row"/g)||[]).length,3);assert.doesNotMatch(body,/data-load-more="recent-cards"/);
  assert.doesNotMatch(html,/class="properties"|id="comments"|\/js\/comments.js|name="robots" content="noindex"/);
  const article=env.render('base.njk',{...data,site:context.site,post:data.posts.find(p=>p.category==='Test'),content:''});assert.match(article,/<a class="category-crumb" href="\/category\/test"/);
+ assert.match(article,/<a class="site-logo" href="\/"/);
+ assert.match(article,/<span class="post-crumb" aria-current="page">/);assert.doesNotMatch(article,/<a class="post-crumb"/);
+ assert.doesNotMatch(html,/<a class="category-crumb"/);
+ const home=env.render('base.njk',{...data,site:context.site,content:''});assert.match(home,/<span class="site-logo" aria-current="page">/);assert.doesNotMatch(home,/<a class="site-logo"/);
+
  const categories=env.renderString('{% from "icon.njk" import icon %}{% include "home-categories.njk" %}',context);assert.match(categories,/<a class="category-label" href="\/category\/test">Test<\/a>/);
  const sitemap=env.renderString(fs.readFileSync('src/sitemap.njk','utf8').replace(/^---[\s\S]*?---\n/,''),context);assert.match(sitemap,/<loc>https:\/\/www.anyflow.net\/category\/test<\/loc>/);
  assert.doesNotMatch(data.rss,/<link>https:\/\/www.anyflow.net\/category\/test<\/link>/);
