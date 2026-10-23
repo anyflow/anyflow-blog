@@ -9,11 +9,13 @@ module.exports = function(config) {
   config.addGlobalData("categoryPages",content.categoryPages);
   const categoryUrls=new Map(content.categoryPages.map(page=>[page.title,page.url]));
   config.addGlobalData("categoryUrls",Object.assign(Object.create(null),Object.fromEntries(categoryUrls)));
+  const categoryVisuals=Object.assign(Object.create(null),Object.fromEntries(content.categoryPages.map(page=>[page.title,page])));
+  config.addGlobalData("categoryVisuals",categoryVisuals);
   config.addGlobalData("rss",require("./lib/rss").rss({posts:content.posts,site,home:content.home||{}}));
   config.addGlobalData("home",{id:"home",...site,coverPosition:"50% 50%",...content.home});
   const order=new Map(site.categoryOrder.map((name,index)=>[name,index]));
   const names=[...new Set(content.posts.map(post=>post.category))].sort((a,b)=>(order.get(a)??Infinity)-(order.get(b)??Infinity)||a.localeCompare(b,"ko"));
-  config.addGlobalData("categories",names.map(name=>({name,url:categoryUrls.get(name)||"",posts:content.posts.filter(p=>p.category===name)})));
+  config.addGlobalData("categories",names.map(name=>({name,url:categoryUrls.get(name)||"",visual:categoryVisuals[name],posts:content.posts.filter(p=>p.category===name)})));
   config.addFilter("tagColor",name=>{const palette=["#f1f0ef","#e7f3e6","#e3f2fb","#ffe8f3","#fef5e6","#f9eee2","#f6edfa","#ffe8e7"];return palette[Array.from(String(name)).reduce((n,c)=>n+c.codePointAt(0),0)%palette.length];});
   config.addFilter("tagStyle",bg=>{
     const themes={"#f1f0ef":["#32302c","rgba(71,76,80,.7)","rgba(255,255,255,.88)"],"#e7f3e6":["#1c3829","#344f40","#b5d2ac"],"#e3f2fb":["#183347","#2b4d67","#a3cbea"],"#ffe8f3":["#4c2337","#633856","#f8aacb"],"#fef5e6":["#402c1b","#66543b","#fad5a1"],"#f9eee2":["#442a1e","#5b4739","#f0c295"],"#ffe8e7":["#5d1715","#69363f","#feaca5"],"#f6edfa":["#412454","#574263","#dbb5ef"]};

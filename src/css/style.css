@@ -17,10 +17,10 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .site-logo span,.post-crumb span { overflow:hidden; text-overflow:ellipsis}
 .site-logo { flex-shrink:0}
 .post-crumb { flex:1; min-width:26px }
-.category-crumb { min-width:0; flex:0 1 auto; white-space:normal; overflow-wrap:anywhere }
+.category-crumb { display:flex; align-items:center; gap:6px; min-width:0; flex:0 1 auto; white-space:normal; overflow-wrap:anywhere }
 .crumb-divider { color:#aaa}
 .breadcrumbs a { color:var(--link) }
-.breadcrumbs a.category-crumb,.breadcrumbs a.site-logo>span:not(.visual-icon-text) { text-decoration:underline; text-decoration-color:var(--link-underline); text-underline-offset:3px }
+.breadcrumbs a.category-crumb>span:not(.visual-icon-text),.breadcrumbs a.site-logo>span:not(.visual-icon-text) { text-decoration:underline; text-decoration-color:var(--link-underline); text-underline-offset:3px }
 .header-actions { display:flex; align-items:center; gap:10px; flex-shrink:0}
 .search-button,.share-button,.rss-link { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:4px; font-size:14px; line-height:20px}
 .share-button svg { fill:none; stroke-width:1.5}
