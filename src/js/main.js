@@ -25,5 +25,5 @@ if(node.closest('.diagram-preview')){
  const focus=Array.from(drawing.querySelectorAll('g.node'),element=>element.getBoundingClientRect()).filter(rect=>rect.width&&rect.height).reduce((best,rect)=>!best||distance(rect)<distance(best)?rect:best,null);
  if(focus)drawing.style.transform='translate('+(cx-focus.left-focus.width/2)+'px, '+(cy-focus.top-focus.height/2)+'px)';
 }
-node.dataset.processed='true';bindFunctions?.(node);}catch{node.removeAttribute('data-processed');node.textContent=source;}}});}
-if(graphSources.length)(async()=>{try{const response=await fetch(graphScript.dataset.mermaidSrc);if(!response.ok)throw new Error('Mermaid HTTP '+response.status);graphRenderer=blogMermaid.createRenderer(await response.text());drawGraphs();}catch{notify('다이어그램을 불러오지 못했습니다. 새로고침해 주세요.');}})();
+delete node.dataset.renderError;node.dataset.processed='true';bindFunctions?.(node);}catch{node.removeAttribute('data-processed');node.dataset.renderError='true';node.textContent='다이어그램을 표시하지 못했습니다.';}}});}
+if(graphSources.length)(async()=>{try{const response=await fetch(graphScript.dataset.mermaidSrc);if(!response.ok)throw new Error('Mermaid HTTP '+response.status);graphRenderer=blogMermaid.createRenderer(await response.text());drawGraphs();}catch{for(const {node} of graphSources){node.dataset.renderError='true';node.textContent='다이어그램을 불러오지 못했습니다.';}notify('다이어그램을 불러오지 못했습니다. 새로고침해 주세요.');}})();

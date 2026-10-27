@@ -17,3 +17,18 @@ test('card diagrams use 60% scale and keep node focus; article diagrams keep res
  assert.deepEqual(article.drawing.style,{});assert.equal(later.drawing.style.transform,undefined);assert.deepEqual(themes,['default','dark']);
  assert.deepEqual(rendered,['diagram-0','diagram-1','diagram-0','diagram-1','diagram-2']);
 });
+
+test('failed diagram rendering never exposes raw source and can recover on the next draw',async()=>{
+ const source=fs.readFileSync('src/js/main.js','utf8'),start=source.indexOf('function drawGraphs()'),end=source.indexOf('\nif(graphSources.length)',start),raw='graph TD; Secret-->Source;';let fail=true;
+ const node={dataset:{},textContent:raw,closest:()=>null,removeAttribute(){delete this.dataset.processed;}};
+ const context={root:{dataset:{theme:'light'}},blogMermaid:{githubDefaults:x=>x},graphDraw:Promise.resolve(),graphSources:[{node,source:raw}],graphRenderer:{engine:{initialize(){},render:async()=>{if(fail)throw Error('bad diagram');return {svg:'<svg></svg>'};}}}};
+ vm.runInNewContext(source.slice(start,end),context);context.drawGraphs();await context.graphDraw;assert.equal(node.dataset.renderError,'true');assert(!node.textContent.includes(raw));
+ fail=false;context.drawGraphs();await context.graphDraw;assert.equal(node.dataset.processed,'true');assert.equal(node.dataset.renderError,undefined);assert.equal(node.innerHTML,'<svg></svg>');
+});
+test('library failure shows a message instead of hidden code; initial hiding covers article and card diagrams',async()=>{
+ const source=fs.readFileSync('src/js/main.js','utf8'),css=fs.readFileSync('src/css/style.css','utf8'),nodes=[{dataset:{},textContent:'graph TD; A-->B;'}];
+ const context={graphSources:nodes.map(node=>({node})),graphScript:{dataset:{mermaidSrc:'/mermaid.js'}},fetch:async()=>{throw Error('offline');},notify(){}};
+ await vm.runInNewContext(source.slice(source.indexOf('if(graphSources.length)')),context);assert.equal(nodes[0].dataset.renderError,'true');assert.equal(nodes[0].textContent,'다이어그램을 불러오지 못했습니다.');
+ assert.match(css,/\.mermaid:not\(\[data-processed=true\]\):not\(\[data-render-error\]\)\s*\{\s*visibility:hidden/);
+ assert.doesNotMatch(css,/\.diagram-preview \.mermaid:not\(\[data-processed=true\]\)/);
+});

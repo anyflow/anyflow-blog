@@ -143,6 +143,8 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-body iframe,.post-body video { max-width:100%; border:0}
 .missing-image { font-size:14px; color:var(--muted)}
 .mermaid { line-height:normal; overflow:auto; text-align:center; background:var(--bg); padding:16px}
+.mermaid:not([data-processed=true]):not([data-render-error]) { visibility:hidden }
+.mermaid[data-render-error] { color:var(--muted); font-family:inherit; font-size:14px }
 .mermaid foreignObject p { margin:0; padding:0 }
 .back-to-top { position:fixed; right:18px; bottom:18px; z-index:12; display:flex; gap:7px; align-items:center; background:var(--bg); box-shadow:0 2px 8px #0001; padding:7px 10px; font-size:12px}
 .toast { position:fixed; bottom:25px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 14px; border-radius:4px; opacity:0; pointer-events:none; font-size:14px}
@@ -341,7 +343,6 @@ html:has(.image-viewer[open]) { overflow:hidden }
 .image-viewer>svg { width:100%; height:100%; max-width:none!important; background:var(--bg); cursor:zoom-out }
 
 .diagram-preview .mermaid { width:100%; height:100%; margin:0; padding:0; overflow:hidden; display:flex; align-items:center; justify-content:center }
-.diagram-preview .mermaid:not([data-processed=true]) { visibility:hidden }
 .diagram-preview .mermaid>svg { flex:none; max-width:none!important }
 
 .post-body table code { white-space:pre-wrap }
