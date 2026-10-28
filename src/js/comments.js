@@ -13,7 +13,11 @@
 
   function commentRows(comments) {
     const byId = new Map(comments.map(comment => [comment.id, comment]));
-    const ordered = comments.filter(comment => comment.status !== 'deleted').sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)) || String(a.id).localeCompare(String(b.id)));
+    const ordered = comments.filter(comment => comment.status !== 'deleted').sort((a, b) => {
+      if (!a.created_at && b.created_at) return 1;
+      if (a.created_at && !b.created_at) return -1;
+      return String(b.created_at || '').localeCompare(String(a.created_at || '')) || String(a.id).localeCompare(String(b.id));
+    });
     const ids = new Set(ordered.map(comment => comment.id)), children = new Map(), visited = new Set(), rows = [];
     for (const comment of ordered) {
       let parent = comment.parent_id;
@@ -39,11 +43,6 @@
       }
     }
     const roots = children.get(null) || [];
-    roots.sort((a, b) => {
-      if (!a.created_at && b.created_at) return 1;
-      if (a.created_at && !b.created_at) return -1;
-      return String(b.created_at || '').localeCompare(String(a.created_at || '')) || String(a.id).localeCompare(String(b.id));
-    });
     append(roots);
     append(ordered.filter(comment => !visited.has(comment.id)));
     return rows;

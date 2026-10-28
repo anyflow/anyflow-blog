@@ -143,13 +143,13 @@ test('deleted rows disappear while replies attach to the closest visible ancesto
   assert.equal(commentRows([comment('x','y',{status:'deleted'}),comment('y','x',{status:'deleted'}),comment('child','x')]).length,1);
 });
 
-test('newest top-level comments precede older threads while replies stay chronological', () => {
+test('comments and sibling replies are newest first while nested replies stay with their parent', () => {
   const rows = commentRows([
     comment('old',null,{created_at:'2025-01-01'}),comment('new',null,{created_at:'2026-01-01'}),comment('unknown',null,{created_at:null}),
     comment('later','new',{created_at:'2026-03-01'}),comment('earlier','new',{created_at:'2026-02-01'}),
     comment('nested','earlier',{created_at:'2026-04-01'}),comment('undated-reply','new',{created_at:null})
   ]);
-  assert.deepEqual(rows.map(row => row.comment.id), ['new','earlier','nested','later','undated-reply','old','unknown']);
+  assert.deepEqual(rows.map(row => row.comment.id), ['new','later','earlier','nested','undated-reply','old','unknown']);
 });
 
 test('replies start collapsed and expansion persists through Like updates', async () => {
