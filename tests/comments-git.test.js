@@ -183,3 +183,11 @@ test('Git maintenance stays in the foreground instead of leaving detached worker
   assert.ok(events.some(e=>e.event==='child_start'&&e.argv?.[1]==='maintenance'));
   assert.ok(!events.some(e=>e.event==='region_enter'&&e.category==='maintenance'&&e.label==='detach'));
 });
+
+test('root and path-based post Likes persist without blocking later replies',async t=>{
+ const root=await temporary(t),store=new GitStore({directory:path.join(root,'data'),preview:true});
+ await store.transaction(state=>{state.comments.parent={...comment('parent'),post_id:'/'};state.likes['post:/']={actor:true};state.likes['post:/sw-engineer/activescale']={actor:true};});
+ await store.transaction(state=>{state.comments.reply={...comment('reply'),post_id:'/',parent_id:'parent'};});
+ const saved=await store.read();assert.equal(saved.comments.reply.parent_id,'parent');assert.equal(saved.likes['post:/'].actor,true);assert.equal(saved.likes['post:/sw-engineer/activescale'].actor,true);
+ for(const invalid of ['post:/../escape','comment:/invalid','invalid:/'])await assert.rejects(store.transaction(state=>{state.likes[invalid]={actor:true};}),/Like 대상/);
+});
