@@ -32,3 +32,11 @@ test('tabs and code indentation after quote markers still recognize explicit cap
 test('caption text on the marker line is retained',()=>{
  assert.match(render('> [!caption] **Cover**: Artist\n> More detail.'),/<div class="caption"><p><strong>Cover<\/strong>: Artist[\s\S]*More detail\.<\/p>/);
 });
+
+test('sized images keep the caption container at full text width',()=>{
+ const html=render('![Photo|300](photo.png)\n\n> [!caption]\n> A caption wider than the image.');
+ assert.match(html, /<figure>/);
+ assert.match(html, /<img[^>]*width="300"[^>]*style="width:300px;max-width:100%"/);
+ assert.match(html, /<figcaption class="caption">/);
+ assert.doesNotMatch(render('![Photo](photo.png)'), /style="width:/);
+});
