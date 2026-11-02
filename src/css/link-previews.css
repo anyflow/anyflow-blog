@@ -7,7 +7,7 @@
 .post-body .bookmark.bookmark-card .bookmark-url,.blog-links .bookmark.bookmark-card .bookmark-url{font-size:12px;line-height:16px}
 .post-body .bookmark.bookmark-card .bookmark-icon,.blog-links .bookmark.bookmark-card .bookmark-icon{position:static;width:16px;height:16px;margin:0;border-radius:3px}
 .post-body .bookmark.bookmark-card>.bookmark-media,.blog-links .bookmark.bookmark-card>.bookmark-media{order:0;flex:0 0 150px;height:98px}
-@media(max-width:600px){.post-body .bookmark.bookmark-card>.bookmark-media,.blog-links .bookmark.bookmark-card>.bookmark-media{display:none}}
+@media(max-width:600px){.post-body .bookmark.bookmark-card>.bookmark-media,.blog-links .bookmark.bookmark-card>.bookmark-media{flex-basis:90px}}
 .post-body a.github-preview,.blog-links a.github-preview{display:flex;align-items:center;gap:12px;box-sizing:border-box;height:57px;padding:8px 16px;margin:12px 0;border:1px solid var(--faint);border-radius:4px;color:var(--text);text-decoration:none}
 .github-avatar{position:relative;flex:0 0 32px;width:32px;height:32px}.github-avatar>img.bookmark-icon{position:static;max-width:none;width:32px;height:32px;object-fit:cover;border-radius:50%;margin:0}.github-avatar>img.github-brand{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:3px;background:var(--bg)}
 .github-details{min-width:0}.github-name{display:block;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.github-owner{display:block;font-size:12px;line-height:18px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
