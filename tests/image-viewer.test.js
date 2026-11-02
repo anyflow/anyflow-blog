@@ -7,7 +7,7 @@ function fixture({diagramOnly=false,rendered=true}={}){
  const svg=make(),diagram=Object.assign(make(),{closest:()=>null,matches:()=>true,getBoundingClientRect:()=>({height:300}),querySelector:()=>rendered?svg:null});
  diagram.style.minHeight='12px';if(rendered)diagram.append(svg);
  const body=make(),created=[];
- const document={body,querySelectorAll:()=>diagramOnly?[diagram]:[photo,linked,icon,diagram],createElement(tag){const node=make();if(tag==='dialog'){node.showModal=()=>node.open=true;node.close=()=>{node.open=false;node.events.close();};}created.push(node);return node;}};
+ const document={body,querySelectorAll:selector=>{assert.ok(selector.includes('.page-cover>img'));return diagramOnly?[diagram]:[photo,linked,icon,diagram];},createElement(tag){const node=make();if(tag==='dialog'){node.showModal=()=>node.open=true;node.close=()=>{node.open=false;node.events.close();};}created.push(node);return node;}};
  vm.runInNewContext(source,{document});
  return {photo,linked,icon,diagram,svg,dialog:created[0],preview:created[1],close:created[2]};
 }

@@ -1,5 +1,5 @@
 (()=>{
- const images=Array.from(document.querySelectorAll('.post-body img,.post-body .mermaid')).filter(image=>!image.closest('a,.page-mention-icon,.callout-icon'));
+ const images=Array.from(document.querySelectorAll('.page-cover>img,.post-body img,.post-body .mermaid')).filter(image=>!image.closest('a,.page-mention-icon,.callout-icon'));
  if(!images.length)return;
  const dialog=document.createElement('dialog'),preview=document.createElement('img'),close=document.createElement('button');
  dialog.className='image-viewer';dialog.setAttribute('aria-label','이미지 확대');
