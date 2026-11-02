@@ -114,7 +114,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .post-body li>p { padding:0}
 .post-body strong { font-weight:600}
 .post-body code { font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace; font-size:85%; padding:3px 5px; border-radius:3px; background:var(--soft); color:#eb5757}
-.code-block { position:relative; margin:8px 0}
+.code-block { position:relative; margin:8px 0; -webkit-text-size-adjust:100%; text-size-adjust:100%}
 .code-block pre { background:rgba(66,35,3,.03); padding:36px 22px; margin:0; border-radius:10px; overflow:auto; line-height:1.5}
 .code-block code { display:block; min-width:max-content; color:var(--text); background:none; padding:0; font-size:13.6px; font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace}
 .copy-code { position:absolute; right:10px; top:8px; color:var(--muted); font-size:12px; opacity:0}
@@ -166,6 +166,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 @media(max-width:900px) { :root { --padding:48px}
 }
 @media(max-width:600px) { :root { --padding:24px}
+.code-block code { font-size:12px }
 .site-header { padding:0 12px; gap:8px}
 .breadcrumbs { gap:8px}
 .site-logo { flex-shrink:1; max-width:150px}
