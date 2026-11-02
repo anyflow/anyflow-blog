@@ -131,7 +131,7 @@ test('native Obsidian callouts preserve nested quotes, folding, figures and math
  assert.match(html,/<div class="callout-title">Custom title<\/div>/);
  assert.match(html,/<details class="callout" data-callout="warning">/);
  assert.doesNotMatch(html,/\[!|\^\w+<\/p>/);
- assert.match(html,/<figure style="width:528px;max-width:100%">[\s\S]*<figcaption class="caption">[\s\S]*<p>First paragraph\.<\/p>[\s\S]*Second paragraph\.<\/p>\s*<\/figcaption><\/figure>\s*<p>After caption/);
+ assert.match(html,/<figure><img[^>]*style="width:528px;max-width:100%"[\s\S]*<figcaption class="caption">[\s\S]*<p>First paragraph\.<\/p>[\s\S]*Second paragraph\.<\/p>\s*<\/figcaption><\/figure>\s*<p>After caption/);
  assert.match(html,/class="katex-display"/);
  assert.match(html,/id="equation"/);assert.match(html,/href="#equation"/);
  assert.equal(result.unresolved.length,0);
@@ -359,4 +359,14 @@ test('body images and Mermaid outrank link card thumbnails while link-only posts
  assert.equal(find('photo-priority').thumbnail,'/assets/body.png');
  assert.equal(find('diagram-priority').thumbnail,'');assert.match(find('diagram-priority').thumbnailDiagram,/A-->B/);
  assert.equal(find('link-fallback').thumbnail,'https://example.com/card.png');
+});
+
+test('callout titles resolve internal links with the current post context',t=>{
+ const root=fixture(t);
+ post(root,'target',{},'Target body.');
+ post(root,'source',{},'> [!info] [[target|Related article]]\n> Details.\n\n> [!note]- [[target]]\n> Folded details.');
+ const current=loadContent(root).posts.find(p=>p.url==='/source');
+ assert.equal((current.html.match(/href="\/target"/g)||[]).length,2);
+ assert.match(current.html,/Related article/);
+ assert.match(current.html,/<details/);
 });
