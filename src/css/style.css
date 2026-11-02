@@ -330,7 +330,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 [data-theme=dark] .post-body a { border-bottom-color:var(--faint) }
 [data-theme=dark] .crumb-divider { color:var(--muted) }
 
-.post-body img[role=button],.post-body .mermaid[role=button] { cursor:zoom-in }
+.page-cover img[role=button],.post-body img[role=button],.post-body .mermaid[role=button] { cursor:zoom-in }
 html:has(.image-viewer[open]) { overflow:hidden }
 .image-viewer { width:100vw; height:100dvh; max-width:100vw; max-height:100dvh; margin:0; border:0; padding:48px 24px 24px; background:transparent; color:white }
 .image-viewer[open] { display:flex; align-items:center; justify-content:center }
