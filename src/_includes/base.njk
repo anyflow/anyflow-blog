@@ -27,7 +27,7 @@
   <script defer src="/js/vendor/highlight.min.js"></script><script defer src="{{ '/js/vendor/mermaid-profile.js' | versionedAsset }}"></script><script defer src="{{ '/js/main.js' | versionedAsset }}" data-mermaid-src="{{ '/js/vendor/mermaid.min.js' | versionedAsset }}"></script>
   <script defer src="{{ '/js/search.js' | versionedAsset }}"></script>
   <script defer src="{{ '/js/share.js' | versionedAsset }}"></script>
-  {% if post %}<script defer src="{{ '/js/image-viewer.js' | versionedAsset }}"></script>{% endif %}
+  <script defer src="{{ '/js/image-viewer.js' | versionedAsset }}"></script>
   {% if not categoryPage %}<link rel="stylesheet" href="{{ '/css/comments.css' | versionedAsset }}"><script defer src="{{ '/js/comments.js' | versionedAsset }}"></script>{% endif %}
   {% if site.analyticsId %}<script defer src="{{ '/js/analytics.js' | versionedAsset }}" data-measurement-id="{{ site.analyticsId | escape }}" data-hostnames="{{ site.analyticsHosts | join(',') | escape }}"></script>{% endif %}
 </head>
