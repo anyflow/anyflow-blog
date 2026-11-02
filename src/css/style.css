@@ -259,7 +259,7 @@ button:hover:not(.tag-filter),a.category-row:hover { background:var(--hover)}
 .breadcrumbs .visual-icon-text { width:20px; font-size:18px; line-height:20px; text-align:center; flex-shrink:0}
 
 .post-body a.page-mention { border:0; vertical-align:baseline}
-.page-mention-icon { display:inline-block; vertical-align:-.25em; width:1.2em; margin-left:0; margin-right:.25em; white-space:nowrap; position:relative}
+.page-mention-icon { display:inline-block; vertical-align:-.2em; width:1.2em; margin-left:.1em; margin-right:.5em; white-space:nowrap; position:relative}
 .page-mention-icon img { display:inline; width:1.2em; height:1.2em; margin:0; object-fit:contain; border-radius:0}
 .page-mention-title { border-bottom:.05em solid rgba(55,53,47,.25); font-weight:500}
 [data-theme=dark] .page-mention-title { border-bottom-color:var(--faint)}
