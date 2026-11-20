@@ -5,7 +5,7 @@ metadata:
   namespace: service
   labels:
     app: anyflow-blog
-    version: "0.0.0"
+    version: "0.1.0"
 spec:
   replicas: 1
   selector:
@@ -20,7 +20,7 @@ spec:
         - name: anyflow-blog-registry
       containers:
         - name: anyflow-blog
-          image: ghcr.io/anyflow/anyflow-blog@sha256:396d4bca879657414df96fafe288e95af7823cfc4fc15960a171132c7b361bcf
+          image: ghcr.io/anyflow/anyflow-blog:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -49,7 +49,7 @@ metadata:
   name: anyflow-blog-comments
   namespace: service
   labels:
-    version: "0.0.0"
+    version: "0.1.0"
 spec:
   replicas: 1
   strategy:
@@ -71,7 +71,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: api
-          image: ghcr.io/anyflow/anyflow-blog-comments@sha256:c02952613bfdf1a923bd88dfc953ca73dda316208ab7a3c7306889e8c8eca283
+          image: ghcr.io/anyflow/anyflow-blog-comments:0.1.0
           ports:
             - containerPort: 3000
           env:
