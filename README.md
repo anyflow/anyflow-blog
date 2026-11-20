@@ -86,7 +86,7 @@ HTTPRoute는 `/api` 경로를 댓글 Service로 직접 전달하고 그 외 경�
 | `fix:`, `perf:` | patch |
 | `docs:`, `chore:`, `test:` 등 | 버전 변경 없음 |
 
-예: `feat(comments): 댓글 알림 추가`, `fix: 검색 결과 수정`. 각 이미지의 마지막 릴리스 태그 이후 가장 큰 변경 수준을 적용한다. 콘텐츠 저장소만 바뀌면 사이트 이미지만 patch를 올린다. 각 이미지의 Git 태그는 `site-vX.Y.Z`, `comments-vX.Y.Z`이며, Deployment에는 GHCR 이미지 태그 `X.Y.Z`와 동일한 버전 라벨을 기록한다. 이미 발행한 태그는 다른 이미지로 덮어쓰지 않는다.
+예: `feat(comments): 댓글 알림 추가`, `fix: 검색 결과 수정`. 각 이미지의 마지막 릴리스 태그 이후 가장 큰 변경 수준을 적용한다. 콘텐츠 저장소만 바뀌면 사이트 이미지만 patch를 올린다. 각 이미지의 Git 태그는 `site-vX.Y.Z`, `comments-vX.Y.Z`이며, Deployment에는 GHCR 이미지 태그 `X.Y.Z`와 동일한 버전 라벨을 기록한다. 이미 발행한 태그는 다른 이미지로 덮어쓰지 않는다. 게시 커밋이 올라가면 현재 두 이미지의 버전을 `blog-image-published` 이벤트로 `home-platform`에 보낸다. 송신 저장소의 Actions Secret `GH_ACCESS_TOKEN`에는 대상 저장소의 Contents 쓰기 권한이 있는 GitHub 공용 접근 토큰을 등록한다. 토큰을 등록하지 않으면 이미지 게시만 진행한다.
 
 ## 검증과 공개 범위
 

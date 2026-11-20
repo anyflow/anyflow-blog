@@ -224,6 +224,35 @@ jobs:
               set -- "$@" "refs/tags/comments-v$COMMENTS_VERSION"
             fi
             git push --atomic origin "$@"
+            revision=$(git rev-parse HEAD)
+            echo "revision=$revision" >> "$GITHUB_OUTPUT"
+            echo "Deployment revision: $revision" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "published=true" >> "$GITHUB_OUTPUT"
-          echo "Deployment revision: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Notify home-platform
+        if: >-
+          steps.declaration.outputs.revision != '' &&
+          (steps.versions.outputs.site != '' || steps.versions.outputs.comments != '')
+        env:
+          GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          RELEASE_SHA: ${{ steps.declaration.outputs.revision }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::home-platform notification skipped; configure the existing GH_ACCESS_TOKEN"
+            exit 0
+          fi
+          read_version() {
+            git show "$RELEASE_SHA:deployment/deployments.yaml" |
+              awk -v image="ghcr.io/anyflow/$1" '$1 == "image:" && index($2, image ":") == 1 {
+                print substr($2, length(image) + 2)
+              }' |
+              grep -xE '(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
+          }
+          # Send both current versions so replacing a queued workflow cannot lose one image's update.
+          site_version=$(read_version anyflow-blog)
+          comments_version=$(read_version anyflow-blog-comments)
+          jq -n --arg repo "$GITHUB_REPOSITORY" --arg release "$RELEASE_SHA" \
+            --arg site "$site_version" --arg comments "$comments_version" \
+            '{event_type:"blog-image-published",client_payload:{
+              source_repository:$repo,release_sha:$release,site_version:$site,comments_version:$comments}}' |
+            gh api --method POST repos/anyflow/home-platform/dispatches --input -
