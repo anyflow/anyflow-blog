@@ -1,20 +1,22 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 
-function updateImages(text, siteDigest, commentsDigest = '') {
+function updateImages(text, siteVersion, commentsVersion = '') {
   const images = {
-    'anyflow-blog': ['ghcr.io/anyflow/anyflow-blog', siteDigest],
-    'anyflow-blog-comments': ['ghcr.io/anyflow/anyflow-blog-comments', commentsDigest],
+    'anyflow-blog': ['ghcr.io/anyflow/anyflow-blog', siteVersion],
+    'anyflow-blog-comments': ['ghcr.io/anyflow/anyflow-blog-comments', commentsVersion],
   };
-  for (const [name, [image, digest]] of Object.entries(images)) {
-    if (!digest) continue;
-    assert.match(digest, /^sha256:[a-f0-9]{64}$/);
+  for (const [name, [image, version]] of Object.entries(images)) {
+    if (!version) continue;
+    assert.match(version, /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/);
     let count = 0;
     text = text.split(/^---\s*$/m).map(doc => {
       if (!new RegExp('^metadata:\\n  name: ' + name + '\\s*$', 'm').test(doc)) return doc;
+      assert.match(doc, /^    version: "[^"]+"$/m);
+      doc = doc.replace(/^    version: "[^"]+"$/m, '    version: "' + version + '"');
       return doc.replace(/^(\s+image:)\s+\S+\s*$/m, (_, prefix) => {
         count++;
-        return prefix + ' ' + image + '@' + digest;
+        return prefix + ' ' + image + ':' + version;
       });
     }).join('---');
     assert.equal(count, 1, 'Expected exactly one image for ' + name);
@@ -36,9 +38,8 @@ function updateDeployerImage(text, digest) {
 
 if (require.main === module) {
   const file = 'deployment/deployments.yaml';
-  assert.ok(process.env.SITE_DIGEST, 'SITE_DIGEST is required');
   fs.writeFileSync(file, updateImages(fs.readFileSync(file, 'utf8'),
-    process.env.SITE_DIGEST, process.env.COMMENTS_DIGEST));
+    process.env.SITE_VERSION, process.env.COMMENTS_VERSION));
   if (process.env.DEPLOYER_DIGEST) {
     const cron = 'deployment/cronjob.yaml';
     fs.writeFileSync(cron, updateDeployerImage(fs.readFileSync(cron, 'utf8'), process.env.DEPLOYER_DIGEST));

@@ -4,12 +4,15 @@ on:
     branches: [master]
     paths-ignore:
       - deployment/*.yaml
-      - '**.md'
   workflow_dispatch:
     inputs:
       content_sha:
         description: Content commit (empty uses latest main)
         type: string
+      build_site:
+        description: Build a new static site image
+        type: boolean
+        default: true
       build_comments:
         description: Also publish comments API
         type: boolean
@@ -61,7 +64,17 @@ jobs:
           cache: npm
       - name: Check deployment logic
         if: steps.inputs.outputs.current == 'true'
-        run: node --test tests/deployment-images.test.js tests/poll-deploy.test.js
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          node scripts/release-version.js check-range "$BEFORE"
+          node --test tests/deployment-images.test.js tests/poll-deploy.test.js
+      - name: Plan image versions
+        id: release
+        if: steps.inputs.outputs.current == 'true'
+        env:
+          CONTENT_SHA: ${{ steps.inputs.outputs.content }}
+        run: node scripts/release-version.js plan >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         if: steps.inputs.outputs.current == 'true'
         with:
@@ -73,7 +86,10 @@ jobs:
           restore-keys: |
             card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'src/js/vendor/mermaid-profile.js', 'src/js/vendor/mermaid.min.js') }}-
       - name: Build static artifacts and card images
-        if: steps.inputs.outputs.current == 'true'
+        if: >-
+          steps.inputs.outputs.current == 'true' &&
+          ((steps.release.outputs.site != '' && (github.event_name == 'push' || inputs.build_site)) ||
+           (steps.release.outputs.comments != '' && (github.event_name == 'push' || inputs.build_comments)))
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
@@ -89,7 +105,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build static site
         id: site
-        if: steps.inputs.outputs.current == 'true'
+        if: steps.release.outputs.site != '' && (github.event_name == 'push' || inputs.build_site)
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -102,7 +118,7 @@ jobs:
             net.anyflow.blog.content-revision=${{ steps.inputs.outputs.content }}
       - name: Build comments API
         id: comments
-        if: steps.inputs.outputs.current == 'true' && (github.event_name == 'push' || inputs.build_comments)
+        if: steps.release.outputs.comments != '' && (github.event_name == 'push' || inputs.build_comments)
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -115,7 +131,10 @@ jobs:
             org.opencontainers.image.revision=${{ steps.inputs.outputs.code }}
       - name: Build deployment tools
         id: deployer
-        if: steps.inputs.outputs.current == 'true' && (github.event_name == 'push' || inputs.build_deployer)
+        if: >-
+          steps.inputs.outputs.current == 'true' &&
+          (inputs.build_deployer || (github.event_name == 'push' &&
+           (steps.release.outputs.site != '' || steps.release.outputs.comments != '')))
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -126,14 +145,55 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/anyflow/anyflow-blog
             org.opencontainers.image.revision=${{ steps.inputs.outputs.code }}
+      - name: Publish version tags
+        id: versions
+        if: steps.inputs.outputs.current == 'true'
+        env:
+          SITE_NEXT: ${{ steps.release.outputs.site }}
+          COMMENTS_NEXT: ${{ steps.release.outputs.comments }}
+          SITE_DIGEST: ${{ steps.site.outputs.digest }}
+          COMMENTS_DIGEST: ${{ steps.comments.outputs.digest }}
+        run: |
+          set -eu
+          publish_version() {
+            image="ghcr.io/anyflow/$1"
+            version="$2"
+            digest="$3"
+            [ -n "$version" ] || return 0
+            if [ -z "$digest" ]; then
+              # On migration, adopt an existing digest without rebuilding the image.
+              ref=$(awk -v prefix="$image@" '$1 == "image:" && index($2, prefix) == 1 {print $2}' deployment/deployments.yaml)
+              [ -n "$ref" ] || return 0
+              digest="${ref#*@}"
+            fi
+            tag="$image:$version"
+            if current=$(docker buildx imagetools inspect "$tag" --format '{{.Manifest.Digest}}' 2>&1); then
+              if [ "$current" != "$digest" ]; then
+                echo "Version tag already exists with a different digest: $tag" >&2
+                return 1
+              fi
+            else
+              printf '%s' "$current" | grep -Eiq 'not found|manifest unknown' || {
+                printf '%s\n' "$current" >&2
+                return 1
+              }
+              docker buildx imagetools create --prefer-index=false --tag "$tag" "$image@$digest" >&2 || return 1
+            fi
+            actual=$(docker buildx imagetools inspect "$tag" --format '{{.Manifest.Digest}}') || return 1
+            [ "$actual" = "$digest" ] || return 1
+            echo "$version"
+          }
+          site_version=$(publish_version anyflow-blog "$SITE_NEXT" "$SITE_DIGEST")
+          comments_version=$(publish_version anyflow-blog-comments "$COMMENTS_NEXT" "$COMMENTS_DIGEST")
+          printf 'site=%s\ncomments=%s\n' "$site_version" "$comments_version" >> "$GITHUB_OUTPUT"
       - name: Publish deployment declaration
         id: declaration
         if: steps.inputs.outputs.current == 'true'
         env:
           CODE_SHA: ${{ steps.inputs.outputs.code }}
           CONTENT_SHA: ${{ steps.inputs.outputs.content }}
-          SITE_DIGEST: ${{ steps.site.outputs.digest }}
-          COMMENTS_DIGEST: ${{ steps.comments.outputs.digest }}
+          SITE_VERSION: ${{ steps.versions.outputs.site }}
+          COMMENTS_VERSION: ${{ steps.versions.outputs.comments }}
           DEPLOYER_DIGEST: ${{ steps.deployer.outputs.digest }}
         run: |
           set -eu
@@ -153,8 +213,17 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           if ! git diff --quiet -- deployment/deployments.yaml deployment/cronjob.yaml; then
             git add deployment/deployments.yaml deployment/cronjob.yaml
-            git commit -m "deploy: publish code $CODE_SHA content $CONTENT_SHA"
-            git push origin HEAD:master
+            git commit -m "chore: release blog images" -m "Source-Revision: $CODE_SHA"
+            set -- HEAD:master
+            if [ -n "$SITE_VERSION" ]; then
+              git tag -a "site-v$SITE_VERSION" -m "Site $SITE_VERSION" -m "Content-Revision: $CONTENT_SHA"
+              set -- "$@" "refs/tags/site-v$SITE_VERSION"
+            fi
+            if [ -n "$COMMENTS_VERSION" ]; then
+              git tag -a "comments-v$COMMENTS_VERSION" -m "Comments API $COMMENTS_VERSION"
+              set -- "$@" "refs/tags/comments-v$COMMENTS_VERSION"
+            fi
+            git push --atomic origin "$@"
           fi
           echo "published=true" >> "$GITHUB_OUTPUT"
           echo "Deployment revision: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"

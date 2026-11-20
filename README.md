@@ -55,7 +55,7 @@ BLOG_STATIC_DIR=_preview COMMENTS_PREVIEW=true node scripts/comments-server.js
 | 도메인·Gateway·네임스페이스·이미지·댓글 환경변수 | [deployment/](deployment/) |
 | Obsidian 작성 도구 | [obsidian-common-ux](https://github.com/anyflow/obsidian-common-ux) |
 
-GitHub Actions는 콘텐츠 읽기용 `BLOG_CONTENT_READ_KEY`와 실행 시 제공되는 `GITHUB_TOKEN`을 사용한다. 콘텐츠 저장소의 workflow는 코드 저장소의 `publish.yml`을 `workflow_dispatch`로 호출하고 `content_sha`를 전달한다. `build_comments`·`build_deployer` 입력은 해당 이미지의 추가 빌드를 제어한다. 정적 사이트 이미지는 함께 생성한다.
+GitHub Actions는 콘텐츠 읽기용 `BLOG_CONTENT_READ_KEY`와 실행 시 제공되는 `GITHUB_TOKEN`을 사용한다. 콘텐츠 저장소의 workflow는 코드 저장소의 `publish.yml`을 `workflow_dispatch`로 호출하고 `content_sha`를 전달한다. `build_site`, `build_comments`, `build_deployer`로 대상 이미지를 고를 수 있다.
 
 Kubernetes에는 Gateway API·agentgateway CRD, 대상 네임스페이스와 Gateway, 스토리지를 준비한다. Secret은 별도로 등록한다.
 
@@ -65,7 +65,7 @@ Kubernetes에는 Gateway API·agentgateway CRD, 대상 네임스페이스와 Gat
 | `anyflow-blog-comments` | 댓글 서명/관리자 설정과 댓글 Git SSH 인증 |
 | `anyflow-blog-deploy-git` | 배포 선언을 읽는 Git SSH 인증 |
 
-배포 context를 지정한 뒤 리소스를 생성한다. `make create`는 댓글 PVC·RBAC·정책·CronJob과 웹/API 리소스를 적용한다. 이후 CronJob이 1분마다 `emptyDir`에 저장소를 새로 clone하고 `make deploy`를 실행한다. 같은 이미지 digest를 적용하면 실행 중인 웹/API Pod를 교체하지 않는다.
+배포 context를 지정한 뒤 리소스를 생성한다. `make create`는 댓글 PVC·RBAC·정책·CronJob과 웹/API 리소스를 적용한다. 이후 CronJob이 1분마다 `emptyDir`에 저장소를 새로 clone하고 `make deploy`를 실행한다. 같은 이미지 버전을 적용하면 실행 중인 웹/API Pod를 교체하지 않는다.
 
 ```sh
 make create KUBE_CONTEXT=YOUR_CONTEXT
@@ -74,6 +74,19 @@ make create KUBE_CONTEXT=YOUR_CONTEXT
 HTTPRoute는 `/api` 경로를 댓글 Service로 직접 전달하고 그 외 경로는 nginx Service로 전달한다. URI를 재작성하지 않으며 두 규칙은 같은 도메인과 요청 제한 정책을 사용한다. 두 Service의 포트는 80이며 댓글 Service는 Node.js의 3000 포트로 전달한다.
 
 일회성 반영은 `make deploy KUBE_CONTEXT=YOUR_CONTEXT`를 사용한다. 코드/콘텐츠 변경은 이미지 빌드와 배포 선언 게시를 거쳐 반영한다. 댓글 데이터 변경은 사이트 이미지 빌드와 독립적이다.
+
+### 버전과 커밋 메시지
+
+`make hooks`로 로컬 커밋 메시지 검사를 연결한다. GitHub Actions도 푸시된 새 커밋을 검사한다.
+
+| 커밋 메시지 | 버전 |
+|---|---|
+| `type!:` 또는 `BREAKING CHANGE:` | major |
+| `feat:` | minor |
+| `fix:`, `perf:` | patch |
+| `docs:`, `chore:`, `test:` 등 | 버전 변경 없음 |
+
+예: `feat(comments): 댓글 알림 추가`, `fix: 검색 결과 수정`. 각 이미지의 마지막 릴리스 태그 이후 가장 큰 변경 수준을 적용한다. 콘텐츠 저장소만 바뀌면 사이트 이미지만 patch를 올린다. 각 이미지의 Git 태그는 `site-vX.Y.Z`, `comments-vX.Y.Z`이며, Deployment에는 GHCR 이미지 태그 `X.Y.Z`와 동일한 버전 라벨을 기록한다. 이미 발행한 태그는 다른 이미지로 덮어쓰지 않는다.
 
 ## 검증과 공개 범위
 

@@ -52,3 +52,8 @@ delete:
 	$(KUBECTL) delete service/anyflow-blog -n $(NAMESPACE) || true
 
 recreate: delete create
+
+.PHONY: hooks
+hooks:
+	@case "$$(git config --get core.hooksPath || true)" in ""|.githooks) ;; *) echo "기존 hooksPath가 있어 변경하지 않는다." >&2; exit 1 ;; esac
+	git config --local core.hooksPath .githooks
