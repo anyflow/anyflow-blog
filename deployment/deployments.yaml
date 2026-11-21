@@ -51,7 +51,7 @@ metadata:
   labels:
     version: "0.1.0"
 spec:
-  replicas: 1
+  replicas: 0
   strategy:
     type: Recreate
   selector:
