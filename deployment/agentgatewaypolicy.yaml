@@ -9,6 +9,12 @@ spec:
       kind: HTTPRoute
       name: anyflow-blog
   traffic:
+    # Core i3 이전 중 기존 댓글 API가 처리 중인 작업을 끝낼 때까지 새 쓰기를 막는다.
+    authorization:
+      action: Require
+      policy:
+        matchExpressions:
+          - '!request.path.startsWith("/api/") || request.method in ["GET", "HEAD", "OPTIONS"]'
     rateLimit:
       conditional:
         - condition: 'request.method == "POST" && request.path.contains("/login")'
