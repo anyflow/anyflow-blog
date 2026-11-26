@@ -71,7 +71,7 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/anyflow/anyflow-blog:run-${{ github.run_id }}-${{ github.run_attempt }}
+          tags: ghcr.io/anyflow/blog-app:run-${{ github.run_id }}-${{ github.run_attempt }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ steps.release.outputs.source }}
@@ -82,10 +82,10 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          target: comments-api
+          target: blog-app-comments
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/anyflow/anyflow-blog-comments:run-${{ github.run_id }}-${{ github.run_attempt }}
+          tags: ghcr.io/anyflow/blog-app-comments:run-${{ github.run_id }}-${{ github.run_attempt }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ steps.release.outputs.source }}
@@ -107,12 +107,13 @@ jobs:
             echo "A newer release tag already exists."
             exit 0
           fi
-          site_digest=$(bash scripts/publish-image.sh anyflow-blog "$VERSION" "$SITE_DIGEST" "$SOURCE_SHA" "$CONTENT_SHA")
-          if [[ -n "$COMMENTS_DIGEST" ]]; then
-            comments_digest=$(bash scripts/publish-image.sh anyflow-blog-comments "$VERSION" "$COMMENTS_DIGEST" "$SOURCE_SHA" "")
-          else
-            comments_digest=$(jq -er '.comments' <<< "$previous")
+          site_digest=$(bash scripts/publish-image.sh blog-app "$VERSION" "$SITE_DIGEST" "$SOURCE_SHA" "$CONTENT_SHA")
+          comments_source="$SOURCE_SHA"
+          if [[ -z "$COMMENTS_DIGEST" ]]; then
+            COMMENTS_DIGEST=$(jq -er '.comments' <<< "$previous")
+            comments_source=""
           fi
+          comments_digest=$(bash scripts/publish-image.sh blog-app-comments "$VERSION" "$COMMENTS_DIGEST" "$comments_source" "")
           metadata=$(printf 'Content-Revision: %s\nSite-Digest: %s\nComments-Digest: %s' \
             "$CONTENT_SHA" "$site_digest" "$comments_digest")
           git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \

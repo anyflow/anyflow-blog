@@ -72,7 +72,7 @@ API·단일 비동기 처리기`"]
     Code -->|"D2b. 코드·workflow checkout"| Build
     Build -->|"D3. 이미지 push"| GHCR
     Build -->|"D4. Git 릴리스 태그 발행"| Code
-    Build -->|"D5. 이미지 digest 갱신 PR"| Platform
+    Build -->|"D5. 이미지 버전 갱신 PR"| Platform
     Platform -->|"D6. PR 머지 후 Git 선언 읽기"| Argo
     Argo -->|"D7a. 웹 Service·Deployment 적용"| Web
     Argo -->|"D7b. 댓글 Service·Deployment 적용"| API
@@ -114,7 +114,7 @@ API·단일 비동기 처리기`"]
 | 댓글 게시자 | 브라우저에서 페이지를 조회하고 댓글·답글·Like와 본인 댓글 수정·삭제를 요청한다. |
 | blog repo | 작성 Markdown과 첨부를 보관하고 콘텐츠 변경 시 blog-app에 발행할 커밋 SHA를 제안하는 PR을 연다. |
 | blog-app repo | 코드·템플릿·워크플로와 릴리스 이미지 버전을 보관한다. |
-| home-platform repo | 운영 Kubernetes 리소스와 배포할 이미지 digest를 선언한다. |
+| home-platform repo | 운영 Kubernetes 리소스와 배포할 릴리스 버전을 선언한다. |
 | comments repo | 댓글·Like·작성 권한 데이터와 댓글 게시 workflow를 비공개로 보관한다. |
 | 빌드 workflow | GitHub 제공 runner에서 입력을 검증하고 고정된 콘텐츠 커밋으로 이미지를 빌드해 GHCR에 게시하고 릴리스 기록과 배포 PR을 갱신한다. |
 | 댓글 게시 workflow | GitHub 제공 runner에서 신규 댓글 PR·승인 절차와 공개 데이터 생성을 수행한다. |
@@ -131,7 +131,7 @@ waypoint·ztunnel·응답 경로·Secret 등 세부 인프라는 그림에서 �
 
 ## 저장소별 데이터 구조
 
-작성 원본은 [blog](https://github.com/anyflow/blog), 댓글·Like 원본은 비공개 [blog-comments](https://github.com/anyflow/blog-comments)에 저장한다. 이 문서의 comments repo는 `blog-comments`를 뜻한다. 웹·API 코드와 배포 선언은 `anyflow-blog`에 둔다.
+작성 원본은 [blog](https://github.com/anyflow/blog), 댓글·Like 원본은 비공개 [blog-comments](https://github.com/anyflow/blog-comments)에 저장한다. 이 문서의 comments repo는 `blog-comments`를 뜻한다. 웹·API 코드와 배포 선언은 `blog-app`에 둔다.
 
 ### blog: 문서·첨부·메타데이터
 
@@ -222,7 +222,7 @@ D 단계는 검증을 통과한 산출물을 게시하고, Argo CD가 배포 선
 - HTML·검색 색인·sitemap·RSS 2.0·공개 글 카탈로그를 임시 경로에서 완성한 뒤 `_site` 또는 `_preview`를 교체한다. 직전 결과는 `.cache/previous-build`에 한 개 보관한다.
 - 콘텐츠 PR에 기록한 SHA로 빌드하고 GHCR 발행에 성공하면 Git 릴리스 태그를 발행한다.
 
-blog-app은 릴리스마다 하나의 Git 태그를 생성한다. 태그가 소스·콘텐츠 커밋과 웹·댓글 API 이미지의 digest를 기록한다. 빌드 워크플로가 두 digest를 포함한 home-platform PR을 열고, 머지되면 Argo CD가 Deployment 선언을 적용한다. [빌드 워크플로](.github/workflows/publish.yml) · [운영 배포 정의](https://github.com/anyflow/home-platform/tree/main/apps/anyflow-blog)
+blog-app은 릴리스마다 하나의 Git 태그를 생성한다. 태그가 소스·콘텐츠 커밋과 웹·댓글 API 이미지의 digest를 기록한다. 빌드 워크플로가 두 이미지에 같은 릴리스 버전을 지정하는 home-platform PR을 열고, 머지되면 Argo CD가 Deployment 선언을 적용한다. [빌드 워크플로](.github/workflows/publish.yml) · [운영 배포 정의](https://github.com/anyflow/home-platform/tree/main/apps/blog-app)
 
 ## 댓글·Like 처리
 
@@ -384,7 +384,7 @@ PR은 승인 절차와 새 댓글 알림을 GitHub 기능으로 제공해 별도
 
 방문자 쿠키는 1년, 관리자 쿠키는 7일을 사용한다. 쿠키를 잃으면 해당 브라우저의 작성 권한과 Like 식별도 잃는다. 관리자는 별도 브라우저에서도 인증 후 관리할 수 있다. 댓글 본문은 텍스트로 표시하고 HTTP/HTTPS/www 주소만 안전한 DOM 링크로 만든다.
 
-Gateway의 로컬 요청 제한은 로그인·쓰기·조회에 접속 주소별 한도와 전체 한도를 함께 적용한다. 정책 값은 [home-platform의 운영 요청 제한 정책](https://github.com/anyflow/home-platform/blob/main/apps/anyflow-blog/agentgatewaypolicy.yaml)을 따른다. 카운터는 프록시마다 독립적이며 재시작 시 초기화된다. NAT나 중간 프록시로 출발지 주소가 합쳐지면 사용자들이 주소 한도를 공유한다. 클라이언트가 제공한 `X-Forwarded-For`를 식별 키로 신뢰하지 않는다.
+Gateway의 로컬 요청 제한은 로그인·쓰기·조회에 접속 주소별 한도와 전체 한도를 함께 적용한다. 정책 값은 [home-platform의 운영 요청 제한 정책](https://github.com/anyflow/home-platform/blob/main/apps/blog-app/agentgatewaypolicy.yaml)을 따른다. 카운터는 프록시마다 독립적이며 재시작 시 초기화된다. NAT나 중간 프록시로 출발지 주소가 합쳐지면 사용자들이 주소 한도를 공유한다. 클라이언트가 제공한 `X-Forwarded-For`를 식별 키로 신뢰하지 않는다.
 
 일반 방문자에게는 게시된 댓글·표시 작성자·Like 집계를 제공한다. 작성자와 관리자는 권한에 따라 대기 댓글과 작업 상태를 조회할 수 있다. 작성 권한 해시·요청 fingerprint·비공개 원본 설정은 공개 응답에 포함하지 않는다. `noindex`는 공개 접근 제어 수단이 아니다.
 

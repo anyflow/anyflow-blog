@@ -1,5 +1,5 @@
 {
-  "name": "anyflow-blog",
+  "name": "blog-app",
   "version": "1.0.0",
   "description": "Obsidian Markdown 기반 정적 블로그와 Git 기반 댓글 서비스",
   "main": "index.js",

@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {loadContent}=require('../lib/content');
-function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'anyflow-blog-test-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));return root;}
+function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'blog-app-test-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));return root;}
 function post(root,name,overrides={},body='## Introduction\n\nText.'){const dir=root;const values={title:name,permalink:'/'+name,created:'2025-01-01',category:'test',publish:true,...overrides};delete values.kind;const file=path.join(dir,overrides.kind==='root'?'index.md':name+'.md');fs.writeFileSync(file,'---\n'+Object.entries(values).map(([k,v])=>k+': '+JSON.stringify(v)).join('\n')+'\n---\n\n'+body);return file;}
 test('only published notes and referenced assets, correct legacy paths and dates',t=>{
  const root=fixture(t);

@@ -3,12 +3,12 @@ name="anyflow blog preview"
 description="Loopback-only blog and isolated Git comment review server"
 supervisor="supervise-daemon"
 command="/usr/bin/node"
-command_args="/home/anyflow/workspace/my-cluster/apps/anyflow-blog/scripts/comments-server.js"
+command_args="/home/anyflow/workspace/blog-app/scripts/comments-server.js"
 command_user="anyflow:anyflow"
-directory="/home/anyflow/workspace/my-cluster/apps/anyflow-blog"
+directory="/home/anyflow/workspace/blog-app"
 pidfile="/run/${RC_SVCNAME}.pid"
 respawn_delay=5
 respawn_max=0
-output_log="/home/anyflow/workspace/my-cluster/apps/anyflow-blog/.cache/preview.stdout.log"
-error_log="/home/anyflow/workspace/my-cluster/apps/anyflow-blog/.cache/preview.log"
+output_log="/home/anyflow/workspace/blog-app/.cache/preview.stdout.log"
+error_log="/home/anyflow/workspace/blog-app/.cache/preview.log"
 depend() { need net; }

@@ -87,7 +87,7 @@ test('image publication reuses a matching tag and refuses a conflicting tag', t 
     '',
   ].join('\n'), {mode: 0o700});
   const publish = (digest, revision) => spawnSync('bash', [
-    path.resolve('scripts/publish-image.sh'), 'anyflow-blog', '0.1.3', staged, source, content,
+    path.resolve('scripts/publish-image.sh'), 'blog-app', '0.1.3', staged, source, content,
   ], {
     env: {
       ...process.env, PATH: directory + ':' + process.env.PATH, TEST_CALLS: calls,
