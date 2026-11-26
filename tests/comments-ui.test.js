@@ -303,6 +303,27 @@ test('late snapshots cannot undo login or restore administrator UI after logout'
   assert.ok(f.find('comments-admin-login'));
 });
 
+test('administrator login shows delete for another author even after the server revision resets',async()=>{
+  const other=comment('other',null,{can_delete:false,version:4});
+  const f=fixture({...snapshot([other]),revision:9});
+  const deleteButton=()=>f.all().find(n=>n.tagName==='button'&&n.textContent==='삭제');
+  await f.ready();
+  assert.equal(deleteButton(),undefined);
+  const login=f.find('comments-admin-login');
+  login.children.find(n=>n.tagName==='label').children.find(n=>n.tagName==='input').value='test-only';
+  f.responses.push({is_admin:true},{...snapshot([other]),is_admin:true,revision:1});
+  login.events.submit({preventDefault(){}});
+  await f.ready();
+  assert.equal(f.all().find(n=>n.tagName==='summary').textContent,'관리자 (로그인됨)');
+  f.responses.push({...snapshot([{...other,status:'deleted'}]),is_admin:true,revision:2});
+  deleteButton().events.click();
+  await f.ready();
+  assert.equal(f.requests.at(-1).url,'/api/comments/other');
+  assert.equal(f.requests.at(-1).options.method,'DELETE');
+  assert.equal(f.requests.at(-1).body.expected_version,4);
+  assert.equal(deleteButton(),undefined);
+});
+
 
 test('a retried failed Like retains its ID and sequence without overwriting newer clicks',async()=>{
   const f=fixture({...snapshot([]),revision:1});await f.ready();

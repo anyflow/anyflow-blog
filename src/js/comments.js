@@ -415,7 +415,7 @@
           const edit = button('수정', () => openEditor(comment, true));
           edit.disabled = busyComments.has(comment.id); actions.append(edit);
         }
-        if (comment.can_delete) {
+        if (snapshot.is_admin || comment.can_delete) {
           const remove = button('삭제', () => action(remove, async () => {
             if (!confirm('댓글을 삭제할까요? 답글은 유지됩니다.')) return;
             if (activeEditor?.target === comment.id) activeEditor = null;
@@ -483,6 +483,7 @@
     if (adminBody.dataset.authenticated === String(snapshot.is_admin)) return;
     adminBody.dataset.authenticated = String(snapshot.is_admin);
     adminBody.replaceChildren();
+    adminTitle.textContent = snapshot.is_admin ? '관리자 (로그인됨)' : '관리자';
     if (snapshot.is_admin) {
       const label = element('label', 'comments-moderation'), input = element('input');
       input.type = 'checkbox';
@@ -560,7 +561,7 @@
 
   function update(result) {
     if (result.identityEpoch !== undefined && result.identityEpoch !== identityEpoch) { render(); return; }
-    if (snapshot && Number(result.revision || 0) < Number(snapshot.revision || 0)) { render(); return; }
+    if (snapshot && result.identityEpoch === snapshot.identityEpoch && Number(result.revision || 0) < Number(snapshot.revision || 0)) { render(); return; }
     if (!result.moderation) {
       for (const task of result.tasks || []) {
         if (task.kind === 'create' && task.status === 'done' && !publicationWaiting.has(task.id) && result.comments.some(comment => comment.id === task.comment_id && comment.status === 'pending')) {
