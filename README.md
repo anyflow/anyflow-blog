@@ -60,9 +60,11 @@ BLOG_STATIC_DIR=_preview COMMENTS_PREVIEW=true node scripts/comments-server.js
 
 | Actions Secret | 사용처 | 권한 |
 | --- | --- | --- |
-| `BLOG_PUBLISH_TOKEN` | `blog`의 콘텐츠 PR | `blog-app`의 Contents·Pull requests 쓰기 |
+| `GH_ACCESS_TOKEN` | `blog`의 콘텐츠 PR | `blog-app`의 브랜치·PR 쓰기 |
 | `BLOG_CONTENT_READ_KEY` | `blog-app`의 콘텐츠 checkout | `blog` 읽기 |
-| `GH_ACCESS_TOKEN` | `blog-app`의 운영 배포 PR | `home-platform`의 Contents·Pull requests 쓰기 |
+| `GH_ACCESS_TOKEN` | `blog-app`의 운영 배포 PR | `home-platform`의 브랜치·PR 쓰기 |
+
+두 저장소의 `GH_ACCESS_TOKEN`에는 같은 공용 PAT를 등록한다. 복구 원본과 등록 위치는 [home-platform 자격증명 문서](https://github.com/anyflow/home-platform/blob/main/credentials/README.md)에 기록한다.
 
 운영 배포에는 Gateway API·agentgateway CRD, 대상 네임스페이스와 Gateway, 스토리지가 필요하다. home-platform의 Argo CD 애플리케이션이 웹/API 리소스, 댓글 PVC, 라우팅 정책과 SealedSecret을 적용한다.
 
