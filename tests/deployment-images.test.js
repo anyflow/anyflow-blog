@@ -102,3 +102,65 @@ test('image publication reuses a matching tag and refuses a conflicting tag', t 
   assert.match(conflict.stderr, /already exists for different inputs/);
   assert.equal(fs.existsSync(calls), false);
 });
+
+test('retrying the original release completes a partial publication without replacing the site image', t => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const os = require('node:os');
+  const { spawnSync } = require('node:child_process');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'blog-image-retry-'));
+  t.after(() => fs.rmSync(directory, {recursive: true, force: true}));
+  const version = '0.1.6';
+  const source = 'a'.repeat(40);
+  const content = 'b'.repeat(40);
+  const site = 'sha256:' + 'c'.repeat(64);
+  const rebuiltSite = 'sha256:' + 'd'.repeat(64);
+  const comments = 'sha256:' + 'e'.repeat(64);
+  const calls = path.join(directory, 'creates');
+  fs.writeFileSync(path.join(directory, 'docker'), [
+    '#!/bin/sh',
+    'case "$1/$2/$3" in',
+    '  buildx/imagetools/inspect)',
+    '    record="$TEST_REGISTRY/${4##*/}"',
+    '    [ -f "$record" ] || { echo "manifest unknown" >&2; exit 1; }',
+    '    cat "$record" ;;',
+    '  buildx/imagetools/create)',
+    '    record="$TEST_REGISTRY/${6##*/}"',
+    '    printf "%s\\n" "$6" >> "$TEST_CREATE_LOG"',
+    '    if [ "$TEST_FAIL_COMMENTS" = 1 ]; then echo "registry unavailable" >&2; exit 1; fi',
+    '    [ ! -f "$record" ] || exit 99',
+    '    printf "%s\\n" "${7##*@}" > "$record" ;;',
+    '  pull/--platform/linux/amd64) exit 0 ;;',
+    '  image/inspect/*) case "$5" in',
+    '    *org.opencontainers.image.revision*) printf "%s\\n" "$TEST_SOURCE" ;;',
+    '    *) printf "%s\\n" "$TEST_CONTENT" ;;',
+    '  esac ;;',
+    '  *) exit 99 ;;',
+    'esac',
+    '',
+  ].join('\n'), {mode: 0o700});
+  const publish = (name, digest, fail = false) => spawnSync('bash', [
+    path.resolve('scripts/publish-image.sh'), name, version, digest, source, name === 'blog-app' ? content : '',
+  ], {
+    env: {
+      ...process.env, PATH: directory + ':' + process.env.PATH,
+      TEST_REGISTRY: directory, TEST_CREATE_LOG: calls, TEST_SOURCE: source, TEST_CONTENT: content,
+      TEST_FAIL_COMMENTS: String(Number(fail)),
+    },
+    encoding: 'utf8',
+  });
+
+  assert.equal(publish('blog-app', site).stdout.trim(), site);
+  const interrupted = publish('blog-app-comments', comments, true);
+  assert.equal(interrupted.status, 1);
+  assert.match(interrupted.stderr, /registry unavailable/);
+  assert.equal(fs.existsSync(path.join(directory, 'blog-app-comments:' + version)), false);
+
+  assert.equal(publish('blog-app', rebuiltSite).stdout.trim(), site);
+  assert.equal(publish('blog-app-comments', comments).stdout.trim(), comments);
+  assert.deepEqual(fs.readFileSync(calls, 'utf8').trim().split('\n'), [
+    'ghcr.io/anyflow/blog-app:' + version,
+    'ghcr.io/anyflow/blog-app-comments:' + version,
+    'ghcr.io/anyflow/blog-app-comments:' + version,
+  ]);
+});

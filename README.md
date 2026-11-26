@@ -89,6 +89,18 @@ home-platform의 배포 PR이 머지되면 Argo CD가 운영에 반영한다. �
 
 GHCR에는 `ghcr.io/anyflow/blog-app`에 사이트 이미지를, `ghcr.io/anyflow/blog-app-comments`에 댓글 API 이미지를 발행한다.
 
+### 릴리스 중간 실패 복구
+
+GHCR에 이미지 버전 태그를 올린 뒤 Git 릴리스 태그나 배포 PR 생성이 실패하면 원래 `Publish blog` 실행을 재실행한다. 재실행은 원래 소스 커밋과 그 커밋의 `content.lock`을 사용하므로, 빌드 입력이 같은 기존 이미지를 재사용할 수 있다. [GitHub Actions 재실행](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs)
+
+1. 실패한 실행에서 대상 버전, 실패 단계와 실행 ID를 확인한다. 권한 오류처럼 재실행 전에 해결해야 할 원인을 처리한다.
+2. 같은 실행의 **Re-run all jobs**를 선택한다. CLI에서는 `gh run rerun RUN_ID --repo anyflow/blog-app`을 실행한다. 충돌이 계속되면 해당 Git 태그와 이미지의 소스·콘텐츠 SHA를 대조하고, 이미 발행한 태그의 이미지를 보존한다.
+3. GHCR의 두 이미지 버전 태그와 `blog-app`의 `vX.Y.Z` 태그를 확인한다. `home-platform` 배포 PR의 검사 통과와 머지, Argo CD의 동기화와 운영 응답까지 확인한다.
+
+### 운영 이미지 보존
+
+GHCR에서 **운영 중인 버전과 직전 정상 배포 버전의 사이트·댓글 API 이미지 한 쌍씩**을 보존한다. 정상 배포 여부는 Argo CD 동기화와 운영 응답으로 확인한다. 이미지 정리 전에는 두 버전 태그와 각 이미지가 참조하는 매니페스트를 확인하고, 롤백할 때는 `home-platform` 배포 PR에서 두 이미지를 같은 이전 버전으로 지정한다.
+
 ## 검증과 공개 범위
 
 변경된 기능의 테스트와 대표 화면을 확인한다. 전체 콘텐츠·화면 조합 검사는 전체 변경을 마무리할 때 수행한다.
