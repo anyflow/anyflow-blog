@@ -19,22 +19,21 @@ function bump(version, level) {
   return ['', `${major}.${minor}.${patch + 1}`, `${major}.${minor + 1}.0`, `${major + 1}.0.0`][level];
 }
 
-function plan(component, current, content = '') {
-  const prefix = `${component}-v`;
-  const tag = git('tag', '--merged', 'HEAD', '--list', prefix + '*', '--sort=-version:refname')
-    .split('\n').find(name => versionPattern.test(name.slice(prefix.length)));
-  assert.equal(tag ? tag.slice(prefix.length) : '0.0.0', current,
-    `${component}: deployment version and annotated Git tag differ`);
-  const range = tag ? tag + '..HEAD' : 'HEAD';
-  let level = releaseLevel(git('log', '--no-merges', '--format=%s%n%b', range));
-  // The site also publishes when its separately versioned content changes.
-  if (component === 'site' && tag && content) {
-    const previous = git('for-each-ref', '--format=%(contents)', 'refs/tags/' + tag)
-      .match(/^Content-Revision: ([0-9a-f]{40})$/m)?.[1];
-    assert.ok(previous, 'Site release tag is missing its content revision');
-    if (previous !== content) level = Math.max(level, 1);
+const revisionPattern = /^[a-f0-9]{40}$/;
+const components = ['site', 'comments'];
+
+function readRelease() {
+  const release = JSON.parse(fs.readFileSync('release.json', 'utf8'));
+  for (const component of components) {
+    assert.match(release[component].version, versionPattern);
+    assert.match(release[component].source, revisionPattern);
   }
-  return bump(current, level);
+  assert.match(release.site.content, revisionPattern);
+  return release;
+}
+
+function nextVersion(current, messages, contentChanged = false) {
+  return bump(current, Math.max(releaseLevel(messages), Number(contentChanged)));
 }
 
 function assertSubject(subject) {
@@ -52,14 +51,31 @@ if (require.main === module) {
         assertSubject(subject);
       }
     }
-  } else {
-    assert.equal(command, 'plan');
-    const parts = fs.readFileSync('deployment/deployments.yaml', 'utf8').split(/^---\s*$/m);
-    for (const [component, name] of [['site', 'anyflow-blog'], ['comments', 'anyflow-blog-comments']]) {
-      const doc = parts.find(part => new RegExp(`^metadata:\\n  name: ${name}$`, 'm').test(part));
-      const version = doc?.match(/^    version: "([^"]+)"$/m)?.[1];
-      console.log(`${component}=${plan(component, version, process.env.CONTENT_SHA)}`);
+  } else if (command === 'plan') {
+    const release = readRelease();
+    const content = fs.readFileSync('content.lock', 'utf8').trim();
+    assert.match(content, revisionPattern);
+    console.log('content=' + content);
+    for (const component of components) {
+      const previous = release[component];
+      git('merge-base', '--is-ancestor', previous.source, 'HEAD');
+      const messages = git('log', '--no-merges', '--format=%s%n%b', previous.source + '..HEAD');
+      const changed = component === 'site' && previous.content !== content;
+      console.log(component + '=' + nextVersion(previous.version, messages, changed));
     }
+  } else {
+    assert.equal(command, 'record');
+    const release = readRelease();
+    const { SOURCE_SHA, CONTENT_SHA, SITE_VERSION, COMMENTS_VERSION } = process.env;
+    assert.match(SOURCE_SHA, revisionPattern);
+    assert.match(CONTENT_SHA, revisionPattern);
+    for (const [component, version] of [['site', SITE_VERSION], ['comments', COMMENTS_VERSION]]) {
+      if (!version) continue;
+      assert.match(version, versionPattern);
+      release[component] = { version, source: SOURCE_SHA };
+      if (component === 'site') release.site.content = CONTENT_SHA;
+    }
+    fs.writeFileSync('release.json', JSON.stringify(release, null, 2) + '\n');
   }
 }
-module.exports = { releaseLevel, bump, assertSubject };
+module.exports = { releaseLevel, bump, assertSubject, nextVersion };

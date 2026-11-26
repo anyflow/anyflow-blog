@@ -23,5 +23,5 @@ test('edits preserve GUID and publication date; removing or unpublishing a post 
  assert.equal(parse(rss({site,posts:[]})).items.length,0);assert.equal(parse(rss({site,posts:[{...post,publish:false}]})).items.length,0);
 });
 test('feed has the RSS media type in nginx and generation is deterministic',()=>{
- assert.equal(rss({site,posts:[post]}),rss({site,posts:[post]}));const nginx=fs.readFileSync(require.resolve('../deployment/nginx.conf'),'utf8');assert.match(nginx,/location = \/rss\.xml \{[^}]*if[^\n]*\n\s*types \{ \}\s*default_type application\/rss\+xml;/);
+ assert.equal(rss({site,posts:[post]}),rss({site,posts:[post]}));const nginx=fs.readFileSync(require.resolve('../nginx.conf'),'utf8');assert.match(nginx,/location = \/rss\.xml \{[^}]*if[^\n]*\n\s*types \{ \}\s*default_type application\/rss\+xml;/);
 });

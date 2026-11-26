@@ -32,8 +32,10 @@ flowchart TB
     subgraph GitHub["GitHub"]
         Blog["`**blog repo**
 Markdown·첨부`"]
-        Code["`**anyflow-blog repo**
-코드·Makefile·배포 YAML`"]
+        Code["`**blog-app repo**
+코드·이미지 릴리스 버전`"]
+        Platform["`**home-platform repo**
+운영 Kubernetes 배포 선언`"]
         Comments["`**comments repo**
 비공개 · 댓글·Like·공개 데이터`"]
 
@@ -45,13 +47,12 @@ PR·승인·공개 데이터 생성`"]
         end
 
         GHCR["`**GHCR**
-웹·댓글 API·배포 도구 이미지`"]
+웹·댓글 API 이미지`"]
     end
 
     subgraph Home["홈 서버 · Kubernetes"]
-        Cron["`**배포 CronJob**
-1분 주기
-emptyDir에 clone → make deploy`"]
+        Argo["`**Argo CD**
+운영 Kubernetes 리소스 동기화`"]
         Gateway["`**public-gateway**
 agentgateway
 블로그 HTTPRoute·요청 제한`"]
@@ -67,15 +68,15 @@ API·단일 비동기 처리기`"]
 
     Admin -->|"D1a. 글 push"| Blog
     Admin -->|"D1b. 코드·설정 push"| Code
-    Blog -->|"D2a. workflow_dispatch·콘텐츠 checkout"| Build
+    Blog -->|"D2a. 콘텐츠 SHA 갱신 PR"| Code
     Code -->|"D2b. 코드·workflow checkout"| Build
     Build -->|"D3. 이미지 push"| GHCR
-    Build -->|"D4. 이미지 digest로 YAML 갱신·push"| Code
-    GHCR -->|"D5. 배포 도구 이미지 준비"| Cron
-    Code -->|"D6. 매 실행 새 clone"| Cron
-    Cron -->|"D7a. 웹 Service·Deployment 적용"| Web
-    Cron -->|"D7b. 댓글 Service·Deployment 적용"| API
-    Cron -->|"D7c. HTTPRoute·요청 제한 정책 적용"| Gateway
+    Build -->|"D4. 릴리스 버전 기록·push"| Code
+    Build -->|"D5. 이미지 버전 갱신 PR"| Platform
+    Platform -->|"D6. PR 머지 후 Git 선언 읽기"| Argo
+    Argo -->|"D7a. 웹 Service·Deployment 적용"| Web
+    Argo -->|"D7b. 댓글 Service·Deployment 적용"| API
+    Argo -->|"D7c. HTTPRoute·요청 제한 정책 적용"| Gateway
     GHCR -->|"D8a. 웹 이미지 pull"| Web
     GHCR -->|"D8b. API 이미지 pull"| API
 
@@ -96,8 +97,8 @@ API·단일 비동기 처리기`"]
     classDef gateway fill:#fef9c3,stroke:#ca8a04,color:#713f12
     classDef storage fill:#ffedd5,stroke:#ea580c,color:#7c2d12
     class Admin,Commenter actor
-    class Blog,Code,Comments repo
-    class Build,Publish,Cron action
+    class Blog,Code,Comments,Platform repo
+    class Build,Publish,Argo action
     class GHCR registry
     class Web,API service
     class Gateway gateway
@@ -111,13 +112,14 @@ API·단일 비동기 처리기`"]
 | --- | --- |
 | 주인장 · 관리자 | 글·코드·설정을 작성하고 push하며 댓글 승인·관리를 수행한다. |
 | 댓글 게시자 | 브라우저에서 페이지를 조회하고 댓글·답글·Like와 본인 댓글 수정·삭제를 요청한다. |
-| blog repo | 작성 Markdown과 첨부를 보관하고 콘텐츠 변경 시 빌드 workflow를 호출한다. |
-| anyflow-blog repo | 코드·템플릿·Makefile·workflow와 이미지 digest가 기록된 배포 YAML을 보관한다. |
+| blog repo | 작성 Markdown과 첨부를 보관하고 콘텐츠 변경 시 blog-app에 발행할 커밋 SHA를 제안하는 PR을 연다. |
+| blog-app repo | 코드·템플릿·워크플로와 릴리스 이미지 버전을 보관한다. |
+| home-platform repo | 운영 Kubernetes 리소스와 배포할 이미지 버전을 선언한다. |
 | comments repo | 댓글·Like·작성 권한 데이터와 댓글 게시 workflow를 비공개로 보관한다. |
-| 빌드 workflow | GitHub 제공 runner에서 입력을 검증하고 정적 콘텐츠·이미지를 생성해 GHCR과 배포 YAML에 게시한다. |
+| 빌드 workflow | GitHub 제공 runner에서 입력을 검증하고 고정된 콘텐츠 커밋으로 이미지를 빌드해 GHCR에 게시하고 릴리스 기록과 배포 PR을 갱신한다. |
 | 댓글 게시 workflow | GitHub 제공 runner에서 신규 댓글 PR·승인 절차와 공개 데이터 생성을 수행한다. |
-| GHCR | 웹·댓글 API·배포 도구 이미지를 digest별로 보관한다. |
-| 배포 CronJob | 매분 emptyDir에 코드를 clone하고 make deploy로 Service·Deployment·라우팅·정책을 적용한다. |
+| GHCR | 웹·댓글 API 이미지를 보관한다. |
+| Argo CD | home-platform의 Git 선언을 읽어 운영 Kubernetes 리소스를 동기화한다. |
 | public-gateway | HTTPS를 수신하고 HTTPRoute로 정적 콘텐츠와 API를 분기하며 요청 제한을 적용한다. |
 | nginx | 이미지에 포함된 HTML·CSS·JS·미디어·검색 색인을 제공하고 정규 URL 리다이렉트를 처리한다. |
 | 댓글 Deployment | 입력·인증·권한 검증, 로컬 상태 조회, 영속 큐 접수와 단일 비동기 처리기의 Git 저장을 수행한다. |
@@ -208,21 +210,19 @@ blog-comments/
 | nginx | 정적 산출물과 HTTP 제공 설정을 같은 이미지로 고정해 교체·복구 단위를 일치시킨다. |
 | agentgateway | 공통 Gateway와 블로그 소유 HTTPRoute·정책의 설정 책임을 분리한다. |
 | GitHub Actions·GHCR | 홈 서버의 빌드 부하를 줄이고 코드·콘텐츠 조합의 산출물을 이미지 digest로 배포한다. |
-| Kubernetes CronJob·Makefile | 배포 수신 API·상시 배포 서버 없이 Kubernetes와 make 명령으로 주기적 적용을 수행한다. |
+| Argo CD | home-platform의 Git 선언에 맞춰 운영 Kubernetes 리소스를 동기화한다. |
 | Node.js·Git·PVC | 낮은 요청량에서 별도 SQL·Redis를 운영하지 않고 영속 접수와 Git 변경 이력을 확보한다. |
 
 ## 빌드와 배포 보장
 
-D 단계는 검증을 통과한 산출물을 게시하고, 배포 실패는 다음 정기 실행에서 재시도한다.
+D 단계는 검증을 통과한 산출물을 게시하고, Argo CD가 배포 선언을 동기화한다.
 
 - 게시 속성·Markdown·내부 링크·참조 첨부를 검증한다. 작성 규칙과 공개 범위는 [CONTENT_CONTRACT.md](CONTENT_CONTRACT.md)를 따른다.
 - 링크 메타데이터·X 사진·Mermaid 등의 카드/OG 이미지는 수집 결과를 캐시해 재사용한다.
 - HTML·검색 색인·sitemap·RSS 2.0·공개 글 카탈로그를 임시 경로에서 완성한 뒤 `_site` 또는 `_preview`를 교체한다. 직전 결과는 `.cache/previous-build`에 한 개 보관한다.
-- 빌드 중 코드 또는 콘텐츠 SHA가 바뀌면 오래된 배포 선언의 게시를 생략한다.
+- 콘텐츠 PR에 기록한 SHA로 빌드하고 GHCR 발행이 성공한 버전만 릴리스 기록에 저장한다.
 
-CronJob은 `concurrencyPolicy: Forbid`로 정기 작업의 중복 실행을 막는다. 매 실행마다 master 브랜치를 depth 1로 clone하고 작업 종료 시 checkout을 정리한다. emptyDir은 Pod와 함께 제거하며 배포 PVC·파일 잠금·마지막 성공 기록은 사용하지 않는다. 동일한 이미지 digest의 YAML을 재적용해도 웹/API Pod는 교체하지 않는다.
-
-웹·댓글 API·배포 도구 이미지는 독립된 digest를 사용하므로 사이트 변경만 배포할 때 댓글 API를 교체하지 않는다. 이미지 선언과 적용 명령은 [Makefile](Makefile), [배포 스크립트](scripts/poll-deploy.sh), [빌드 workflow](.github/workflows/publish.yml)를 따른다.
+웹과 댓글 API의 릴리스 버전은 [release.json](release.json)에 기록한다. 빌드 워크플로가 두 버전을 포함한 home-platform PR을 열고, 머지되면 Argo CD가 Deployment 선언을 적용한다. [빌드 워크플로](.github/workflows/publish.yml) · [운영 배포 정의](https://github.com/anyflow/home-platform/tree/main/apps/anyflow-blog)
 
 ## 댓글·Like 처리
 
@@ -384,7 +384,7 @@ PR은 승인 절차와 새 댓글 알림을 GitHub 기능으로 제공해 별도
 
 방문자 쿠키는 1년, 관리자 쿠키는 7일을 사용한다. 쿠키를 잃으면 해당 브라우저의 작성 권한과 Like 식별도 잃는다. 관리자는 별도 브라우저에서도 인증 후 관리할 수 있다. 댓글 본문은 텍스트로 표시하고 HTTP/HTTPS/www 주소만 안전한 DOM 링크로 만든다.
 
-Gateway의 로컬 요청 제한은 로그인·쓰기·조회에 접속 주소별 한도와 전체 한도를 함께 적용한다. 정책 값은 [agentgatewaypolicy.yaml](deployment/agentgatewaypolicy.yaml)을 따른다. 카운터는 프록시마다 독립적이며 재시작 시 초기화된다. NAT나 중간 프록시로 출발지 주소가 합쳐지면 사용자들이 주소 한도를 공유한다. 클라이언트가 제공한 `X-Forwarded-For`를 식별 키로 신뢰하지 않는다.
+Gateway의 로컬 요청 제한은 로그인·쓰기·조회에 접속 주소별 한도와 전체 한도를 함께 적용한다. 정책 값은 [home-platform의 운영 요청 제한 정책](https://github.com/anyflow/home-platform/blob/main/apps/anyflow-blog/agentgatewaypolicy.yaml)을 따른다. 카운터는 프록시마다 독립적이며 재시작 시 초기화된다. NAT나 중간 프록시로 출발지 주소가 합쳐지면 사용자들이 주소 한도를 공유한다. 클라이언트가 제공한 `X-Forwarded-For`를 식별 키로 신뢰하지 않는다.
 
 일반 방문자에게는 게시된 댓글·표시 작성자·Like 집계를 제공한다. 작성자와 관리자는 권한에 따라 대기 댓글과 작업 상태를 조회할 수 있다. 작성 권한 해시·요청 fingerprint·비공개 원본 설정은 공개 응답에 포함하지 않는다. `noindex`는 공개 접근 제어 수단이 아니다.
 

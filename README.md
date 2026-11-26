@@ -1,4 +1,4 @@
-# anyflow-blog
+# blog-app
 
 ## Introduction
 
@@ -6,7 +6,7 @@ Obsidian Markdown으로 작성한 콘텐츠를 정적 블로그로 게시한다.
 
 ## Summary
 
-글을 Git에 push하면 GitHub Actions가 사이트와 컨테이너 이미지를 만들고, Kubernetes CronJob이 배포 선언을 가져와 적용한다.
+콘텐츠 발행과 운영 배포는 각각 PR을 통해 진행한다. GitHub Actions가 이미지를 GHCR에 발행하고, Argo CD가 home-platform의 배포 선언을 운영 클러스터에 적용한다.
 
 - Eleventy·Nunjucks로 HTML을 생성하고 Pagefind로 브라우저 검색을 제공한다.
 - 댓글·답글·글/댓글 Like는 Node.js API와 비공개 Git 저장소로 관리한다.
@@ -44,36 +44,31 @@ BLOG_STATIC_DIR=_preview COMMENTS_PREVIEW=true node scripts/comments-server.js
 
 ## 설정과 배포
 
-사이트 설정과 배포 대상을 각 구성 파일에서 지정한다. 이 저장소의 배포 선언은 운영 사이트에 맞춰져 있으므로 별도 환경에서는 다음 값을 함께 조정한다.
+사이트 설정과 배포 대상을 각 구성 파일에서 지정한다. 운영 Kubernetes 리소스는 home-platform에서 관리한다.
 
 | 대상 | 설정 위치 |
 | --- | --- |
 | 사이트 이름·대표 URL·작성자·GA4·카테고리 순서 | [src/_data/site.json](src/_data/site.json) |
-| 콘텐츠 저장소·Kubernetes context | [Makefile](Makefile) |
+| 로컬 콘텐츠 저장소 | [Makefile](Makefile) |
 | Actions의 콘텐츠 checkout·이미지 저장소 | [.github/workflows/publish.yml](.github/workflows/publish.yml) |
-| 배포 checkout의 원격 저장소·브랜치 | [scripts/poll-deploy.sh](scripts/poll-deploy.sh) |
-| 도메인·Gateway·네임스페이스·이미지·댓글 환경변수 | [deployment/](deployment/) |
+| 발행할 콘텐츠 커밋 | [content.lock](content.lock) |
+| 발행한 이미지 버전과 입력 커밋 | [release.json](release.json) |
+| 운영 도메인·Gateway·네임스페이스·댓글 환경변수 | [home-platform 배포 설정](https://github.com/anyflow/home-platform/tree/main/apps/anyflow-blog) |
 | Obsidian 작성 도구 | [obsidian-common-ux](https://github.com/anyflow/obsidian-common-ux) |
 
-GitHub Actions는 콘텐츠 읽기용 `BLOG_CONTENT_READ_KEY`와 실행 시 제공되는 `GITHUB_TOKEN`을 사용한다. 콘텐츠 저장소의 workflow는 코드 저장소의 `publish.yml`을 `workflow_dispatch`로 호출하고 `content_sha`를 전달한다. `build_site`, `build_comments`, `build_deployer`로 대상 이미지를 고를 수 있다.
+콘텐츠 저장소는 `blog/main`이 바뀌면 `content.lock`을 갱신하는 PR을 연다. GitHub Actions가 지정된 콘텐츠 커밋으로 사이트를 검증하고 PR이 `blog-app/main`에 머지되면 이미지를 발행한다. 소스 변경도 `blog-app/main`에서 발행한다. 발행에 성공하면 `release.json`을 커밋하고 home-platform에 이미지 버전 갱신 PR을 연다.
 
-Kubernetes에는 Gateway API·agentgateway CRD, 대상 네임스페이스와 Gateway, 스토리지를 준비한다. Secret은 별도로 등록한다.
+| Actions Secret | 사용처 | 권한 |
+| --- | --- | --- |
+| `BLOG_PUBLISH_TOKEN` | `blog`의 콘텐츠 PR | `blog-app`의 Contents·Pull requests 쓰기 |
+| `BLOG_CONTENT_READ_KEY` | `blog-app`의 콘텐츠 checkout | `blog` 읽기 |
+| `GH_ACCESS_TOKEN` | `blog-app`의 운영 배포 PR | `home-platform`의 Contents·Pull requests 쓰기 |
 
-| Secret | 용도 |
-| --- | --- |
-| `anyflow-blog-registry` | 이미지 다운로드 인증 |
-| `anyflow-blog-comments` | 댓글 서명/관리자 설정과 댓글 Git SSH 인증 |
-| `anyflow-blog-deploy-git` | 배포 선언을 읽는 Git SSH 인증 |
-
-배포 context를 지정한 뒤 리소스를 생성한다. `make create`는 댓글 PVC·RBAC·정책·CronJob과 웹/API 리소스를 적용한다. 이후 CronJob이 1분마다 `emptyDir`에 저장소를 새로 clone하고 `make deploy`를 실행한다. 같은 이미지 버전을 적용하면 실행 중인 웹/API Pod를 교체하지 않는다.
-
-```sh
-make create KUBE_CONTEXT=YOUR_CONTEXT
-```
+운영 배포에는 Gateway API·agentgateway CRD, 대상 네임스페이스와 Gateway, 스토리지가 필요하다. home-platform의 Argo CD 애플리케이션이 웹/API 리소스, 댓글 PVC, 라우팅 정책과 SealedSecret을 적용한다.
 
 HTTPRoute는 `/api` 경로를 댓글 Service로 직접 전달하고 그 외 경로는 nginx Service로 전달한다. URI를 재작성하지 않으며 두 규칙은 같은 도메인과 요청 제한 정책을 사용한다. 두 Service의 포트는 80이며 댓글 Service는 Node.js의 3000 포트로 전달한다.
 
-일회성 반영은 `make deploy KUBE_CONTEXT=YOUR_CONTEXT`를 사용한다. 코드/콘텐츠 변경은 이미지 빌드와 배포 선언 게시를 거쳐 반영한다. 댓글 데이터 변경은 사이트 이미지 빌드와 독립적이다.
+home-platform의 배포 PR이 머지되면 Argo CD가 운영에 반영한다. 댓글·Like 데이터는 blog-comments에서 독립적으로 반영한다.
 
 ### 버전과 커밋 메시지
 
@@ -86,7 +81,7 @@ HTTPRoute는 `/api` 경로를 댓글 Service로 직접 전달하고 그 외 경�
 | `fix:`, `perf:` | patch |
 | `docs:`, `chore:`, `test:` 등 | 버전 변경 없음 |
 
-예: `feat(comments): 댓글 알림 추가`, `fix: 검색 결과 수정`. 각 이미지의 마지막 릴리스 태그 이후 가장 큰 변경 수준을 적용한다. 콘텐츠 저장소만 바뀌면 사이트 이미지만 patch를 올린다. 각 이미지의 Git 태그는 `site-vX.Y.Z`, `comments-vX.Y.Z`이며, Deployment에는 GHCR 이미지 태그 `X.Y.Z`와 동일한 버전 라벨을 기록한다. 이미 발행한 태그는 다른 이미지로 덮어쓰지 않는다. 게시 커밋이 올라가면 현재 두 이미지의 버전을 `blog-image-published` 이벤트로 `home-platform`에 보낸다. 송신 저장소의 Actions Secret `GH_ACCESS_TOKEN`에는 대상 저장소의 Contents 쓰기 권한이 있는 GitHub 공용 접근 토큰을 등록한다. 토큰을 등록하지 않으면 이미지 게시만 진행한다.
+`release.json`에 기록된 이미지별 소스 커밋 이후 가장 큰 변경 수준을 적용한다. 콘텐츠 SHA만 바뀌면 사이트 이미지만 patch를 올린다. GHCR의 버전 태그는 이미 발행한 이미지로 고정한다.
 
 ## 검증과 공개 범위
 
