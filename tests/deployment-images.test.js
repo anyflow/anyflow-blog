@@ -11,7 +11,7 @@ test('version bump follows the highest Conventional Commit and ignores docs', ()
   assert.throws(() => assertSubject('repair sync'));
 });
 
-test('content-only publication advances the site patch and leaves the API version alone', () => {
+test('content-only publication advances the release patch', () => {
   const { nextVersion } = require('../scripts/release-version');
   const commits = 'chore(content): update blog content\nchore: release blog images';
   assert.equal(nextVersion('0.1.2', commits, true), '0.1.3');
@@ -19,25 +19,46 @@ test('content-only publication advances the site patch and leaves the API versio
   assert.equal(nextVersion('0.1.2', 'feat: update the site', true), '0.2.0');
 });
 
-test('only published components advance in the release record', t => {
+test('release tags carry both digests and plan one version for approved content and code', t => {
   const fs = require('node:fs');
   const path = require('node:path');
   const os = require('node:os');
   const { execFileSync } = require('node:child_process');
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'blog-release-'));
-  t.after(() => fs.rmSync(directory, {recursive: true, force: true}));
-  const record = path.join(directory, 'release.json');
-  fs.copyFileSync('release.json', record);
-  const previous = JSON.parse(fs.readFileSync(record, 'utf8'));
-  const source = 'a'.repeat(40);
-  const content = 'b'.repeat(40);
-  execFileSync(process.execPath, [require.resolve('../scripts/release-version'), 'record'], {
-    cwd: directory,
-    env: {...process.env, SOURCE_SHA: source, CONTENT_SHA: content, SITE_VERSION: '1.2.3', COMMENTS_VERSION: ''},
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'blog-release-'));
+  t.after(() => fs.rmSync(cwd, {recursive: true, force: true}));
+  const git = (...args) => execFileSync('git', args, {cwd, encoding: 'utf8'}).trim();
+  const execute = (...args) => execFileSync(process.execPath, [
+    require.resolve('../scripts/release-version'), ...args,
+  ], {cwd, encoding: 'utf8'}).trim();
+  const first = 'a'.repeat(40), next = 'b'.repeat(40);
+  const site = 'sha256:' + 'c'.repeat(64), comments = 'sha256:' + 'd'.repeat(64);
+  git('init', '-q');
+  git('config', 'user.name', 'Test');
+  git('config', 'user.email', 'test@example.invalid');
+  const content = path.join(cwd, 'content.lock');
+  fs.writeFileSync(content, first + '\n');
+  git('add', 'content.lock');
+  git('commit', '-qm', 'chore: seed release');
+  const source = git('rev-parse', 'HEAD');
+  git('tag', '-a', 'v0.1.4', '-m', [
+    'Release v0.1.4', 'Content-Revision: ' + first, 'Site-Digest: ' + site,
+    'Comments-Digest: ' + comments,
+  ].join('\n'));
+  assert.deepEqual(JSON.parse(execute('published')), {
+    tag: 'v0.1.4', version: '0.1.4', source, content: first, site, comments,
   });
-  const updated = JSON.parse(fs.readFileSync(record, 'utf8'));
-  assert.deepEqual(updated.site, {version: '1.2.3', source, content});
-  assert.deepEqual(updated.comments, previous.comments);
+  assert.match(execute('plan'), /^version=$/m);
+  fs.writeFileSync(content, next + '\n');
+  git('commit', '-qam', 'chore(content): publish new content');
+  assert.match(execute('plan'), /^version=0\.1\.5$/m);
+  assert.match(execute('plan'), /^build_comments=false$/m);
+  const api = path.join(cwd, 'lib/comments');
+  fs.mkdirSync(api, {recursive: true});
+  fs.writeFileSync(path.join(api, 'api.js'), 'updated');
+  git('add', 'lib/comments/api.js');
+  git('commit', '-qm', 'feat(comments): update the API');
+  assert.match(execute('plan'), /^version=0\.2\.0$/m);
+  assert.match(execute('plan'), /^build_comments=true$/m);
 });
 
 test('image publication reuses a matching tag and refuses a conflicting tag', t => {
@@ -74,8 +95,8 @@ test('image publication reuses a matching tag and refuses a conflicting tag', t 
     },
     encoding: 'utf8',
   });
-  assert.equal(publish(staged, '').status, 0);
-  assert.equal(publish(published, source).status, 0);
+  assert.equal(publish(staged, '').stdout.trim(), staged);
+  assert.equal(publish(published, source).stdout.trim(), published);
   const conflict = publish(published, 'e'.repeat(40));
   assert.equal(conflict.status, 1);
   assert.match(conflict.stderr, /already exists for different inputs/);

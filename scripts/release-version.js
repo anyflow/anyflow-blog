@@ -20,16 +20,29 @@ function bump(version, level) {
 }
 
 const revisionPattern = /^[a-f0-9]{40}$/;
-const components = ['site', 'comments'];
+const digestPattern = /^sha256:[a-f0-9]{64}$/;
 
-function readRelease() {
-  const release = JSON.parse(fs.readFileSync('release.json', 'utf8'));
-  for (const component of components) {
-    assert.match(release[component].version, versionPattern);
-    assert.match(release[component].source, revisionPattern);
+function publishedRelease(ref = 'HEAD') {
+  const tag = git('tag', '--merged', ref, '--list', 'v*', '--sort=-version:refname')
+    .split('\n').find(name => name.startsWith('v') && versionPattern.test(name.slice(1)));
+  assert.ok(tag, 'An annotated vX.Y.Z release tag is required');
+  assert.equal(git('cat-file', '-t', 'refs/tags/' + tag), 'tag', tag + ' must be annotated');
+  const notes = git('for-each-ref', '--format=%(contents)', 'refs/tags/' + tag);
+  function field(name, pattern) {
+    const matches = notes.split('\n').filter(line => line.startsWith(name + ': '));
+    assert.equal(matches.length, 1, tag + ' must have one ' + name);
+    const value = matches[0].slice(name.length + 2);
+    assert.match(value, pattern);
+    return value;
   }
-  assert.match(release.site.content, revisionPattern);
-  return release;
+  return {
+    tag,
+    version: tag.slice(1),
+    source: git('rev-parse', tag + '^{commit}'),
+    content: field('Content-Revision', revisionPattern),
+    site: field('Site-Digest', digestPattern),
+    comments: field('Comments-Digest', digestPattern),
+  };
 }
 
 function nextVersion(current, messages, contentChanged = false) {
@@ -52,30 +65,20 @@ if (require.main === module) {
       }
     }
   } else if (command === 'plan') {
-    const release = readRelease();
+    const previous = publishedRelease();
     const content = fs.readFileSync('content.lock', 'utf8').trim();
     assert.match(content, revisionPattern);
+    const messages = git('log', '--no-merges', '--format=%s%n%b', previous.source + '..HEAD');
+    const version = nextVersion(previous.version, messages, previous.content !== content);
+    const commentsChanged = git('diff', '--name-only', previous.source, 'HEAD', '--',
+      'lib/comments', 'scripts/comments-server.js', 'Dockerfile', '.dockerignore');
     console.log('content=' + content);
-    for (const component of components) {
-      const previous = release[component];
-      git('merge-base', '--is-ancestor', previous.source, 'HEAD');
-      const messages = git('log', '--no-merges', '--format=%s%n%b', previous.source + '..HEAD');
-      const changed = component === 'site' && previous.content !== content;
-      console.log(component + '=' + nextVersion(previous.version, messages, changed));
-    }
+    console.log('version=' + version);
+    console.log('previous_tag=' + previous.tag);
+    console.log('build_comments=' + Boolean(version && commentsChanged));
   } else {
-    assert.equal(command, 'record');
-    const release = readRelease();
-    const { SOURCE_SHA, CONTENT_SHA, SITE_VERSION, COMMENTS_VERSION } = process.env;
-    assert.match(SOURCE_SHA, revisionPattern);
-    assert.match(CONTENT_SHA, revisionPattern);
-    for (const [component, version] of [['site', SITE_VERSION], ['comments', COMMENTS_VERSION]]) {
-      if (!version) continue;
-      assert.match(version, versionPattern);
-      release[component] = { version, source: SOURCE_SHA };
-      if (component === 'site') release.site.content = CONTENT_SHA;
-    }
-    fs.writeFileSync('release.json', JSON.stringify(release, null, 2) + '\n');
+    assert.equal(command, 'published');
+    console.log(JSON.stringify(publishedRelease(value)));
   }
 }
-module.exports = { releaseLevel, bump, assertSubject, nextVersion };
+module.exports = { releaseLevel, bump, assertSubject, nextVersion, publishedRelease };

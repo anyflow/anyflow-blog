@@ -2,8 +2,6 @@ name: Publish blog
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - release.json
   workflow_dispatch:
 permissions:
   contents: write
@@ -33,7 +31,7 @@ jobs:
           node scripts/release-version.js plan >> "$GITHUB_OUTPUT"
           printf 'source=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v7
-        if: steps.release.outputs.site != '' || steps.release.outputs.comments != ''
+        if: steps.release.outputs.version != ''
         with:
           repository: anyflow/blog
           ref: ${{ steps.release.outputs.content }}
@@ -41,7 +39,7 @@ jobs:
           ssh-key: ${{ secrets.BLOG_CONTENT_READ_KEY }}
           persist-credentials: false
       - uses: actions/cache@v6
-        if: steps.release.outputs.site != '' || steps.release.outputs.comments != ''
+        if: steps.release.outputs.version != ''
         with:
           path: |
             .cache/card-images
@@ -51,23 +49,23 @@ jobs:
           restore-keys: |
             card-images-${{ runner.os }}-${{ hashFiles('lib/card-images.js', 'src/js/vendor/mermaid-profile.js', 'src/js/vendor/mermaid.min.js') }}-
       - name: Build static artifacts and card images
-        if: steps.release.outputs.site != '' || steps.release.outputs.comments != ''
+        if: steps.release.outputs.version != ''
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           npm ci
           npm run build
       - uses: docker/setup-buildx-action@v4
-        if: steps.release.outputs.site != '' || steps.release.outputs.comments != ''
+        if: steps.release.outputs.version != ''
       - uses: docker/login-action@v4
-        if: steps.release.outputs.site != '' || steps.release.outputs.comments != ''
+        if: steps.release.outputs.version != ''
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build static site
         id: site
-        if: steps.release.outputs.site != ''
+        if: steps.release.outputs.version != ''
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -80,7 +78,7 @@ jobs:
             net.anyflow.blog.content-revision=${{ steps.release.outputs.content }}
       - name: Build comments API
         id: comments
-        if: steps.release.outputs.comments != ''
+        if: steps.release.outputs.build_comments == 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -91,33 +89,35 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ steps.release.outputs.source }}
-      - name: Publish versions and record release
-        if: steps.release.outputs.site != '' || steps.release.outputs.comments != ''
+      - name: Publish images and tag the release
+        if: steps.release.outputs.version != ''
         env:
           SOURCE_SHA: ${{ steps.release.outputs.source }}
           CONTENT_SHA: ${{ steps.release.outputs.content }}
-          SITE_VERSION: ${{ steps.release.outputs.site }}
-          COMMENTS_VERSION: ${{ steps.release.outputs.comments }}
+          VERSION: ${{ steps.release.outputs.version }}
+          PREVIOUS_TAG: ${{ steps.release.outputs.previous_tag }}
           SITE_DIGEST: ${{ steps.site.outputs.digest }}
           COMMENTS_DIGEST: ${{ steps.comments.outputs.digest }}
         run: |
           set -euo pipefail
-          git fetch origin main
+          git fetch origin main --tags
           git merge-base --is-ancestor "$SOURCE_SHA" origin/main
-          if ! git diff --quiet "$SOURCE_SHA" origin/main -- release.json; then
-            echo "A newer release has already been recorded."
-            git switch --detach origin/main
+          previous=$(node scripts/release-version.js published origin/main)
+          if [[ "$(jq -er '.tag' <<< "$previous")" != "$PREVIOUS_TAG" ]]; then
+            echo "A newer release tag already exists."
             exit 0
           fi
-          bash scripts/publish-image.sh anyflow-blog "$SITE_VERSION" "$SITE_DIGEST" "$SOURCE_SHA" "$CONTENT_SHA"
-          bash scripts/publish-image.sh anyflow-blog-comments "$COMMENTS_VERSION" "$COMMENTS_DIGEST" "$SOURCE_SHA" ""
-          git switch --detach origin/main
-          node scripts/release-version.js record
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add release.json
-          git commit -m "chore: release blog images"
-          git push origin HEAD:main
+          site_digest=$(bash scripts/publish-image.sh anyflow-blog "$VERSION" "$SITE_DIGEST" "$SOURCE_SHA" "$CONTENT_SHA")
+          if [[ -n "$COMMENTS_DIGEST" ]]; then
+            comments_digest=$(bash scripts/publish-image.sh anyflow-blog-comments "$VERSION" "$COMMENTS_DIGEST" "$SOURCE_SHA" "")
+          else
+            comments_digest=$(jq -er '.comments' <<< "$previous")
+          fi
+          metadata=$(printf 'Content-Revision: %s\nSite-Digest: %s\nComments-Digest: %s' \
+            "$CONTENT_SHA" "$site_digest" "$comments_digest")
+          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            tag -a "v$VERSION" "$SOURCE_SHA" -m "Release v$VERSION" -m "$metadata"
+          git push origin "refs/tags/v$VERSION"
       - uses: actions/checkout@v7
         with:
           repository: anyflow/home-platform

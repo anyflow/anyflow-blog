@@ -52,11 +52,11 @@ BLOG_STATIC_DIR=_preview COMMENTS_PREVIEW=true node scripts/comments-server.js
 | 로컬 콘텐츠 저장소 | [Makefile](Makefile) |
 | Actions의 콘텐츠 checkout·이미지 저장소 | [.github/workflows/publish.yml](.github/workflows/publish.yml) |
 | 발행할 콘텐츠 커밋 | [content.lock](content.lock) |
-| 발행한 이미지 버전과 입력 커밋 | [release.json](release.json) |
+| 릴리스 버전과 이미지 digest | [Git 릴리스 태그](https://github.com/anyflow/blog-app/tags) |
 | 운영 도메인·Gateway·네임스페이스·댓글 환경변수 | [home-platform 배포 설정](https://github.com/anyflow/home-platform/tree/main/apps/anyflow-blog) |
 | Obsidian 작성 도구 | [obsidian-common-ux](https://github.com/anyflow/obsidian-common-ux) |
 
-콘텐츠 저장소는 `blog/main`이 바뀌면 `content.lock`을 갱신하는 PR을 연다. GitHub Actions가 지정된 콘텐츠 커밋으로 사이트를 검증하고 PR이 `blog-app/main`에 머지되면 이미지를 발행한다. 소스 변경도 `blog-app/main`에서 발행한다. 발행에 성공하면 `release.json`을 커밋하고 home-platform에 이미지 버전 갱신 PR을 연다.
+콘텐츠 저장소는 `blog/main`이 바뀌면 `content.lock`을 갱신하는 PR을 연다. GitHub Actions가 지정된 콘텐츠 커밋으로 사이트를 검증하고 PR이 `blog-app/main`에 머지되면 이미지를 발행한다. 소스 변경도 `blog-app/main`에서 발행한다. 발행에 성공하면 `vX.Y.Z` Git 태그를 만들고 home-platform에 이미지 digest 갱신 PR을 연다.
 
 | Actions Secret | 사용처 | 권한 |
 | --- | --- | --- |
@@ -83,7 +83,9 @@ home-platform의 배포 PR이 머지되면 Argo CD가 운영에 반영한다. �
 | `fix:`, `perf:` | patch |
 | `docs:`, `chore:`, `test:` 등 | 버전 변경 없음 |
 
-`release.json`에 기록된 이미지별 소스 커밋 이후 가장 큰 변경 수준을 적용한다. 콘텐츠 SHA만 바뀌면 사이트 이미지만 patch를 올린다. GHCR의 버전 태그는 이미 발행한 이미지로 고정한다.
+최신 `vX.Y.Z` Git 태그가 가리키는 소스 커밋 이후 가장 큰 변경 수준을 적용한다. 콘텐츠 SHA만 바뀌면 patch를 올리고 기존 댓글 API 이미지 digest를 사용한다. 댓글 API 빌드 입력이 바뀐 릴리스에서는 같은 릴리스 버전으로 댓글 API 이미지도 발행한다.
+
+태그는 빌드에 사용한 소스 커밋을 가리킨다. 태그 메시지에 `Content-Revision`, `Site-Digest`, `Comments-Digest`를 기록한다. home-platform은 두 이미지 digest를 Deployment에 고정한다. GHCR의 버전 태그는 이미 발행한 이미지로 고정한다.
 
 ## 검증과 공개 범위
 

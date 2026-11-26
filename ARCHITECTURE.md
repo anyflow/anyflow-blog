@@ -71,8 +71,8 @@ API·단일 비동기 처리기`"]
     Blog -->|"D2a. 콘텐츠 SHA 갱신 PR"| Code
     Code -->|"D2b. 코드·workflow checkout"| Build
     Build -->|"D3. 이미지 push"| GHCR
-    Build -->|"D4. 릴리스 버전 기록·push"| Code
-    Build -->|"D5. 이미지 버전 갱신 PR"| Platform
+    Build -->|"D4. Git 릴리스 태그 발행"| Code
+    Build -->|"D5. 이미지 digest 갱신 PR"| Platform
     Platform -->|"D6. PR 머지 후 Git 선언 읽기"| Argo
     Argo -->|"D7a. 웹 Service·Deployment 적용"| Web
     Argo -->|"D7b. 댓글 Service·Deployment 적용"| API
@@ -114,7 +114,7 @@ API·단일 비동기 처리기`"]
 | 댓글 게시자 | 브라우저에서 페이지를 조회하고 댓글·답글·Like와 본인 댓글 수정·삭제를 요청한다. |
 | blog repo | 작성 Markdown과 첨부를 보관하고 콘텐츠 변경 시 blog-app에 발행할 커밋 SHA를 제안하는 PR을 연다. |
 | blog-app repo | 코드·템플릿·워크플로와 릴리스 이미지 버전을 보관한다. |
-| home-platform repo | 운영 Kubernetes 리소스와 배포할 이미지 버전을 선언한다. |
+| home-platform repo | 운영 Kubernetes 리소스와 배포할 이미지 digest를 선언한다. |
 | comments repo | 댓글·Like·작성 권한 데이터와 댓글 게시 workflow를 비공개로 보관한다. |
 | 빌드 workflow | GitHub 제공 runner에서 입력을 검증하고 고정된 콘텐츠 커밋으로 이미지를 빌드해 GHCR에 게시하고 릴리스 기록과 배포 PR을 갱신한다. |
 | 댓글 게시 workflow | GitHub 제공 runner에서 신규 댓글 PR·승인 절차와 공개 데이터 생성을 수행한다. |
@@ -220,9 +220,9 @@ D 단계는 검증을 통과한 산출물을 게시하고, Argo CD가 배포 선
 - 게시 속성·Markdown·내부 링크·참조 첨부를 검증한다. 작성 규칙과 공개 범위는 [CONTENT_CONTRACT.md](CONTENT_CONTRACT.md)를 따른다.
 - 링크 메타데이터·X 사진·Mermaid 등의 카드/OG 이미지는 수집 결과를 캐시해 재사용한다.
 - HTML·검색 색인·sitemap·RSS 2.0·공개 글 카탈로그를 임시 경로에서 완성한 뒤 `_site` 또는 `_preview`를 교체한다. 직전 결과는 `.cache/previous-build`에 한 개 보관한다.
-- 콘텐츠 PR에 기록한 SHA로 빌드하고 GHCR 발행이 성공한 버전만 릴리스 기록에 저장한다.
+- 콘텐츠 PR에 기록한 SHA로 빌드하고 GHCR 발행에 성공하면 Git 릴리스 태그를 발행한다.
 
-웹과 댓글 API의 릴리스 버전은 [release.json](release.json)에 기록한다. 빌드 워크플로가 두 버전을 포함한 home-platform PR을 열고, 머지되면 Argo CD가 Deployment 선언을 적용한다. [빌드 워크플로](.github/workflows/publish.yml) · [운영 배포 정의](https://github.com/anyflow/home-platform/tree/main/apps/anyflow-blog)
+blog-app은 릴리스마다 하나의 Git 태그를 생성한다. 태그가 소스·콘텐츠 커밋과 웹·댓글 API 이미지의 digest를 기록한다. 빌드 워크플로가 두 digest를 포함한 home-platform PR을 열고, 머지되면 Argo CD가 Deployment 선언을 적용한다. [빌드 워크플로](.github/workflows/publish.yml) · [운영 배포 정의](https://github.com/anyflow/home-platform/tree/main/apps/anyflow-blog)
 
 ## 댓글·Like 처리
 
