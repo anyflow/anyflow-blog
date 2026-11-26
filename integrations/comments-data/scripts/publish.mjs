@@ -6,6 +6,7 @@ const require=createRequire(import.meta.url);
 const {exportPublic}=require('../lib/comments/export');
 const run=promisify(execFile);
 const repository=process.env.COMMENTS_REPOSITORY,branch=process.env.COMMENTS_EVENT_BRANCH||'main';
+const siteUrl='https://www.anyflow.net';
 if(!/^[\w.-]+\/[\w.-]+$/.test(repository||'')||!process.env.GH_TOKEN)throw new Error('Repository and GitHub token are required.');
 const git=async(...args)=>(await run('git',args,{maxBuffer:16*1024*1024})).stdout.trim();
 async function api(route,method='GET',body){
@@ -33,8 +34,19 @@ if(branch.startsWith('incoming/')){
     process.exit(0);
   }
   if(!pr){
-    const title=('새 댓글: '+(request.title||comment.post_id)+' — '+(comment.author?.name||'이름 없음')).replace(/[\r\n]/g,' ').slice(0,240);
-    const body='글: '+String(request.title||comment.post_id)+'\n\n작성자: '+String(comment.author?.name||'이름 없음')+'\n\n'+String(comment.body||'').split('\n').map(line=>'> '+line.replace(/@/g,'＠')).join('\n')+'\n\n글 주소: '+String(request.post_url||'')+'#comment-'+id+'\n\n승인 설정이 꺼져 있으면 자동 게시합니다. 켜져 있으면 이 PR을 merge하여 게시합니다.';
+    const postPath=request.post_url||(/^\/(?!\/)/.test(comment.post_id)?comment.post_id:'');
+    const postUrl=postPath&&URL.canParse(postPath,siteUrl)?new URL(postPath,siteUrl):null;
+    const postTitle=(request.title||comment.post_id)+(postUrl?.pathname==='/'?' (블로그 홈)':'');
+    const author=comment.author?.name||'이름 없음';
+    const title=('새 댓글: '+postTitle+' — '+author).replace(/[\r\n]/g,' ').slice(0,240);
+    let links='';
+    if(postUrl&&['https:','http:'].includes(postUrl.protocol)){
+      postUrl.hash='';
+      links='\n\n글 주소: <'+postUrl.href+'>';
+      postUrl.hash='comment-'+id;
+      links+='\n\n댓글 주소: <'+postUrl.href+'>';
+    }
+    const body='글: '+postTitle+'\n\n작성자: '+author+'\n\n'+String(comment.body||'').split('\n').map(line=>'> '+line.replace(/@/g,'＠')).join('\n')+links+'\n\n승인 설정이 꺼져 있으면 자동 게시합니다. 켜져 있으면 이 PR을 merge하여 게시합니다.';
     pr=await api('/pulls','POST',{title,head:branch,base:'main',body});
   }
   const settings=JSON.parse(await readFile('settings.json','utf8'));
